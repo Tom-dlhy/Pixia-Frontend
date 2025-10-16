@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { useState, useEffect, useRef } from "react"
+import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { GraduationCap, BookOpen, PenLine, AudioLines } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card"
 import { cn } from "~/lib/utils"
@@ -54,7 +54,7 @@ const gradientMap: GradientMap = {
 /* -------------------------------------------------------------------------- */
 /* 🧊 Styles glassmorphism universels avec teinte dynamique                   */
 /* -------------------------------------------------------------------------- */
-function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean) {
+function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive: boolean) {
   const base = cn(
     "relative overflow-hidden rounded-[24px] p-6 transition-all duration-500 ease-out cursor-pointer",
     "border border-white/20 backdrop-blur-2xl backdrop-saturate-150",
@@ -65,47 +65,49 @@ function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean) {
   const innerGlow =
     "shadow-[inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_40px_60px_-50px_rgba(255,255,255,0.25)]"
 
+  const activeState = isActive
+    ? "-translate-y-1 brightness-110 ring-2 ring-white/60 dark:ring-white/80 dark:border-white/70"
+    : undefined
+
   if (isDark) {
     // 🌙 Couleurs sombres harmonisées
     switch (kind) {
       case "cours": // 💚 vert turquoise harmonisé
-        return cn(base, innerGlow, "bg-[#1de9b6]/40 dark:bg-[#00c4b4]/45 text-white")
+        return cn(base, innerGlow, activeState, "bg-[#1de9b6]/40 dark:bg-[#00c4b4]/45 text-white")
 
       case "exercice": // bleu
-        return cn(base, innerGlow, "bg-sky-700/45 dark:bg-sky-800/50 text-white")
+        return cn(base, innerGlow, activeState, "bg-sky-700/45 dark:bg-sky-800/50 text-white")
 
       case "discuss": // violet
-        return cn(base, innerGlow, "bg-violet-700/45 dark:bg-violet-800/50 text-white")
+        return cn(base, innerGlow, activeState, "bg-violet-700/45 dark:bg-violet-800/50 text-white")
 
       case "deep": // rouge
-        return cn(base, innerGlow, "bg-rose-700/50 dark:bg-rose-800/55 text-white")
+        return cn(base, innerGlow, activeState, "bg-rose-700/50 dark:bg-rose-800/55 text-white")
     }
   } else {
     // ☀️ Couleurs claires harmonisées
     switch (kind) {
       case "cours": // 💚 vert turquoise (texte foncé pour contraste)
-        return cn(base, innerGlow, "bg-[#a7ffee]/70 text-[#0b5e4d] border-white/60 shadow-lg")
+        return cn(base, innerGlow, activeState, "bg-[#a7ffee]/70 text-[#0b5e4d] border-white/60 shadow-lg")
 
       case "exercice": // bleu clair
-        return cn(base, innerGlow, "bg-sky-300/70 text-[#0b294a] border-white/60 shadow-lg")
+        return cn(base, innerGlow, activeState, "bg-sky-300/70 text-[#0b294a] border-white/60 shadow-lg")
 
       case "discuss": // violet pastel
-        return cn(base, innerGlow, "bg-violet-300/70 text-[#2e1b4e] border-white/60 shadow-lg")
+        return cn(base, innerGlow, activeState, "bg-violet-300/70 text-[#2e1b4e] border-white/60 shadow-lg")
 
       case "deep": // rouge vif
-        return cn(base, innerGlow, "bg-rose-400/70 text-[#4a0a0a] border-white/60 shadow-lg")
+        return cn(base, innerGlow, activeState, "bg-rose-400/70 text-[#4a0a0a] border-white/60 shadow-lg")
     }
   }
 
 }
 
-/* -------------------------------------------------------------------------- */
-/* 💫 SectionCards : composant principal                                     */
-/* -------------------------------------------------------------------------- */
-
 export function SectionCards() {
   const navigate = useNavigate()
+  const location = useRouterState({ select: (state) => state.location })
   const { courseType, setCourseType } = useCourseType()
+  const lastLocation = useRef(location.pathname)
 
   const [isDark, setIsDark] = useState<boolean>(
     typeof document !== "undefined" &&
@@ -123,6 +125,13 @@ export function SectionCards() {
     })
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (lastLocation.current !== location.pathname) {
+      lastLocation.current = location.pathname
+      setCourseType("none")
+    }
+  }, [location.pathname, setCourseType])
 
   const cards = [
     { key: "deep" as const, title: "Cours Approfondis", description: "Explore des concepts avancés", icon: GraduationCap },
@@ -157,7 +166,7 @@ export function SectionCards() {
                 if (c.key === "deep") navigate({ to: "/deep-courses" })
               }}
               role="button"
-              className={cn(glassTint(c.key, isDark))}
+              className={cn(glassTint(c.key, isDark, courseType === c.key))}
             >
               {/* Reflet interne lumineux */}
               <span

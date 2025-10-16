@@ -124,8 +124,8 @@ export function DeepCoursesLayout() {
   )
 
   const gradientClass = useMemo(
-    () => getGradientClasses(courseType ?? "deep", isDark),
-    [courseType, isDark]
+    () => getGradientClasses(isDark),
+    [isDark],
   )
 
   // ------------------------------

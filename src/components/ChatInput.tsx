@@ -90,7 +90,7 @@ export function ChatInput({
   }, [courseType])
 
   // 🎨 Couleurs dynamiques du fond et du texte
-  const backgroundColor = isDark ? "bg-[#141414]" : "bg-white/90"
+  const backgroundColor = isDark ? "bg-neutral-900" : "bg-gray-200"
   const textColor = isDark ? "text-white placeholder:text-white/60" : "text-zinc-900 placeholder:text-zinc-500"
   const borderColor = isDark ? "border-white/10" : "border-zinc-200"
 

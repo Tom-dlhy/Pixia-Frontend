@@ -5,7 +5,7 @@ interface SectionTitleProps {
   subtitle?: string
   align?: "left" | "center" | "right"
   size?: "sm" | "md" | "lg"
-  className?: string 
+  className?: string
 }
 
 export default function SectionTitle({
@@ -13,7 +13,7 @@ export default function SectionTitle({
   subtitle,
   align = "center",
   size = "lg",
-  className, 
+  className,
 }: SectionTitleProps) {
   const sizes = {
     sm: "text-xl font-semibold",
@@ -28,10 +28,17 @@ export default function SectionTitle({
   }[align]
 
   return (
-    <div className={cn(alignment, className)}> 
-      <h1 className={sizes}>{title}</h1>
+    <div className={cn(alignment, className)}>
+      {/* Titre principal — blanc en dark, noir en light */}
+      <h1 className={cn(sizes, "text-zinc-900 dark:text-white")}>
+        {title}
+      </h1>
+
+      {/* Sous-titre — gris doux selon le thème */}
       {subtitle && (
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          {subtitle}
+        </p>
       )}
     </div>
   )
