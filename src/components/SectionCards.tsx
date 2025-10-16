@@ -127,6 +127,10 @@ export function SectionCards() {
   }, [])
 
   useEffect(() => {
+    setCourseType("none")
+  }, [setCourseType])
+
+  useEffect(() => {
     if (lastLocation.current !== location.pathname) {
       lastLocation.current = location.pathname
       setCourseType("none")

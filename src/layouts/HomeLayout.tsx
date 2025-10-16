@@ -25,7 +25,6 @@ export function HomeLayout({
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
 
-  // ✅ Écoute les changements de classe "dark" sur le document
   useEffect(() => {
     if (typeof document === "undefined") return
 
