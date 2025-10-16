@@ -37,52 +37,60 @@ export function Login() {
   })
 
   return (
-  <Auth
-    actionText="Login"
-    status={loginMutation.status}
-    onSubmit={(e) => {
-      const formData = new FormData(e.target as HTMLFormElement)
+    <Auth
+      actionText="Login"
+      status={loginMutation.status}
+      onSubmit={(e) => {
+        const formData = new FormData(e.target as HTMLFormElement)
 
-      loginMutation.mutate({
-        data: {
-          email: formData.get("email") as string,
-          password: formData.get("password") as string,
-        },
-      })
-    }}
-    afterSubmit={
-      loginMutation.data ? (
-        <>
-          <div className="text-red-400 text-center drop-shadow-sm">
-            {loginMutation.data.message}
-          </div>
-          {loginMutation.data.userNotFound ? (
-            <div className="text-center">
-              <button
-                className="text-emerald-400 hover:text-emerald-300 transition-colors"
-                onClick={(e) => {
-                  const formData = new FormData(
-                    (e.target as HTMLButtonElement).form!,
-                  )
-
-                  signupMutation.mutate({
-                    data: {
-                      email: formData.get("email") as string,
-                      password: formData.get("password") as string,
-                    },
-                  })
-                }}
-                type="button"
-              >
-                Sign up instead?
-              </button>
+        loginMutation.mutate({
+          data: {
+            email: formData.get("email") as string,
+            password: formData.get("password") as string,
+          },
+        })
+      }}
+      onTestUser={() => {
+        loginMutation.mutate({
+          data: {
+            email: "test@me.com",
+            password: "test",
+          },
+        })
+      }}
+      afterSubmit={
+        loginMutation.data ? (
+          <>
+            <div className="text-red-400 text-center drop-shadow-sm">
+              {loginMutation.data.message}
             </div>
-          ) : null}
-        </>
-      ) : null
-    }
-  />
-)
+            {loginMutation.data.userNotFound ? (
+              <div className="text-center">
+                <button
+                  className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                  onClick={(e) => {
+                    const formData = new FormData(
+                      (e.target as HTMLButtonElement).form!,
+                    )
+
+                    signupMutation.mutate({
+                      data: {
+                        email: formData.get("email") as string,
+                        password: formData.get("password") as string,
+                      },
+                    })
+                  }}
+                  type="button"
+                >
+                  Sign up instead?
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : null
+      }
+    />
+  )
 
 }
 

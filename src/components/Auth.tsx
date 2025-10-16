@@ -8,11 +8,13 @@ export function Auth({
   onSubmit,
   status,
   afterSubmit,
+  onTestUser,
 }: {
   actionText: string
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   status: "pending" | "idle" | "success" | "error"
   afterSubmit?: React.ReactNode
+  onTestUser?: () => void
 }) {
   return (
     <div
@@ -87,15 +89,19 @@ export function Auth({
               {status === "pending" ? "..." : actionText}
             </Button>
 
-            <Button
-              variant="outline"
-              type="button"
-              className="w-full bg-white/20 dark:bg-white/10 border-white/30
-                         text-foreground backdrop-blur-md hover:scale-[1.02] 
-                         transition-all duration-300"
-            >
-              Continue with Google
-            </Button>
+            {onTestUser ? (
+              <Button
+                variant="outline"
+                type="button"
+                disabled={status === "pending"}
+                onClick={onTestUser}
+                className="w-full bg-white/20 dark:bg-white/10 border-white/30
+                           text-foreground backdrop-blur-md hover:scale-[1.02] 
+                           transition-all duration-300"
+              >
+                {status === "pending" ? "..." : "Utilisateur Test"}
+              </Button>
+            ) : null}
           </div>
 
           {afterSubmit && (
