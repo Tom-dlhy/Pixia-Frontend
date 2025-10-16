@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  email     String   @id @unique
+  password  String
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  deepCourses DeepCourse[]
+  evaluations Evaluation[]
+}
+
+model DeepCourse {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  ownerEmail  String
+  isCompleted Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime?
+
+  owner    User                @relation(fields: [ownerEmail], references: [email], onDelete: Cascade)
+  chapters DeepCourseChapter[]
+
+  @@index([ownerEmail])
+}
+
+model DeepCourseChapter {
+  id                 String    @id @default(cuid())
+  title              String
+  illustrationBase64 String?
+  courseId           String
+  exerciseId         String
+  position           Int?
+  isCompleted        Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @default(now()) @updatedAt
+  deletedAt          DateTime?
+
+  course      DeepCourse   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  exercise    DeepExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  evaluations Evaluation[]
+
+  @@index([courseId])
+  @@index([exerciseId])
+}
+
+model DeepExercise {
+  id        String    @id @default(cuid())
+  type      String
+  topic     String
+  itemsJson String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  deletedAt DateTime?
+
+  chapters    DeepCourseChapter[]
+  evaluations Evaluation[]
+}
+
+model Evaluation {
+  id          String    @id @default(cuid())
+  userEmail   String
+  exerciseId  String
+  chapterId   String
+  score       Int?
+  completedAt DateTime?
+  durationMs  Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  deletedAt   DateTime?
+
+  user     User              @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+  exercise DeepExercise      @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  chapter  DeepCourseChapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@unique([chapterId, userEmail])
+  @@index([userEmail])
+  @@index([exerciseId])
+}
