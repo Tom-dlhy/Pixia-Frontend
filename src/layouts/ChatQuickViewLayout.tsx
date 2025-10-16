@@ -7,7 +7,6 @@ import ChatHeader from "~/layouts/ChatHeader"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import BackButton from "~/components/BackButton"
 import { ChatActionButton } from "~/components/ChatActionButton"
-import { NeonContainer } from "~/layouts/NeonContainer"
 
 export function ChatQuickViewLayout() {
   const navigate = useNavigate()
@@ -21,7 +20,6 @@ export function ChatQuickViewLayout() {
 
   return (
     <div className="flex min-h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
-      <NeonContainer>
         <div className="flex min-h-full w-full flex-col overflow-hidden bg-background">
           {/* HEADER */}
           <div className="flex-none px-10 pt-10">
@@ -62,7 +60,6 @@ export function ChatQuickViewLayout() {
             </div>
           </div>
         </div>
-      </NeonContainer>
     </div>
   )
 }

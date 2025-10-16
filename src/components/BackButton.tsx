@@ -19,7 +19,6 @@ export default function BackButton({ onClick }: { onClick: () => void }) {
       )}
     >
       <ArrowLeft className="h-4 w-4 opacity-80" />
-      Retour
     </Button>
   )
 }

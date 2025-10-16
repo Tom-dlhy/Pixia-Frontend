@@ -1,5 +1,5 @@
 export function getGradientClasses(isDark: boolean): string {
   return isDark
-    ? "bg-gradient-to-br from-slate-800 via-black to-slate-800"
-    : "bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200"
+    ? "bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-900"
+    : "bg-gradient-to-br from-gray-200 via-gray-200 to-gray-200"
 }

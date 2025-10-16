@@ -93,7 +93,6 @@ export default function ActionButton({
         }}
       >
         <Plus className="h-4 w-4 opacity-90" />
-        Nouveau cours
       </Button>
     )
   }
@@ -117,7 +116,6 @@ export default function ActionButton({
             }}
           >
             <Menu className="h-4 w-4 opacity-90" />
-            Actions
           </Button>
         </DropdownMenuTrigger>
 
@@ -221,7 +219,6 @@ export default function ActionButton({
             }}
           >
             <Menu className="h-4 w-4 opacity-90" />
-            Actions
           </Button>
         </DropdownMenuTrigger>
 

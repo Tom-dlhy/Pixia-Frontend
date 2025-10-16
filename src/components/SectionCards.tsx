@@ -26,27 +26,28 @@ type GradientMap = Record<
 const gradientMap: GradientMap = {
   light: {
     exercice:
-      "linear-gradient(90deg, rgba(147,197,253,1) 0%, rgba(96,165,250,1) 25%, rgba(59,130,246,1) 50%, rgba(96,165,250,1) 75%, rgba(147,197,253,1) 100%)", // bleu
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(96,165,250,0.9) 25%, rgba(59,130,246,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // bleu
     cours:
-      "linear-gradient(90deg, #86efac 0%, #4ade80 25%, #22c55e 50%, #00c4b4 75%, #86efac 100%)",
+      "linear-gradient(90deg, rgba(134,239,172,0.9) 0%, rgba(74,222,128,0.9) 25%, rgba(34,197,94,0.9) 50%, rgba(0,196,180,0.9) 75%, rgba(134,239,172,0.9) 100%)", // vert menthe doux
     discuss:
-      "linear-gradient(90deg, rgba(221,214,254,1) 0%, rgba(196,181,253,1) 25%, rgba(167,139,250,1) 50%, rgba(196,181,253,1) 75%, rgba(221,214,254,1) 100%)", // violet
+      "linear-gradient(90deg, rgba(221,214,254,0.9) 0%, rgba(196,181,253,0.9) 25%, rgba(167,139,250,0.9) 50%, rgba(196,181,253,0.9) 75%, rgba(221,214,254,0.9) 100%)", // violet pastel
     deep:
-      "linear-gradient(90deg, rgba(147,197,253,1) 0%, rgba(167,243,208,1) 25%, rgba(110,231,183,1) 50%, rgba(96,165,250,1) 75%, rgba(147,197,253,1) 100%)", // bleu-vert
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // bleu-vert doux
     none:
-      "linear-gradient(90deg, rgba(147,197,253,1) 0%, rgba(167,243,208,1) 25%, rgba(110,231,183,1) 50%, rgba(96,165,250,1) 75%, rgba(147,197,253,1) 100%)", // bleu-vert
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // fallback doux
   },
+
   dark: {
     exercice:
       "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(59,130,246,0.8) 25%, rgba(37,99,235,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu
     cours:
-      "linear-gradient(90deg, rgba(74,222,128,0.8) 0%, rgba(34,197,94,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(34,197,94,0.8) 75%, rgba(74,222,128,0.8) 100%)",
+      "linear-gradient(90deg, rgba(74,222,128,0.8) 0%, rgba(34,197,94,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(0,196,180,0.8) 75%, rgba(74,222,128,0.8) 100%)", // vert menthe harmonisé
     discuss:
       "linear-gradient(90deg, rgba(196,181,253,0.8) 0%, rgba(167,139,250,0.8) 25%, rgba(139,92,246,0.8) 50%, rgba(167,139,250,0.8) 75%, rgba(196,181,253,0.8) 100%)", // violet
     deep:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu-vert
+      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu-vert doux
     none:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu-vert
+      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // fallback bleu-vert
   },
 }
 
@@ -142,7 +143,6 @@ export function SectionCards() {
           className="text-4xl font-bold"
           text="Bienvenu sur Pixia"
           gradient={activeGradient}
-          neon={isDark}
         />
       </div>
 
