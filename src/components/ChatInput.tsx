@@ -12,10 +12,19 @@ import {
 import { Mic, Paperclip, Send, X } from "lucide-react"
 import { Textarea } from "~/components/ui/textarea"
 import { Button } from "~/components/ui/button"
-import { BackgroundGradient } from "~/components/ui/background-gradient"
+import dynamic from "next/dynamic"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
+
+// ✅ Import dynamique pour éviter le mismatch SSR
+const BackgroundGradient = dynamic(
+  () =>
+    import("~/components/ui/background-gradient").then(
+      (mod) => mod.BackgroundGradient
+    ),
+  { ssr: false }
+)
 
 export type ChatInputProps = {
   value: string
@@ -48,15 +57,17 @@ export function ChatInput({
   const accentKey = courseType === "deep" ? "none" : courseType
   const accent = useMemo(() => getCourseAccent(accentKey), [accentKey])
 
-  const [isDark, setIsDark] = useState(
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
-  )
+  const [isDark, setIsDark] = useState(false)
 
-  // ✅ Observe les changements de thème (comme dans HomeLayout)
+  // 🎨 Thème dynamique (dark / light)
   useEffect(() => {
     if (typeof document === "undefined") return
+    const checkDark = () =>
+      document.documentElement.classList.contains("dark")
+    setIsDark(checkDark())
+
     const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"))
+      setIsDark(checkDark())
     })
     observer.observe(document.documentElement, {
       attributes: true,
@@ -66,34 +77,37 @@ export function ChatInput({
   }, [])
 
   const hasContent = value.trim().length > 0 || queuedFiles.length > 0
-  const actionIcon = hasContent ? <Send className="h-5 w-5" /> : <Mic className="h-5 w-5" />
+  const actionIcon = hasContent ? (
+    <Send className="h-5 w-5" />
+  ) : (
+    <Mic className="h-5 w-5" />
+  )
 
-  // 🎨 Définition du gradient selon le courseType
+  // 🟢 Gradients cohérents selon le type de cours
   const gradientColors = useMemo<[string, string, string, string]>(() => {
     switch (courseType) {
-      case "exercice": // bleu doux
-        return ["#93c5fd", "#60a5fa", "#3b82f6", "#1e40af"]
-
-      case "cours": // vert turquoise harmonisé (match carte)
-        return ["#5ef1c2", "#34e7a6", "#1de9b6", "#00c4b4"]
-
-      case "discuss": // violet lavande
-        return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"]
-
+      case "exercice":
+        return ["#93c5fd", "#60a5fa", "#3b82f6", "#1e40af"] // bleu
+      case "cours":
+        return ["#5ef1c2", "#34e7a6", "#1de9b6", "#00c4b4"] // vert menthe
+      case "discuss":
+        return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] // violet lavande
       case "deep":
-      case "none": // gris/blanc harmonieux
-        return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"]
-
+      case "none":
+        return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"] // neutre
       default:
         return ["#93c5fd", "#5eead4", "#34d399", "#2563eb"]
     }
   }, [courseType])
 
-  // 🎨 Couleurs dynamiques du fond et du texte
+  // 🎨 Couleurs selon le thème
   const backgroundColor = isDark ? "bg-neutral-900" : "bg-gray-200"
-  const textColor = isDark ? "text-white placeholder:text-white/60" : "text-zinc-900 placeholder:text-zinc-500"
+  const textColor = isDark
+    ? "text-white placeholder:text-white/60"
+    : "text-zinc-900 placeholder:text-zinc-500"
   const borderColor = isDark ? "border-white/10" : "border-zinc-200"
 
+  // 📨 Gestion des envois
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!hasContent || isSending) return
@@ -109,25 +123,20 @@ export function ChatInput({
   }
 
   const handleAttachmentClick = () => {
-    if (disableAttachments) return
-    fileInputRef.current?.click()
+    if (!disableAttachments) fileInputRef.current?.click()
   }
 
   const handleFilesChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (!onFilesSelected) return
     const files = event.target.files
-    if (!files || files.length === 0) return
+    if (!files?.length) return
     onFilesSelected(Array.from(files))
     event.target.value = ""
   }
 
   return (
     <div className={cn("w-full relative", className)}>
-      <BackgroundGradient
-        className="rounded-[22px] w-full p-[0.5px]"
-        colors={gradientColors}
-      >
-        {/* --- Couche interne adaptée au thème --- */}
+      <BackgroundGradient className="rounded-[22px] w-full p-[0.5px]" colors={gradientColors}>
         <div
           className={cn(
             "relative z-[1] rounded-[20px] border backdrop-blur-md transition-colors duration-500",
@@ -139,6 +148,7 @@ export function ChatInput({
             onSubmit={handleSubmit}
             className="flex flex-col gap-3 px-4 py-3 relative z-[2]"
           >
+            {/* 🗂️ Pièces jointes */}
             {queuedFiles.length > 0 && (
               <div
                 className={cn(
@@ -177,6 +187,7 @@ export function ChatInput({
               </div>
             )}
 
+            {/* 💬 Zone de saisie */}
             <div className="flex items-center gap-3">
               {!disableAttachments && (
                 <Button
@@ -198,11 +209,9 @@ export function ChatInput({
               )}
 
               <Textarea
-                ref={(el) => {
-                  textareaRef.current = el
-                }}
+                ref={textareaRef}
                 value={value}
-                onChange={(event) => onChange(event.target.value)}
+                onChange={(e) => onChange(e.target.value)}
                 onInput={() => {
                   const el = textareaRef.current
                   if (!el) return
@@ -219,6 +228,7 @@ export function ChatInput({
                 )}
               />
 
+              {/* 📨 Bouton d’envoi */}
               <Button
                 type="submit"
                 disabled={isSending}

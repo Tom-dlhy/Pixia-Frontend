@@ -9,6 +9,7 @@ export default function BackButton({ onClick }: { onClick: () => void }) {
     <Button
       onClick={onClick}
       variant="secondary"
+      size="icon"
       className={cn(
         "flex items-center gap-2 rounded-md cursor-pointer transition-all duration-300",
         "border border-white/30 dark:border-white/10",

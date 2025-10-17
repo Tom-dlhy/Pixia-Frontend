@@ -21,20 +21,17 @@ import BackButton from "~/components/BackButton"
 import ActionButton from "~/components/ActionButton"
 import { cn } from "~/lib/utils"
 import { getGradientClasses } from "~/utils/getGradientClasses"
+import type { CourseType } from "~/context/CourseTypeContext"
 
 export function DeepCoursesLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { courseType, setCourseType } = useCourseType()
+  const { setCourseType } = useCourseType()
 
   const [activeTab, setActiveTab] = useState<DeepCoursesTab>("cours")
   const [isDark, setIsDark] = useState(
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
-
-  useEffect(() => {
-    setCourseType("deep")
-  }, [setCourseType])
 
   const segments = location.pathname.split("/").filter(Boolean)
   const deepCoursesIndex = segments.indexOf("deep-courses")
@@ -42,6 +39,18 @@ export function DeepCoursesLayout() {
 
   const courseId = depth >= 2 ? segments[deepCoursesIndex + 1] : undefined
   const chapterId = depth >= 3 ? segments[deepCoursesIndex + 2] : undefined
+
+  const accentCourseType: CourseType = useMemo(() => {
+    if (depth === 3) {
+      if (activeTab === "cours") return "cours"
+      if (activeTab === "exercice") return "exercice"
+    }
+    return "deep"
+  }, [depth, activeTab])
+
+  useEffect(() => {
+    setCourseType(accentCourseType)
+  }, [accentCourseType, setCourseType])
 
   useEffect(() => {
     if (depth < 3) setActiveTab("cours")

@@ -4,7 +4,15 @@ import { motion } from "framer-motion"
 
 import { CourseCard } from "~/components/CourseCard"
 
-// Liste des cours avec teintes cohérentes avec CourseCard.tint
+// Gradients cohérents avec la nouvelle version glassmorphique
+const courseGradients = {
+  rose: "bg-gradient-to-br from-rose-400/60 to-pink-500/60",
+  blue: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60",
+  emerald: "bg-gradient-to-br from-emerald-400/60 to-teal-400/60",
+  amber: "bg-gradient-to-br from-amber-300/60 to-orange-400/60",
+} as const
+
+// Liste des cours
 const courses = [
   {
     id: "cours-1",
@@ -12,7 +20,7 @@ const courses = [
     description: "Posez les bases mathématiques et algorithmiques de vos agents.",
     icon: Brain,
     badge: "8 modules",
-    tint: "rose" as const,
+    gradient: courseGradients.rose,
   },
   {
     id: "cours-2",
@@ -20,7 +28,7 @@ const courses = [
     description: "Structurez des workflows complexes avec des chaînes adaptatives.",
     icon: Code2,
     badge: "Atelier",
-    tint: "blue" as const,
+    gradient: courseGradients.blue,
   },
   {
     id: "cours-3",
@@ -28,7 +36,7 @@ const courses = [
     description: "Déployez vos modèles avec un pipeline robuste orienté production.",
     icon: Binary,
     badge: "Sprint",
-    tint: "emerald" as const,
+    gradient: courseGradients.emerald,
   },
   {
     id: "cours-4",
@@ -36,7 +44,7 @@ const courses = [
     description: "Optimisez l'UX des assistants vocaux et multimodaux.",
     icon: Sparkles,
     badge: "UX Lab",
-    tint: "amber" as const,
+    gradient: courseGradients.amber,
   },
 ] as const
 
@@ -84,7 +92,7 @@ function DeepCoursesIndex() {
             description={course.description}
             icon={course.icon}
             badge={course.badge}
-            tint={course.tint}
+            gradient={course.gradient}
             onClick={() =>
               navigate({
                 to: "/deep-courses/$courseId",

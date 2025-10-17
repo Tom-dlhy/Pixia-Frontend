@@ -80,7 +80,7 @@ export default function ActionButton({
     return (
       <Button
         variant="secondary"
-        size="sm"
+        size="icon"
         onClick={onCreateCourse}
         className={cn(
           "flex items-center gap-2 rounded-md cursor-pointer transition-all duration-300 text-foreground",
@@ -104,7 +104,7 @@ export default function ActionButton({
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
-            size="sm"
+            size="icon"
             className={cn(
               "flex items-center gap-2 rounded-md cursor-pointer transition-all duration-300 text-foreground",
               "border border-white/30 dark:border-white/10 backdrop-blur-md backdrop-saturate-150",
@@ -207,7 +207,7 @@ export default function ActionButton({
         <DropdownMenuTrigger asChild>
           <Button
             variant="secondary"
-            size="sm"
+            size="icon"
             className={cn(
               "flex items-center gap-2 rounded-md cursor-pointer transition-all duration-300 text-foreground",
               "border border-white/30 dark:border-white/10 backdrop-blur-md backdrop-saturate-150",

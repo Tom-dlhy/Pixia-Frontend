@@ -13,20 +13,27 @@ interface DeepCourseTabsProps {
 export default function DeepCourseTabs({ activeTab, onChange }: DeepCourseTabsProps) {
   const tabs: DeepCoursesTab[] = ["cours", "exercice", "evaluation"]
 
-  const accentMap: Record<DeepCoursesTab, { light: string; dark: string }> = {
+  const accentMap: Record<
+    "cours" | "exercice" | "evaluation",
+    { light: string; dark: string }
+  > = {
     cours: {
-      light: "rgba(167,243,208,0.25)",
-      dark: "rgba(16,185,129,0.25)",
+      // vert menthe lumineux et doux
+      light: "rgba(94, 241, 194, 0.25)",   // correspond au gradient clair
+      dark: "rgba(29, 233, 182, 0.25)",    // correspond au gradient foncé
     },
     exercice: {
-      light: "rgba(147,197,253,0.25)",
-      dark: "rgba(56,189,248,0.25)",
+      // bleu saturé mais transparent
+      light: "rgba(147, 197, 253, 0.25)",  // bleu clair lumineux
+      dark: "rgba(59, 130, 246, 0.25)",    // bleu moyen saturé
     },
     evaluation: {
-      light: "rgba(252,165,165,0.25)",
-      dark: "rgba(239,68,68,0.25)",
+      // rouge rosé inspiré de "danger" doux (comme les deux autres)
+      light: "rgba(253, 164, 175, 0.25)",  // rose clair transparent
+      dark: "rgba(244, 63, 94, 0.25)",     // rouge rosé foncé
     },
   }
+
 
   const tabTriggerVariants = cva(
     "relative rounded-md px-5 py-2 text-sm font-medium capitalize text-foreground transition-all duration-300 border border-white/20 backdrop-blur-md backdrop-saturate-150 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_2px_10px_rgba(0,0,0,0.15)] hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2",

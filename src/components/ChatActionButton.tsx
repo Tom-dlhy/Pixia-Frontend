@@ -31,7 +31,7 @@ export function ChatActionButton() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="secondary"
-          size="sm"
+          size="icon"
           className={cn(
             "flex items-center gap-2 rounded-md cursor-pointer transition-all duration-300 text-foreground",
             "border border-white/30 dark:border-white/10 backdrop-blur-md backdrop-saturate-150",
@@ -44,7 +44,6 @@ export function ChatActionButton() {
           }}
         >
           <Menu className="h-4 w-4 opacity-90" />
-          Actions
         </Button>
       </DropdownMenuTrigger>
 

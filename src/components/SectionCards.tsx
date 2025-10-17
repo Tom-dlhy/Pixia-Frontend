@@ -6,54 +6,52 @@ import { GraduationCap, BookOpen, PenLine, AudioLines } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
-import { GradientText } from "./ui/gradient-text"
+import dynamic from "next/dynamic"
 
-/* -------------------------------------------------------------------------- */
-/* 🧩 Typage strict des clés et du mapping                                    */
-/* -------------------------------------------------------------------------- */
+// ✅ Import dynamique pour éviter les erreurs d’hydratation SSR
+const GradientText = dynamic(() => import("./ui/gradient-text").then(m => m.GradientText), {
+  ssr: false,
+})
 
 type CourseType = "exercice" | "cours" | "discuss" | "deep" | "none"
 
-type GradientMap = Record<
-  "light" | "dark",
-  Record<CourseType, string>
->
+type GradientMap = Record<"light" | "dark", Record<CourseType, string>>
 
 /* -------------------------------------------------------------------------- */
-/* 🌈 Gradients doux et harmonieux pour glassmorphism Apple                   */
+/* 🌈 Gradients harmonieux pour les titres                                    */
 /* -------------------------------------------------------------------------- */
 
 const gradientMap: GradientMap = {
   light: {
     exercice:
-      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(96,165,250,0.9) 25%, rgba(59,130,246,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // bleu
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(96,165,250,0.9) 25%, rgba(59,130,246,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)",
     cours:
-      "linear-gradient(90deg, rgba(134,239,172,0.9) 0%, rgba(74,222,128,0.9) 25%, rgba(34,197,94,0.9) 50%, rgba(0,196,180,0.9) 75%, rgba(134,239,172,0.9) 100%)", // vert menthe doux
+      "linear-gradient(90deg, rgba(134,239,172,0.9) 0%, rgba(74,222,128,0.9) 25%, rgba(34,197,94,0.9) 50%, rgba(0,196,180,0.9) 75%, rgba(134,239,172,0.9) 100%)",
     discuss:
-      "linear-gradient(90deg, rgba(221,214,254,0.9) 0%, rgba(196,181,253,0.9) 25%, rgba(167,139,250,0.9) 50%, rgba(196,181,253,0.9) 75%, rgba(221,214,254,0.9) 100%)", // violet pastel
+      "linear-gradient(90deg, rgba(221,214,254,0.9) 0%, rgba(196,181,253,0.9) 25%, rgba(167,139,250,0.9) 50%, rgba(196,181,253,0.9) 75%, rgba(221,214,254,0.9) 100%)",
     deep:
-      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // bleu-vert doux
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)",
     none:
-      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)", // fallback doux
+      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)",
   },
-
   dark: {
     exercice:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(59,130,246,0.8) 25%, rgba(37,99,235,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu
+      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(59,130,246,0.8) 25%, rgba(37,99,235,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
     cours:
-      "linear-gradient(90deg, rgba(74,222,128,0.8) 0%, rgba(34,197,94,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(0,196,180,0.8) 75%, rgba(74,222,128,0.8) 100%)", // vert menthe harmonisé
+      "linear-gradient(90deg, rgba(74,222,128,0.8) 0%, rgba(34,197,94,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(0,196,180,0.8) 75%, rgba(74,222,128,0.8) 100%)",
     discuss:
-      "linear-gradient(90deg, rgba(196,181,253,0.8) 0%, rgba(167,139,250,0.8) 25%, rgba(139,92,246,0.8) 50%, rgba(167,139,250,0.8) 75%, rgba(196,181,253,0.8) 100%)", // violet
+      "linear-gradient(90deg, rgba(196,181,253,0.8) 0%, rgba(167,139,250,0.8) 25%, rgba(139,92,246,0.8) 50%, rgba(167,139,250,0.8) 75%, rgba(196,181,253,0.8) 100%)",
     deep:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // bleu-vert doux
+      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
     none:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)", // fallback bleu-vert
+      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
   },
 }
 
 /* -------------------------------------------------------------------------- */
-/* 🧊 Styles glassmorphism universels avec teinte dynamique                   */
+/* 🧊 Styles glassmorphism avec teinte dynamique                              */
 /* -------------------------------------------------------------------------- */
+
 function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive: boolean) {
   const base = cn(
     "relative overflow-hidden rounded-[24px] p-6 transition-all duration-500 ease-out cursor-pointer",
@@ -65,43 +63,31 @@ function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive:
   const innerGlow =
     "shadow-[inset_0_1px_2px_rgba(255,255,255,0.35),inset_0_40px_60px_-50px_rgba(255,255,255,0.25)]"
 
-  const activeState = isActive
+  const active = isActive
     ? "-translate-y-1 brightness-110 ring-2 ring-white/60 dark:ring-white/80 dark:border-white/70"
     : undefined
 
-  if (isDark) {
-    // 🌙 Couleurs sombres harmonisées
-    switch (kind) {
-      case "cours": // 💚 vert turquoise harmonisé
-        return cn(base, innerGlow, activeState, "bg-[#1de9b6]/40 dark:bg-[#00c4b4]/45 text-white")
-
-      case "exercice": // bleu
-        return cn(base, innerGlow, activeState, "bg-sky-700/45 dark:bg-sky-800/50 text-white")
-
-      case "discuss": // violet
-        return cn(base, innerGlow, activeState, "bg-violet-700/45 dark:bg-violet-800/50 text-white")
-
-      case "deep": // rouge
-        return cn(base, innerGlow, activeState, "bg-rose-700/50 dark:bg-rose-800/55 text-white")
-    }
-  } else {
-    // ☀️ Couleurs claires harmonisées
-    switch (kind) {
-      case "cours": // 💚 vert turquoise (texte foncé pour contraste)
-        return cn(base, innerGlow, activeState, "bg-[#a7ffee]/70 text-[#0b5e4d] border-white/60 shadow-lg")
-
-      case "exercice": // bleu clair
-        return cn(base, innerGlow, activeState, "bg-sky-300/70 text-[#0b294a] border-white/60 shadow-lg")
-
-      case "discuss": // violet pastel
-        return cn(base, innerGlow, activeState, "bg-violet-300/70 text-[#2e1b4e] border-white/60 shadow-lg")
-
-      case "deep": // rouge vif
-        return cn(base, innerGlow, activeState, "bg-rose-400/70 text-[#4a0a0a] border-white/60 shadow-lg")
-    }
+  const styles = {
+    cours: isDark
+      ? "bg-[#1de9b6]/40 dark:bg-[#00c4b4]/45 text-white"
+      : "bg-[#a7ffee]/70 text-[#0b5e4d] border-white/60 shadow-lg",
+    exercice: isDark
+      ? "bg-sky-700/45 dark:bg-sky-800/50 text-white"
+      : "bg-sky-300/70 text-[#0b294a] border-white/60 shadow-lg",
+    discuss: isDark
+      ? "bg-violet-700/45 dark:bg-violet-800/50 text-white"
+      : "bg-violet-300/70 text-[#2e1b4e] border-white/60 shadow-lg",
+    deep: isDark
+      ? "bg-rose-700/50 dark:bg-rose-800/55 text-white"
+      : "bg-rose-400/70 text-[#4a0a0a] border-white/60 shadow-lg",
   }
 
+  return cn(base, innerGlow, active, styles[kind])
 }
+
+/* -------------------------------------------------------------------------- */
+/* 🚀 Section principale                                                      */
+/* -------------------------------------------------------------------------- */
 
 export function SectionCards() {
   const navigate = useNavigate()
@@ -109,16 +95,14 @@ export function SectionCards() {
   const { courseType, setCourseType } = useCourseType()
   const lastLocation = useRef(location.pathname)
 
-  const [isDark, setIsDark] = useState<boolean>(
-    typeof document !== "undefined" &&
-      document.documentElement.classList.contains("dark")
-  )
+  const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
     if (typeof document === "undefined") return
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"))
-    })
+    const isDarkMode = () => document.documentElement.classList.contains("dark")
+    setIsDark(isDarkMode())
+
+    const observer = new MutationObserver(() => setIsDark(isDarkMode()))
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["class"],
@@ -126,6 +110,7 @@ export function SectionCards() {
     return () => observer.disconnect()
   }, [])
 
+  // Reset du courseType à chaque navigation
   useEffect(() => {
     setCourseType("none")
   }, [setCourseType])
@@ -150,15 +135,17 @@ export function SectionCards() {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-8">
+      {/* 🌈 Titre avec gradient animé */}
       <div className="text-center text-3xl font-bold mb-10">
         <GradientText
           key={courseType}
           className="text-4xl font-bold"
-          text="Bienvenu sur Pixia"
+          text="Bienvenue sur Pixia"
           gradient={activeGradient}
         />
       </div>
 
+      {/* 🧊 Grille des cartes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {cards.map((c, i) => {
           const Icon = c.icon
@@ -172,7 +159,6 @@ export function SectionCards() {
               role="button"
               className={cn(glassTint(c.key, isDark, courseType === c.key))}
             >
-              {/* Reflet interne lumineux */}
               <span
                 aria-hidden
                 className="absolute inset-[-40%_-10%_auto_auto] h-[140px] w-[140px] rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.35),transparent_60%)] opacity-70 rotate-[25deg]"
