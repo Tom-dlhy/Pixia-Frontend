@@ -237,13 +237,15 @@ export function EvaluationDurationDrawerButtons({
 <DrawerFooter className="flex flex-col items-center gap-3 mt-6">
   {/* --- Bouton Commencer --- */}
   <Button
-      variant="outline"
-      className="w-full max-w-sm mx-auto rounded-xl font-medium
-      text-white/85 border border-white/20 backdrop-blur-xl
-      bg-gradient-to-b from-white/10 via-white/5 to-transparent
-      shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),_0_2px_10px_rgba(0,0,0,0.2)]
-      hover:from-white/15 hover:via-white/10 hover:to-white/5
-      transition-all duration-300"
+    variant="outline"
+    className="w-full max-w-sm mx-auto rounded-xl font-medium
+    text-white/85 border border-white/20 backdrop-blur-xl
+    bg-gradient-to-b from-white/10 via-white/5 to-transparent
+    shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),_0_2px_10px_rgba(0,0,0,0.2)]
+    transition-all duration-500 ease-out
+    hover:text-green-200 hover:border-green-300/20
+    hover:from-green-500/30 hover:via-green-500/20 hover:to-green-500/10
+    hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.15),_0_2px_10px_rgba(0,0,0,0.25)]"
     onClick={() => {
       onConfirm(duration)
       onOpenChange(false)
@@ -251,6 +253,7 @@ export function EvaluationDurationDrawerButtons({
   >
     Commencer ({duration} min)
   </Button>
+
 
 {/* --- Bouton Destructif (rouge glassmorphic Apple-like) --- */}
 <DrawerClose asChild>

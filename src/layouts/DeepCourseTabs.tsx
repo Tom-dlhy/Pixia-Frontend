@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority"
 import { cn } from "~/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs"
 import { DeepCoursesTab } from "~/layouts/DeepCourseContext"
-import { EvaluationDurationDrawerSlider } from "~/components/EvaluationDurationDrawer"
+import { EvaluationDurationDrawerButtons, EvaluationDurationDrawerSlider } from "~/components/EvaluationDurationDrawer"
 
 export default function DeepCourseTabs({
   activeTab,
@@ -178,7 +178,7 @@ useEffect(() => {
       </div>
 
       {/* --- Drawer d’évaluation --- */}
-      <EvaluationDurationDrawerSlider
+      <EvaluationDurationDrawerButtons
         open={drawerOpen}
         onOpenChange={handleDrawerChange}
         onConfirm={(duration) => {
