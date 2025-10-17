@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/ca
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
 import dynamic from "next/dynamic"
+import { useAppSession } from "~/utils/session"
 
 // ✅ Import dynamique pour éviter les erreurs d’hydratation SSR
 const GradientText = dynamic(() => import("./ui/gradient-text").then(m => m.GradientText), {
@@ -94,6 +95,8 @@ export function SectionCards() {
   const location = useRouterState({ select: (state) => state.location })
   const { courseType, setCourseType } = useCourseType()
   const lastLocation = useRef(location.pathname)
+  const { session } = useAppSession()
+  const firstName = session.givenName ?? ""
 
   const [isDark, setIsDark] = useState(false)
 
@@ -140,7 +143,7 @@ export function SectionCards() {
         <GradientText
           key={courseType}
           className="text-4xl font-bold"
-          text="Bienvenue sur Pixia"
+          text={`Bienvenue sur Pixia ${firstName}`}
           gradient={activeGradient}
         />
       </div>

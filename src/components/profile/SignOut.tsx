@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react"
 import { Button } from "~/components/ui/button"
 import { useRouter } from "@tanstack/react-router"
 import { cn } from "~/lib/utils"
+import { SESSION_PROFILE_STORAGE_KEY } from "~/utils/session"
 
 export function SignOut() {
   const router = useRouter()
@@ -11,7 +12,14 @@ export function SignOut() {
   return (
     <Button
       variant="ghost"
-      onClick={() => router.navigate({ to: "/logout" })}
+      onClick={() => {
+        if (typeof window !== "undefined") {
+          window.localStorage.removeItem("access_token")
+          window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
+          window.dispatchEvent(new Event("session:refresh"))
+        }
+        router.navigate({ to: "/logout" })
+      }}
       className={cn(
         "relative w-full justify-start gap-2 rounded-md transition-all duration-300 text-red-600 dark:text-red-400",
         "hover:scale-[1.02]"

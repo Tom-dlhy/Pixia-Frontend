@@ -25,6 +25,7 @@ export function HomeLayout({
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
 
+  // ✅ Suivi du thème clair/sombre
   useEffect(() => {
     if (typeof document === "undefined") return
 
@@ -40,6 +41,9 @@ export function HomeLayout({
     return () => observer.disconnect()
   }, [])
 
+  // ✅ Gestion de l’affichage du chat et des cartes
+  const [showCards, setShowCards] = useState(true)
+
   const accentKey = courseType === "deep" ? "none" : courseType
   const accent = getCourseAccent(accentKey)
   const showChatHome = location.pathname === "/" || location.pathname === "/chat"
@@ -51,7 +55,7 @@ export function HomeLayout({
         <AppSidebar user={user} />
 
         <SidebarInset className="relative flex flex-1 flex-col overflow-hidden">
-          {/* ✅ Le fond change en temps réel quand le thème bascule */}
+          {/* ✅ Fond dynamique selon le thème */}
           <GradientBackground key={gradientClass} className={`absolute inset-0 ${gradientClass}`}>
             <div
               className={cn(
@@ -60,19 +64,22 @@ export function HomeLayout({
             />
           </GradientBackground>
 
-
           <main className="relative z-10 flex flex-col w-full h-full overflow-y-auto px-4 sm:px-6 lg:px-10 py-8">
             <section className="flex flex-1 flex-col gap-8 min-h-0">
               {children && <div className="w-full max-w-4xl mx-auto">{children}</div>}
 
               {showChatHome && (
                 <>
-                  <div className="w-full max-w-4xl mx-auto">
-                    <SectionCards />
-                  </div>
+                  {/* ✅ SectionCards visible tant qu’aucun message n’a été envoyé */}
+                  {showCards && (
+                    <div className="w-full max-w-4xl mx-auto">
+                      <SectionCards />
+                    </div>
+                  )}
 
+                  {/* ✅ Chat avec callback pour masquer les cartes */}
                   <div className="w-full max-w-4xl flex-1 flex flex-col min-h-0 mx-auto">
-                    <Chat />
+                    <Chat onFirstMessage={() => setShowCards(false)} />
                   </div>
                 </>
               )}

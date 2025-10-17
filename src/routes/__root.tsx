@@ -6,14 +6,13 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
-import { createServerFn } from "@tanstack/react-start"
 import * as React from "react"
 
 import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary.js"
 import { NotFound } from "~/components/NotFound.js"
 import "~/styles/app.css"
 import { seo } from "~/utils/seo.js"
-import { useAppSession } from "~/utils/session.js"
+import { useAppSession, SessionProvider } from "~/utils/session"
 import { Toaster } from "~/components/ui/sonner"
 import { SettingsProvider } from "~/context/SettingsProvider"
 import { CourseTypeProvider } from "~/context/CourseTypeContext"
@@ -25,6 +24,7 @@ import { ChatQuickViewLayout } from "~/layouts/ChatQuickViewLayout"
 import { PageLayout } from "~/layouts/PageLayout"
 
 import { scan } from "react-scan"
+import { GoogleOAuthProvider } from "@react-oauth/google"
 
 scan({
   enabled: process.env.NODE_ENV === "development",
@@ -32,24 +32,15 @@ scan({
   log: true,
 })
 
-const fetchUser = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await useAppSession()
-  if (!session.data.userEmail) return null
-  return { email: session.data.userEmail }
-})
-
+// Création de la route racine
 export const Route = createRootRoute({
-  beforeLoad: async () => {
-    const user = await fetchUser()
-    return { user }
-  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       ...seo({
-        title: "TanStack Start | Full-Stack React Framework",
-        description: "TanStack Start is a type-safe, client-first framework.",
+        title: "Hackathon | Full-Stack React Framework",
+        description: "Hackathon app using TanStack + FastAPI + Google OAuth",
       }),
     ],
   }),
@@ -62,6 +53,7 @@ export const Route = createRootRoute({
   component: RootComponent,
 })
 
+// Composant racine
 function RootComponent() {
   return (
     <RootDocument>
@@ -70,11 +62,16 @@ function RootComponent() {
   )
 }
 
+// Structure du document
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { user } = Route.useRouteContext()
+  const { session } = useAppSession()
   const router = useRouterState()
   const currentPath = router.location.pathname
+  const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as
+    | string
+    | undefined
 
+  // Gestion du thème (clair/sombre)
   React.useEffect(() => {
     if (typeof window === "undefined") return
     const stored = window.localStorage.getItem("theme") as "light" | "dark" | null
@@ -86,13 +83,13 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   // Layout exclusions (login/signup)
   const hideLayout = ["/login", "/signup"].includes(currentPath)
 
-  // Détermination du layout à utiliser
-  let LayoutComponent: React.FC<{ user?: any; children: React.ReactNode }> = ({ children }) => (
+  // Détermination du layout
+  let LayoutComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <main className="flex-1 p-4">{children}</main>
   )
 
   const isChatHome = currentPath === "/" || currentPath === "/chat"
-  const isChatDetail = /^\/chat\/[^/]+/.test(currentPath) // match /chat/$chatId
+  const isChatDetail = /^\/chat\/[^/]+/.test(currentPath)
   const isDeepCourses = currentPath.startsWith("/deep-courses")
   const isCourseDetail = currentPath.startsWith("/cours/")
   const isLayerPage = currentPath.startsWith("/layer")
@@ -109,28 +106,30 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     LayoutComponent = PageLayout
   }
 
-
   return (
     <html>
       <head>
         <HeadContent />
       </head>
       <body className="min-h-dvh w-full overflow-hidden bg-background text-foreground">
-        <SettingsProvider>
-          <CourseTypeProvider>
-            <div className="flex min-h-dvh w-full flex-1 overflow-hidden">
-              {hideLayout ? (
-                <main className="flex-1 overflow-auto p-4">{children}</main>
-              ) : (
-                <LayoutComponent user={user}>{children}</LayoutComponent>
-              )}
-            </div>
-
-            <Toaster />
-            <TanStackRouterDevtools position="bottom-right" />
-            <Scripts />
-          </CourseTypeProvider>
-        </SettingsProvider>
+        <GoogleOAuthProvider clientId={clientId ?? ""}>
+          <SessionProvider>
+            <SettingsProvider>
+              <CourseTypeProvider>
+                <div className="flex min-h-dvh w-full flex-1 overflow-hidden">
+                  {hideLayout ? (
+                    <main className="flex-1 overflow-auto p-4">{children}</main>
+                  ) : (
+                    <LayoutComponent>{children}</LayoutComponent>
+                  )}
+                </div>
+                <Toaster />
+                <TanStackRouterDevtools position="bottom-right" />
+                <Scripts />
+              </CourseTypeProvider>
+            </SettingsProvider>
+          </SessionProvider>
+        </GoogleOAuthProvider>
       </body>
     </html>
   )

@@ -1,53 +1,59 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { hashPassword, prismaClient } from '~/utils/prisma'
-import { useAppSession } from '~/utils/session'
+import { createFileRoute, redirect } from "@tanstack/react-router"
+import { createServerFn } from "@tanstack/react-start"
 
-export const loginFn = createServerFn({ method: 'POST' })
+// Simple loginFn: appelle le backend FastAPI pour authentifier
+export const loginFn = createServerFn({ method: "POST" })
   .inputValidator((d: { email: string; password: string }) => d)
   .handler(async ({ data }) => {
-    // Find the user
-    const user = await prismaClient.user.findUnique({
-      where: {
-        email: data.email,
-      },
-    })
+    try {
+      const res = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
 
-    // Check if the user exists
-    if (!user) {
+      if (!res.ok) {
+        const msg = await res.text()
+        return {
+          error: true,
+          message: msg,
+          userNotFound: res.status === 404,
+        }
+      }
+
+      const result = await res.json()
+      if (result?.token) {
+        return {
+          success: true,
+          token: result.token as string,
+          email: (result.email as string | undefined) ?? null,
+          userNotFound: false,
+        }
+      }
+
+      return { error: true, message: "Invalid response from backend" }
+    } catch (err) {
+      console.error("Erreur de connexion :", err)
       return {
         error: true,
-        userNotFound: true,
-        message: 'User not found',
+        message: err instanceof Error ? err.message : "Unknown error",
+        userNotFound: false,
       }
     }
-
-    // Check if the password is correct
-    const hashedPassword = await hashPassword(data.password)
-
-    if (user.password !== hashedPassword) {
-      return {
-        error: true,
-        message: 'Incorrect password',
-      }
-    }
-
-    // Create a session
-    const session = await useAppSession()
-
-    // Store the user's email in the session
-    await session.update({
-      userEmail: user.email,
-    })
   })
 
-export const Route = createFileRoute('/_authed')({
+// Route protégée
+export const Route = createFileRoute("/_authed")({
   beforeLoad: ({ context, location }) => {
-    if (!context.user) {
+    const maybeUser = (context as { user?: unknown } | undefined)?.user
+    const hasToken =
+      typeof window !== "undefined" && Boolean(window.localStorage.getItem("access_token"))
+
+    if (!maybeUser && !hasToken) {
       const { pathname, search, hash } = location
-      const redirectPath = `${pathname ?? ''}${search ?? ''}${hash ?? ''}` || '/'
+      const redirectPath = `${pathname ?? ""}${search ?? ""}${hash ?? ""}` || "/"
       throw redirect({
-        to: '/login',
+        to: "/login",
         search: (prev) => ({
           ...prev,
           redirect: redirectPath,

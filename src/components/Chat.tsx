@@ -1,168 +1,174 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { useNavigate } from "@tanstack/react-router"
-import { Paperclip } from "lucide-react"
-import { ChatInput } from "~/components/ChatInput"
+import { useEffect, useRef, useState, useCallback } from "react";
+import { Paperclip } from "lucide-react";
+import { ChatInput } from "~/components/ChatInput";
+import { sendChatMessage } from "../server/chat.server";
 
+// ----------------------
+// 🔹 Types
+// ----------------------
 export type ChatMessage = {
-  id: string
-  role: "user" | "assistant" | "system"
-  content: string
-  createdAt: number
-  attachments?: Array<{ name: string; size: number }>
-}
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  createdAt: number;
+  attachments?: Array<{ name: string; size: number }>;
+};
 
-const STORAGE_KEY = "chat:conversations"
-const MOCK_CHAT_ID = "test"
+const STORAGE_KEY = "chat:conversations";
+const MOCK_CHAT_ID = "test-session";
 
+// ----------------------
+// 🔹 Helpers
+// ----------------------
 function loadConversation(id: string): ChatMessage[] | null {
-  if (typeof window === "undefined") return null
+  if (typeof window === "undefined") return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Record<string, ChatMessage[]>
-    return Array.isArray(parsed[id]) ? parsed[id] : null
-  } catch (error) {
-    console.warn("Failed to parse conversations", error)
-    return null
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) return null;
+    const parsed = JSON.parse(data) as Record<string, ChatMessage[]>;
+    return parsed[id] ?? null;
+  } catch {
+    return null;
   }
 }
 
 function saveConversation(id: string, messages: ChatMessage[]) {
-  if (typeof window === "undefined") return
+  if (typeof window === "undefined") return;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    const parsed = raw ? (JSON.parse(raw) as Record<string, ChatMessage[]>) : {}
-    parsed[id] = messages
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed))
-  } catch (error) {
-    console.warn("Failed to persist conversation", error)
-  }
+    const data = localStorage.getItem(STORAGE_KEY);
+    const parsed = data ? (JSON.parse(data) as Record<string, ChatMessage[]>) : {};
+    parsed[id] = messages;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+  } catch {}
 }
 
+// ----------------------
+// 🔹 Component
+// ----------------------
 export function Chat({
   initialMessages = [],
-  chatId,
+  chatId: propChatId,
+  onFirstMessage,
 }: {
-  initialMessages?: ChatMessage[]
-  chatId?: string
+  initialMessages?: ChatMessage[];
+  chatId?: string;
+  onFirstMessage?: () => void;
 }) {
-  const navigate = useNavigate()
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
-  const [input, setInput] = useState("")
-  const [sending, setSending] = useState(false)
-  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
-  const listRef = useRef<HTMLDivElement | null>(null)
-  const chatIdRef = useRef<string | undefined>(chatId)
-  const isMountedRef = useRef(true)
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([]);
 
-  // Scroll auto vers le bas quand un message est ajouté
-  useEffect(() => {
-    const el = listRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [messages])
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const chatIdRef = useRef<string | null>(propChatId ?? null);
+  const hasLoadedRef = useRef(false);
 
+  // ----------------------
+  // 🔹 Scroll automatique
+  // ----------------------
   useEffect(() => {
-    isMountedRef.current = true
-    return () => {
-      isMountedRef.current = false
-    }
-  }, [])
+    const list = listRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, [messages]);
 
+  // ----------------------
+  // 🔹 Chargement unique de la conversation
+  // ----------------------
   useEffect(() => {
-    chatIdRef.current = chatId
-    if (!chatId) return
-    const stored = loadConversation(chatId)
-    if (stored) {
-      setMessages(stored)
+    if (hasLoadedRef.current) return; // ✅ Empêche les boucles infinies
+    hasLoadedRef.current = true;
+
+    const id = propChatId ?? MOCK_CHAT_ID;
+    chatIdRef.current = propChatId ?? null;
+
+    const stored = loadConversation(id);
+    if (stored && stored.length) {
+      setMessages(stored);
     } else if (initialMessages.length) {
-      saveConversation(chatId, initialMessages)
+      saveConversation(id, initialMessages);
+      setMessages(initialMessages);
     }
-  }, [chatId, initialMessages])
+  }, [propChatId, initialMessages]);
 
-  const ensureChatId = () => {
-    if (chatIdRef.current) return chatIdRef.current
-    const newId = MOCK_CHAT_ID
-    chatIdRef.current = newId
-    return newId
-  }
+  // ----------------------
+  // 🔹 Envoi d’un message
+  // ----------------------
+  const handleSend = useCallback(async () => {
+    if (!input.trim()) return;
 
-  async function handleSend() {
-    const trimmed = input.trim()
-    if (!trimmed && queuedFiles.length === 0) return
+    const isFirstMessage = messages.length === 0;
+    setSending(true);
+    setError(null);
 
-    const activeChatId = ensureChatId()
-    const attachments = queuedFiles.map((file) => ({
-      name: file.name,
-      size: file.size,
-    }))
-    const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: trimmed,
-      createdAt: Date.now(),
-      attachments: attachments.length ? attachments : undefined,
-    }
-
-    const baseMessages = [...messages, userMsg]
-    setMessages(baseMessages)
-    saveConversation(activeChatId, baseMessages)
-    setInput("")
-    setQueuedFiles([])
-    setSending(true)
+    const currentChatId = chatIdRef.current;
 
     try {
-      // Simule la réponse assistant
-      const assistantMsg: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "Ceci est une réponse simulée pour le test de l’affichage.",
-        createdAt: Date.now(),
-      }
-      await new Promise((r) => setTimeout(r, 500))
-      if (!isMountedRef.current) return
-      setMessages((m) => {
-        const updated = [...m, assistantMsg]
-        saveConversation(activeChatId, updated)
-        return updated
-      })
-    } finally {
-      if (isMountedRef.current) {
-        setSending(false)
-      }
-      if (!chatId && isMountedRef.current) {
-        navigate({
-          to: "/chat/$chatId",
-          params: { chatId: chatIdRef.current! },
-        })
-      }
-    }
-  }
+      const res = await sendChatMessage({
+        data: {
+          user_id: "user-123",
+          chatId: currentChatId,
+          message: input,
+        },
+      });
 
+      const newMessages: ChatMessage[] = [
+        ...messages,
+        {
+          id: crypto.randomUUID(),
+          role: "user",
+          content: input,
+          createdAt: Date.now(),
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: res.reply,
+          createdAt: Date.now(),
+        },
+      ];
+
+      setMessages(newMessages);
+      saveConversation(chatIdRef.current ?? MOCK_CHAT_ID, newMessages);
+
+      if (!chatIdRef.current && res.session_id) {
+        chatIdRef.current = res.session_id;
+      }
+
+      if (isFirstMessage && onFirstMessage) {
+        onFirstMessage();
+      }
+    } catch (err) {
+      console.error("Erreur lors de l’envoi :", err);
+      setError("Une erreur est survenue lors de l’envoi du message.");
+    } finally {
+      setInput("");
+      setSending(false);
+    }
+  }, [input, messages, onFirstMessage]);
+
+  // ----------------------
+  // 🔹 Gestion des fichiers
+  // ----------------------
   const handleFilesSelected = (files: File[]) => {
-    if (!files.length) return
-    setQueuedFiles(files)
-  }
+    if (files.length) setQueuedFiles(files);
+  };
 
   const removeAttachment = (index: number) => {
-    setQueuedFiles((prev) => prev.filter((_, idx) => idx !== index))
-  }
+    setQueuedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
 
+  // ----------------------
+  // 🔹 Render
+  // ----------------------
   return (
     <div className="flex h-full flex-col bg-transparent text-sidebar-foreground">
-      {/* Zone de messages */}
-      <div
-        ref={listRef}
-        className="flex-1 overflow-y-auto px-4 py-6 space-y-6"
-      >
+      {/* Messages */}
+      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
         {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex ${
-              m.role === "user" ? "justify-end" : "justify-start"
-            }`}
-          >
+          <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
               className={`rounded-2xl px-4 py-2 max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap ${
                 m.role === "user"
@@ -190,16 +196,17 @@ export function Chat({
 
         {sending && (
           <div className="px-4 text-xs italic text-muted-foreground">
-            Assistant écrit...
+            L’assistant est en train d’écrire…
           </div>
+        )}
+        {error && (
+          <div className="px-4 text-xs text-red-500 italic">{error}</div>
         )}
       </div>
 
-      {/* Barre d’entrée */}
-      <div
-        className="pointer-events-none sticky bottom-0 z-20 flex w-full justify-center px-4"
-      >
-        <div className="pointer-events-auto w-full max-w-3xl">
+      {/* Input */}
+      <div className="sticky bottom-0 z-20 flex w-full justify-center px-4">
+        <div className="w-full max-w-3xl">
           <ChatInput
             className="w-full"
             value={input}
@@ -213,5 +220,5 @@ export function Chat({
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,0 +1,3 @@
+- [x] Rename src/utils/session.ts to src/utils/session.tsx so TypeScript accepts JSX
+- [x] Update imports to reference src/utils/session.tsx if necessary
+- [x] Re-run type checking to ensure session context errors are resolved

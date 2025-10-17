@@ -12,12 +12,16 @@ import {
 } from "~/components/ui/sidebar"
 import { Home, Inbox, Calendar, Search, Settings } from "lucide-react"
 import { NavGuest, NavUser } from "~/components/NavUser"
+import { useAppSession } from "~/utils/session"
 
 type AppSidebarProps = {
   user?: {
     email: string
     name?: string | null
     image?: string | null
+    givenName?: string | null
+    familyName?: string | null
+    locale?: string | null
   } | null
 }
 
@@ -30,6 +34,23 @@ const items = [
 ]
 
 export function AppSidebar({ user }: AppSidebarProps) {
+  const { session } = useAppSession()
+  const resolvedEmail = user?.email ?? session.userEmail ?? null
+  const sessionFullName = session.givenName || session.familyName
+    ? [session.givenName, session.familyName].filter(Boolean).join(" ")
+    : null
+  const enhancedUser = resolvedEmail
+    ? {
+        email: resolvedEmail,
+        name: user?.name ?? sessionFullName ?? null,
+        image: user?.image ?? session.picture ?? null,
+        givenName: user?.givenName ?? session.givenName ?? null,
+        familyName: user?.familyName ?? session.familyName ?? null,
+        locale: user?.locale ?? session.locale ?? null,
+        picture: session.picture ?? user?.image ?? null,
+      }
+    : null
+
   return (
     <Sidebar>
       <SidebarContent>
@@ -53,7 +74,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="mt-auto border-t border-sidebar-border pt-2">
-        {user ? <NavUser user={user} /> : <NavGuest />}
+        {enhancedUser ? <NavUser user={enhancedUser} /> : <NavGuest />}
       </SidebarFooter>
     </Sidebar>
   )

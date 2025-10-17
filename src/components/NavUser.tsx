@@ -24,22 +24,74 @@ import {
 import { ThemeSwitch } from "~/components/theme-switch"
 import { SignOut } from "~/components/profile/SignOut"
 import { cn } from "~/lib/utils"
+import { useAppSession } from "~/utils/session"
+import { useSettings } from "~/context/SettingsProvider"
+import { useEffect, useMemo } from "react"
 
 interface NavUserProps {
   user: {
     id?: string
     name?: string | null
-    email: string
+    email?: string | null
     image?: string | null
+    givenName?: string | null
+    familyName?: string | null
+    picture?: string | null
+    locale?: string | null
   }
 }
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
   const router = useRouter()
+  const { session } = useAppSession()
+  const { settings, updateSettings, isLoaded } = useSettings()
 
-  const displayName = user.name ?? user.email.split("@")[0]
-  const initial = (displayName?.[0] ?? user.email?.[0] ?? "?").toUpperCase()
+  const userFullName = user.givenName || user.familyName
+    ? [user.givenName, user.familyName].filter(Boolean).join(" ")
+    : null
+  const sessionFullName = useMemo(() => {
+    if (session.givenName || session.familyName) {
+      return [session.givenName, session.familyName].filter(Boolean).join(" ")
+    }
+    return null
+  }, [session.givenName, session.familyName])
+
+  const resolvedEmail = user.email ?? session.userEmail ?? settings.gmail ?? ""
+  const resolvedName =
+    user.name ??
+    userFullName ??
+    sessionFullName ??
+    settings.fullName ??
+    (resolvedEmail ? resolvedEmail.split("@")[0] : null)
+
+  const avatarSrc = user.image ?? user.picture ?? session.picture ?? undefined
+  const localeLabel = session.locale ?? user.locale ?? null
+  const googleId = session.googleSub ?? null
+
+  useEffect(() => {
+    const preferredEmail = session.userEmail ?? user.email ?? null
+    if (!isLoaded || !preferredEmail) return
+    if (!settings.gmail) {
+      updateSettings({ gmail: preferredEmail })
+    }
+  }, [isLoaded, session.userEmail, user.email, settings.gmail, updateSettings])
+
+  useEffect(() => {
+    const preferredName = sessionFullName ?? userFullName ?? null
+    if (!isLoaded || !preferredName) return
+    if (!settings.fullName) {
+      updateSettings({ fullName: preferredName })
+    }
+  }, [isLoaded, sessionFullName, userFullName, settings.fullName, updateSettings])
+
+  const displayName = useMemo(() => {
+    if (resolvedName) return resolvedName
+    if (resolvedEmail) return resolvedEmail.split("@")[0]
+    return "Utilisateur"
+  }, [resolvedName, resolvedEmail])
+
+  const initial = (displayName?.[0] ?? resolvedEmail?.[0] ?? "?").toUpperCase()
 
   return (
     <SidebarMenu>
@@ -62,12 +114,12 @@ export function NavUser({ user }: NavUserProps) {
               )}
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.image ?? undefined} alt={displayName} />
+                <AvatarImage src={avatarSrc} alt={displayName} />
                 <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{displayName}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate text-xs">{resolvedEmail}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4 opacity-70" />
             </SidebarMenuButton>
@@ -88,12 +140,12 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex flex-col items-center gap-2 text-center text-sm">
                 <Avatar className="mb-2 h-16 w-16 rounded-lg">
-                  <AvatarImage src={user.image ?? undefined} alt={displayName} />
+                  <AvatarImage src={avatarSrc} alt={displayName} />
                   <AvatarFallback className="rounded-lg text-xl">{initial}</AvatarFallback>
                 </Avatar>
-                <div className="flex w-full flex-col items-start px-2">
+                <div className="flex w-full flex-col items-center px-2">
                   <span className="text-base font-medium">{displayName}</span>
-                  <span className="text-xs text-muted-foreground">{user.email}</span>
+                  <span className="text-xs text-muted-foreground">{resolvedEmail}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
