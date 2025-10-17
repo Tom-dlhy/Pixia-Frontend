@@ -174,14 +174,7 @@ export function SectionCards() {
                   >
                     <Icon className={cn("h-5 w-5", isDark ? "text-white" : "text-gray-800")} />
                   </div>
-                  <div
-                    className={cn(
-                      "h-10 w-10 rounded-xl flex items-center justify-center font-bold backdrop-blur-md",
-                      isDark ? "bg-white/20 text-white" : "bg-white/60 text-gray-800"
-                    )}
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
+                  {/* numéro retiré */}
                 </div>
 
                 <CardTitle

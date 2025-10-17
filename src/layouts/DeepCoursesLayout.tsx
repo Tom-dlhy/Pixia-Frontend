@@ -5,6 +5,7 @@ import {
   useLocation,
   useNavigate,
 } from "@tanstack/react-router"
+import * as React from "react"
 import { useEffect, useMemo, useState } from "react"
 
 import { useCourseType } from "~/context/CourseTypeContext"
@@ -29,8 +30,11 @@ export function DeepCoursesLayout() {
   const { setCourseType } = useCourseType()
 
   const [activeTab, setActiveTab] = useState<DeepCoursesTab>("cours")
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [isEvaluating, setIsEvaluating] = useState(false)
   const [isDark, setIsDark] = useState(
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+    typeof document !== "undefined" &&
+      document.documentElement.classList.contains("dark")
   )
 
   const segments = location.pathname.split("/").filter(Boolean)
@@ -74,12 +78,8 @@ export function DeepCoursesLayout() {
     return formatTitle("chapitre", chapterId)
   }, [depth, courseId, chapterId])
 
-  // ------------------------------
-  // Gestion des actions selon le niveau
-  // ------------------------------
   const rightAction = useMemo(() => {
     if (depth <= 1) {
-      // --- vue racine des cours ---
       return (
         <ActionButton
           viewLevel="root"
@@ -89,31 +89,21 @@ export function DeepCoursesLayout() {
     }
 
     if (depth === 2 && courseId) {
-      // --- vue d’un cours ---
       return (
         <ActionButton
           viewLevel="course"
-          onAddChapter={() =>
-            console.info("Ajout d’un chapitre au cours :", courseId)
-          }
-          onDeleteCourse={() =>
-            console.info("Suppression du cours :", courseId)
-          }
+          onAddChapter={() => console.info("Ajout d’un chapitre :", courseId)}
+          onDeleteCourse={() => console.info("Suppression du cours :", courseId)}
         />
       )
     }
 
     if (depth === 3 && courseId && chapterId) {
-      // --- vue d’un chapitre ---
       return (
         <ActionButton
           viewLevel="chapter"
-          onMarkDone={() =>
-            console.info("Chapitre terminé :", chapterId)
-          }
-          onDeleteChapter={() =>
-            console.info("Chapitre supprimé :", chapterId)
-          }
+          onMarkDone={() => console.info("Chapitre terminé :", chapterId)}
+          onDeleteChapter={() => console.info("Chapitre supprimé :", chapterId)}
         />
       )
     }
@@ -132,43 +122,76 @@ export function DeepCoursesLayout() {
     [depth, activeTab, courseId, chapterId]
   )
 
-  const gradientClass = useMemo(
-    () => getGradientClasses(isDark),
-    [isDark],
-  )
+  const gradientClass = useMemo(() => getGradientClasses(isDark), [isDark])
 
-  // ------------------------------
-  // Rendu principal
-  // ------------------------------
   return (
     <DeepCoursesLayoutContext.Provider value={contextValue}>
-      <main className={cn("min-h-screen w-full flex flex-col overflow-hidden transition-colors duration-500", gradientClass)}>
-        <div className="flex flex-1 flex-col gap-14 px-6 py-10 sm:px-10">
-            <DeepCourseHeader
-              title={headerTitle}
-              leftAction={<BackButton onClick={handleNavigateBack} />}
-              rightAction={rightAction}
-              className="text-foreground"
-            >
-              {depth === 3 && (
-                <DeepCourseTabs
-                  activeTab={activeTab}
-                  onChange={(tab) => setActiveTab(tab)}
-                />
-              )}
-            </DeepCourseHeader>
-
-            {depth === 3 ? (
-              <div className="flex flex-1 gap-6 items-stretch">
-                <ContentContainer className="flex-[0.7]" />
-                <CopiloteContainer className="flex-[0.3]" />
-              </div>
-            ) : (
-              <section className="flex flex-col w-full h-auto">
-                <Outlet />
-              </section>
+      <main
+        className={cn(
+          "min-h-screen w-full flex flex-col overflow-hidden transition-colors duration-500",
+          gradientClass
+        )}
+      >
+        <div
+          className={cn(
+            "flex flex-1 flex-col gap-14 px-6 py-10 sm:px-10 transition-all duration-500",
+            drawerOpen && "blur-md brightness-75 pointer-events-none"
+          )}
+        >
+          {/* --- Header --- */}
+          <DeepCourseHeader
+            title={headerTitle}
+            leftAction={<BackButton onClick={handleNavigateBack} />}
+            rightAction={rightAction}
+            className="text-foreground"
+          >
+            {depth === 3 && (
+              <DeepCourseTabs
+                activeTab={activeTab}
+                onChange={setActiveTab}
+                onDrawerToggle={setDrawerOpen}
+                onEvaluationStateChange={setIsEvaluating}
+              />
             )}
-          </div>
+          </DeepCourseHeader>
+
+          {/* --- Main layout --- */}
+          {depth === 3 ? (
+            <div
+              className={cn(
+                "flex flex-1 items-stretch gap-6 transition-all duration-700 ease-in-out"
+              )}
+            >
+              {/* --- ContentContainer --- */}
+              <div
+                className={cn(
+                  "transition-all duration-700 ease-in-out transform flex items-stretch",
+                  isEvaluating
+                    ? "flex-[0.7] max-w-[70%] mx-auto translate-x-0"
+                    : "flex-[0.7] translate-x-0"
+                )}
+              >
+                <ContentContainer className="flex-1 h-full" />
+              </div>
+
+              {/* --- CopiloteContainer --- */}
+              <div
+                className={cn(
+                  "flex-[0.3] h-full transition-all duration-700 ease-in-out transform",
+                  isEvaluating
+                    ? "opacity-0 pointer-events-none translate-x-12"
+                    : "opacity-100 translate-x-0"
+                )}
+              >
+                {!isEvaluating && <CopiloteContainer className="h-full" />}
+              </div>
+            </div>
+          ) : (
+            <section className="flex flex-col w-full h-auto">
+              <Outlet />
+            </section>
+          )}
+        </div>
       </main>
     </DeepCoursesLayoutContext.Provider>
   )
