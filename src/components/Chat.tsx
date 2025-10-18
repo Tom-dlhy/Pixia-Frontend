@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Paperclip } from "lucide-react";
 import { ChatInput } from "~/components/ChatInput";
 import { sendChatMessage } from "../server/chat.server";
+import { useAppSession } from "~/utils/session";
 
 // ----------------------
 // 🔹 Types
@@ -56,6 +57,8 @@ export function Chat({
   chatId?: string;
   onFirstMessage?: () => void;
 }) {
+  const { session } = useAppSession();
+  const userId = session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user");
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -108,7 +111,7 @@ export function Chat({
     try {
       const res = await sendChatMessage({
         data: {
-          user_id: "user-123",
+          user_id: userId,
           chatId: currentChatId,
           message: input,
         },
