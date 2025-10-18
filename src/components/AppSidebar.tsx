@@ -1,18 +1,15 @@
-import { Link } from "@tanstack/react-router"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "~/components/ui/sidebar"
-import { Home, Inbox, Calendar, Search, Settings } from "lucide-react"
+import { Sidebar, SidebarContent, SidebarFooter } from "~/components/ui/sidebar"
 import { NavGuest, NavUser } from "~/components/NavUser"
 import { useAppSession } from "~/utils/session"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "~/components/ui/empty"
+import { MessageSquare } from "lucide-react"
 
 type AppSidebarProps = {
   user?: {
@@ -25,20 +22,13 @@ type AppSidebarProps = {
   } | null
 }
 
-const items = [
-  { title: "Home", url: "/", icon: Home },
-  { title: "Inbox", url: "/inbox", icon: Inbox },
-  { title: "Calendar", url: "/calendar", icon: Calendar },
-  { title: "Search", url: "/search", icon: Search },
-  { title: "Settings", url: "/settings", icon: Settings },
-]
-
 export function AppSidebar({ user }: AppSidebarProps) {
   const { session } = useAppSession()
   const resolvedEmail = user?.email ?? session.userEmail ?? null
   const sessionFullName = session.givenName || session.familyName
     ? [session.givenName, session.familyName].filter(Boolean).join(" ")
     : null
+  const displayName = session.givenName ?? sessionFullName ?? user?.name ?? null
   const enhancedUser = resolvedEmail
     ? {
         email: resolvedEmail,
@@ -53,24 +43,25 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link to={item.url} className="flex items-center gap-2">
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="p-4">
+        <Empty className="border border-dashed border-sidebar-border/50 bg-sidebar/40 p-6">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <MessageSquare className="size-6" />
+            </EmptyMedia>
+            <EmptyTitle>Aucune conversation pour l’instant</EmptyTitle>
+            <EmptyDescription>
+              {displayName
+                ? `Commence, ${displayName}, une discussion pour remplir cette liste.`
+                : "Lance ta première discussion pour voir apparaître tes chats ici."}
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <p className="text-muted-foreground">
+              Crée un nouveau chat ou sélectionne une conversation existante pour la retrouver facilement.
+            </p>
+          </EmptyContent>
+        </Empty>
       </SidebarContent>
 
       <SidebarFooter className="mt-auto border-t border-sidebar-border pt-2">

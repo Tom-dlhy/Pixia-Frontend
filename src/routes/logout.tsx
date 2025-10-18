@@ -1,18 +1,38 @@
-import { redirect, createFileRoute } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
-import { useAppSession } from '~/utils/session'
+import { createFileRoute, useNavigate } from "@tanstack/react-router"
+import { useEffect } from "react"
+import { SESSION_PROFILE_STORAGE_KEY, useAppSession } from "~/utils/session"
 
-const logoutFn = createServerFn().handler(async () => {
-  const session = await useAppSession()
+function LogoutScreen() {
+  const navigate = useNavigate()
+  const { setSession } = useAppSession()
 
-  session.clear()
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem("access_token")
+      window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
+      window.dispatchEvent(new Event("session:refresh"))
+    }
 
-  throw redirect({
-    to: '/login',
-  })
-})
+    setSession({
+      userEmail: null,
+      userId: null,
+      givenName: null,
+      familyName: null,
+      picture: null,
+      locale: null,
+      googleSub: null,
+    })
 
-export const Route = createFileRoute('/logout')({
-  preload: false,
-  loader: () => logoutFn(),
+    navigate({ to: "/login" })
+  }, [navigate, setSession])
+
+  return (
+    <div className="flex min-h-dvh items-center justify-center text-sm text-muted-foreground">
+      Déconnexion en cours…
+    </div>
+  )
+}
+
+export const Route = createFileRoute("/logout")({
+  component: LogoutScreen,
 })
