@@ -52,9 +52,6 @@ export const loginUser = createServerFn({ method: "POST" })
           given_name: null,
           family_name: null,
           userNotFound: error.status === 404,
-          picture: null,
-          locale: null,
-          google_sub: null,
         }
       }
 
@@ -71,9 +68,6 @@ export const loginUser = createServerFn({ method: "POST" })
         given_name: null,
         family_name: null,
         userNotFound: false,
-        picture: null,
-        locale: null,
-        google_sub: null,
       }
     }
   })

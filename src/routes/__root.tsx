@@ -1,37 +1,28 @@
+"use client"
+
+import * as React from "react"
 import {
   HeadContent,
-  Outlet,
   Scripts,
+  Outlet,
   createRootRoute,
-  useRouterState,
+  type ErrorComponentProps,
 } from "@tanstack/react-router"
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
-import * as React from "react"
+import { scan } from "react-scan"
 
-import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary.js"
-import { NotFound } from "~/components/NotFound.js"
-import "~/styles/app.css"
-import { seo } from "~/utils/seo.js"
-import { useAppSession, SessionProvider } from "~/utils/session"
+import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary"
+import { NotFound } from "~/components/NotFound"
 import { Toaster } from "~/components/ui/sonner"
+import { seo } from "~/utils/seo"
+
+import { SessionProvider } from "~/utils/session"
 import { SettingsProvider } from "~/context/SettingsProvider"
 import { CourseTypeProvider } from "~/context/CourseTypeContext"
 
-// Layouts
-import { HomeLayout } from "~/layouts/HomeLayout"
-import { CourseLayout } from "~/layouts/CourseLayout"
-import { ChatQuickViewLayout } from "~/layouts/ChatQuickViewLayout"
-import { PageLayout } from "~/layouts/PageLayout"
+import "~/styles/app.css"
 
-import { scan } from "react-scan"
-
-scan({
-  enabled: process.env.NODE_ENV === "development",
-  showToolbar: true,
-  log: true,
-})
-
-// Création de la route racine
+// --- Root Route Definition ---
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -43,87 +34,62 @@ export const Route = createRootRoute({
       }),
     ],
   }),
-  errorComponent: (props) => (
-    <RootDocument>
-      <DefaultCatchBoundary {...props} />
-    </RootDocument>
+
+  errorComponent: (props: ErrorComponentProps) => (
+    <DefaultCatchBoundary {...props} />
   ),
   notFoundComponent: () => <NotFound />,
-  component: RootComponent,
+
+  component: RootApp,
 })
 
-// Composant racine
-function RootComponent() {
+// --- Root Providers Wrapper ---
+function RootApp() {
   return (
-    <RootDocument>
-      <Outlet />
-    </RootDocument>
+    <SessionProvider>
+      <SettingsProvider>
+        <CourseTypeProvider>
+          <AppShell />
+        </CourseTypeProvider>
+      </SettingsProvider>
+    </SessionProvider>
   )
 }
 
-// Structure du document
-function RootDocument({ children }: { children: React.ReactNode }) {
-  const { session } = useAppSession()
-  const router = useRouterState()
-  const currentPath = router.location.pathname
-
-  // Gestion du thème (clair/sombre)
+// --- Shell with Layout, Theme & Global Tools ---
+function AppShell() {
   React.useEffect(() => {
+    // --- Thème clair/sombre ---
     if (typeof window === "undefined") return
     const stored = window.localStorage.getItem("theme") as "light" | "dark" | null
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches
     const nextTheme = stored ?? (prefersDark ? "dark" : "light")
-    window.document.documentElement.classList.toggle("dark", nextTheme === "dark")
-  }, [currentPath])
+    document.documentElement.classList.toggle("dark", nextTheme === "dark")
+  }, [])
 
-  // Layout exclusions (login/signup)
-  const hideLayout = ["/login", "/signup"].includes(currentPath)
-
-  // Détermination du layout
-  let LayoutComponent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <main className="flex-1 p-4">{children}</main>
-  )
-
-  const isChatHome = currentPath === "/" || currentPath === "/chat"
-  const isChatDetail = /^\/chat\/[^/]+/.test(currentPath)
-  const isDeepCourses = currentPath.startsWith("/deep-courses")
-  const isCourseDetail = currentPath.startsWith("/cours/")
-  const isLayerPage = currentPath.startsWith("/layer")
-
-  if (isChatHome) {
-    LayoutComponent = HomeLayout
-  } else if (isChatDetail) {
-    LayoutComponent = ChatQuickViewLayout
-  } else if (isDeepCourses) {
-    LayoutComponent = ({ children }) => <>{children}</>
-  } else if (isCourseDetail) {
-    LayoutComponent = CourseLayout
-  } else if (isLayerPage) {
-    LayoutComponent = PageLayout
+  // --- Activation de React Scan en mode développement ---
+  if (process.env.NODE_ENV === "development") {
+    scan({
+      enabled: true,
+      showToolbar: true,
+      log: true,
+    })
   }
 
   return (
-    <html>
+    <html lang="en">
       <head>
         <HeadContent />
       </head>
       <body className="min-h-dvh w-full overflow-hidden bg-background text-foreground">
-        <SessionProvider>
-          <SettingsProvider>
-            <CourseTypeProvider>
-              <div className="flex min-h-dvh w-full flex-1 overflow-hidden">
-                {hideLayout ? (
-                  <main className="flex-1 overflow-auto p-4">{children}</main>
-                ) : (
-                  <LayoutComponent>{children}</LayoutComponent>
-                )}
-              </div>
-              <Toaster />
-              <TanStackRouterDevtools position="bottom-right" />
-              <Scripts />
-            </CourseTypeProvider>
-          </SettingsProvider>
-        </SessionProvider>
+        <main className="flex min-h-dvh w-full flex-1 overflow-hidden">
+          <Outlet />
+        </main>
+
+        {/* --- Global UI Components --- */}
+        <Toaster />
+        <TanStackRouterDevtools position="bottom-right" />
+        <Scripts />
       </body>
     </html>
   )

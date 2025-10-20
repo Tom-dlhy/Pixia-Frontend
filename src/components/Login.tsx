@@ -72,7 +72,7 @@ export function Login() {
       const destination = resolveRedirectTarget(redirectTarget)
 
       if (destination?.type === "chat-detail") {
-        router.navigate({ to: "/chat/$chatId", params: { chatId: destination.chatId } })
+        router.navigate({ to: "/chat/$id", params: { id: destination.chatId } })
       } else {
         router.navigate({ to: "/chat" })
       }

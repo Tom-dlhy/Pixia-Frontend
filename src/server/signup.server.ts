@@ -1,98 +1,47 @@
 import { createServerFn } from "@tanstack/react-start"
 import { z } from "zod"
-import { signup } from "./signup"
-import { login } from "./login"
-import { HttpError } from "./httpError"
+import { signup, type SignupPayload, type SignupResponse } from "./signup"
 
-// -------------------------
-// 🔹 Validation des entrées
-// -------------------------
 const SignUpSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6).max(100),
-  given_name: z.string().trim().min(1).max(50).optional(),
-  family_name: z.string().trim().min(1).max(50).optional(),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters").max(100),
+  given_name: z.string().trim().min(1, "First name is required").max(50).optional(),
+  family_name: z.string().trim().min(1, "Last name is required").max(50).optional(),
 })
 
-// -------------------------
-// 🔹 Server Function principale
-// -------------------------
+type SignupSuccess = {
+  success: true
+  user_id: string
+  email: string
+  given_name: string | null | undefined
+  family_name: string | null | undefined
+}
+
+type SignupError = {
+  success: false
+  error: string
+}
+
 export const signupUser = createServerFn({ method: "POST" })
   .inputValidator(SignUpSchema)
-  .handler(async ({ data }) => {
-    const { email, password, given_name, family_name } = data
-
+  .handler(async ({ data }): Promise<SignupSuccess | SignupError> => {
     try {
-      const signupResponse = await signup({
-        email,
-        password,
-        given_name,
-        family_name,
-      })
-
-      let token = signupResponse.token ?? null
-      let loginResponse: Awaited<ReturnType<typeof login>> | null = null
-
-      if (!token) {
-        try {
-          loginResponse = await login(email, password)
-          token = loginResponse.token ?? null
-        } catch (loginError) {
-          console.warn("Signup succeeded but login to retrieve token failed", loginError)
-        }
-      }
-
+      const response = await signup(data as SignupPayload)
+      
       return {
-        success: true as const,
-        error: false as const,
-        status: 200,
-        userExists: false,
-        message: null as string | null,
-        token,
-        user_id: signupResponse.user_id ?? loginResponse?.user_id ?? null,
-        email: signupResponse.email ?? loginResponse?.email ?? email,
-        given_name:
-          signupResponse.given_name ?? loginResponse?.given_name ?? given_name ?? null,
-        family_name:
-          signupResponse.family_name ?? loginResponse?.family_name ?? family_name ?? null,
-        picture: signupResponse.picture ?? loginResponse?.picture ?? null,
-        locale: signupResponse.locale ?? loginResponse?.locale ?? null,
-        google_sub: signupResponse.google_sub ?? loginResponse?.google_sub ?? null,
+        success: true,
+        user_id: response.user_id,
+        email: response.email,
+        given_name: response.given_name ?? null,
+        family_name: response.family_name ?? null,
       }
     } catch (error) {
-      if (error instanceof HttpError) {
-        return {
-          success: false as const,
-          error: true as const,
-          status: error.status,
-          userExists: error.status === 409,
-          message: error.body || `HTTP ${error.status}`,
-          token: null,
-          user_id: null,
-          email,
-          given_name: null,
-          family_name: null,
-          picture: null,
-          locale: null,
-          google_sub: null,
-        }
-      }
-
-      console.error("Unexpected signup error", error)
+      const message = error instanceof Error ? error.message : "Signup failed"
+      console.error("Signup error:", error)
+      
       return {
-        success: false as const,
-        error: true as const,
-        status: null,
-        userExists: false,
-        message: error instanceof Error ? error.message : "Unknown error",
-        token: null,
-        user_id: null,
-        email,
-        given_name: null,
-        family_name: null,
-        picture: null,
-        locale: null,
-        google_sub: null,
+        success: false,
+        error: message,
       }
     }
   })

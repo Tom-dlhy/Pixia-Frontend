@@ -17,15 +17,7 @@ import { useAppSession } from "~/utils/session"
 import { Button } from "~/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 
-const MOCK_CHAT_ID = "test-session"
-
-export function HomeLayout({
-  user,
-  children,
-}: {
-  user?: any
-  children: React.ReactNode
-}) {
+export function HomeLayout({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <HomeLayoutContent user={user}>{children}</HomeLayoutContent>
@@ -33,13 +25,7 @@ export function HomeLayout({
   )
 }
 
-function HomeLayoutContent({
-  user,
-  children,
-}: {
-  user?: any
-  children: React.ReactNode
-}) {
+function HomeLayoutContent({ user, children }: { user?: any; children: React.ReactNode }) {
   const { location } = useRouterState()
   const navigate = useNavigate()
   const { courseType } = useCourseType()
@@ -68,6 +54,20 @@ function HomeLayoutContent({
   const [error, setError] = useState<string | null>(null)
   const [queuedFiles, setQueuedFiles] = useState<File[]>([])
 
+  // 🧠 Nouvelle gestion de session_id
+  const [sessionId, setSessionId] = useState<string | null>(null)
+
+  // 🔁 Persistance du session_id dans sessionStorage
+  useEffect(() => {
+    const stored = sessionStorage.getItem("chatSession")
+    if (stored) setSessionId(stored)
+  }, [])
+
+  useEffect(() => {
+    if (sessionId) sessionStorage.setItem("chatSession", sessionId)
+  }, [sessionId])
+
+  // 🧑‍💻 Utilisateur
   const userId =
     session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user")
 
@@ -94,10 +94,15 @@ function HomeLayoutContent({
       const res = await sendChatMessage({
         data: {
           user_id: userId,
-          chatId: MOCK_CHAT_ID,
+          sessionId: sessionId ?? undefined,
           message: input,
         },
       })
+
+      // ✅ Sauvegarde du nouveau session_id si créé
+      if (res.session_id && res.session_id !== sessionId) {
+        setSessionId(res.session_id)
+      }
 
       const newMessages: ChatMessage[] = [
         ...messages,
@@ -106,7 +111,7 @@ function HomeLayoutContent({
       ]
 
       setMessages(newMessages)
-      saveConversation(MOCK_CHAT_ID, newMessages)
+      saveConversation(res.session_id ?? sessionId ?? "default", newMessages)
     } catch (err) {
       console.error("Erreur lors de l’envoi :", err)
       setError("Une erreur est survenue lors de l’envoi du message.")
@@ -114,8 +119,9 @@ function HomeLayoutContent({
       setInput("")
       setSending(false)
     }
-  }, [input, messages, userId, setOpen])
+  }, [input, messages, userId, sessionId, setOpen])
 
+  // 📎 Fichiers
   const handleFilesSelected = (files: File[]) => {
     if (files.length) setQueuedFiles(files)
   }
@@ -124,12 +130,15 @@ function HomeLayoutContent({
     setQueuedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
+  // 🔙 Bouton retour
   const handleBack = () => {
     setOpen(true)
     setTimeout(() => {
       setMessages([])
       setInput("")
       sessionStorage.removeItem("chat:conversations")
+      sessionStorage.removeItem("chatSession") // ❌ reset session
+      setSessionId(null)
       setShowCards(true)
       navigate({ to: "/chat" })
     }, 300)
@@ -150,7 +159,6 @@ function HomeLayoutContent({
 
             {showChatHome && (
               <>
-                {/* 🔙 Bouton retour visible uniquement en mode chat */}
                 {!showCards && (
                   <div className="absolute top-6 left-6 z-30">
                     <Button
@@ -164,7 +172,7 @@ function HomeLayoutContent({
                   </div>
                 )}
 
-                {/* 🟢 SectionCards avec transition fade/slide */}
+                {/* 🟢 SectionCards avec animation */}
                 <div
                   className={cn(
                     "w-full max-w-4xl mx-auto transform transition-all duration-700 ease-out",
@@ -176,7 +184,7 @@ function HomeLayoutContent({
                   {showCards && <SectionCards />}
                 </div>
 
-                {/* 💬 Chat avec transition inverse */}
+                {/* 💬 Chat principal */}
                 <div
                   className={cn(
                     "w-full max-w-4xl flex-1 flex flex-col min-h-0 mx-auto transform transition-all duration-700 ease-out",
@@ -185,10 +193,12 @@ function HomeLayoutContent({
                       : "opacity-100 translate-y-0 scale-100 pointer-events-auto"
                   )}
                 >
-                  {!showCards && <Chat messages={messages} sending={sending} error={error} />}
+                  {!showCards && (
+                    <Chat messages={messages} sending={sending} error={error} />
+                  )}
                 </div>
 
-                {/* ✏️ Barre d’entrée toujours visible */}
+                {/* ✏️ Input */}
                 <div className="sticky bottom-0 z-20 flex w-full justify-center px-4 mt-6 transition-all duration-500">
                   <div className="w-full max-w-3xl">
                     <ChatInput
@@ -203,7 +213,6 @@ function HomeLayoutContent({
                     />
                   </div>
                 </div>
-
               </>
             )}
           </section>

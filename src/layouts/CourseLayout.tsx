@@ -9,7 +9,7 @@ import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { DocPanel } from "~/components/DocPanel"
 import { Chat } from "~/components/Chat"
 
-export function CourseLayout() {
+export function CourseLayout({ children }: { children: React.ReactNode }) {
   const { courseType } = useCourseType()
   const accent = getCourseAccent(courseType)
   const [copilotOpen, setCopilotOpen] = useState(true)
@@ -49,17 +49,18 @@ export function CourseLayout() {
       </header>
 
       {/* MAIN ZONE */}
-  <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* DOC PANEL */}
         <div className="flex-1 overflow-y-auto bg-background px-10 py-8">
           <DocPanel />
+          {/* ✅ sous-routes rendues ici */}
+          {children}
         </div>
 
         {/* SIDE PANEL */}
         <aside
           className={`flex flex-col border-l border-border/40 bg-background/60 backdrop-blur-sm transition-all duration-300 ease-in-out ${copilotOpen ? "w-[350px]" : "w-16"}`}
         >
-
           {/* TOP - Copilot header */}
           <div className="border-b border-border/40 px-4 py-3">
             {copilotOpen ? (
@@ -102,7 +103,7 @@ export function CourseLayout() {
           {/* BOTTOM - Input */}
           {copilotOpen && (
             <div className="border-t border-border/40 bg-background/80 px-4 py-3 backdrop-blur">
-              <Chat /> {/* On garde le composant Chat avec son Textarea et bouton Envoyer */}
+              <Chat />
             </div>
           )}
         </aside>
