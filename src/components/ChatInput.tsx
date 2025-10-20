@@ -12,19 +12,10 @@ import {
 import { Mic, Paperclip, Send, X } from "lucide-react"
 import { Textarea } from "~/components/ui/textarea"
 import { Button } from "~/components/ui/button"
-import dynamic from "next/dynamic"
+import { BackgroundGradient } from "~/components/ui/background-gradient"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
-
-// ✅ Import dynamique pour éviter le mismatch SSR
-const BackgroundGradient = dynamic(
-  () =>
-    import("~/components/ui/background-gradient").then(
-      (mod) => mod.BackgroundGradient
-    ),
-  { ssr: false }
-)
 
 export type ChatInputProps = {
   value: string

@@ -24,7 +24,6 @@ import { ChatQuickViewLayout } from "~/layouts/ChatQuickViewLayout"
 import { PageLayout } from "~/layouts/PageLayout"
 
 import { scan } from "react-scan"
-import { GoogleOAuthProvider } from "@react-oauth/google"
 
 scan({
   enabled: process.env.NODE_ENV === "development",
@@ -67,9 +66,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const { session } = useAppSession()
   const router = useRouterState()
   const currentPath = router.location.pathname
-  const clientId = (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID as
-    | string
-    | undefined
 
   // Gestion du thème (clair/sombre)
   React.useEffect(() => {
@@ -112,24 +108,22 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="min-h-dvh w-full overflow-hidden bg-background text-foreground">
-        <GoogleOAuthProvider clientId={clientId ?? ""}>
-          <SessionProvider>
-            <SettingsProvider>
-              <CourseTypeProvider>
-                <div className="flex min-h-dvh w-full flex-1 overflow-hidden">
-                  {hideLayout ? (
-                    <main className="flex-1 overflow-auto p-4">{children}</main>
-                  ) : (
-                    <LayoutComponent>{children}</LayoutComponent>
-                  )}
-                </div>
-                <Toaster />
-                <TanStackRouterDevtools position="bottom-right" />
-                <Scripts />
-              </CourseTypeProvider>
-            </SettingsProvider>
-          </SessionProvider>
-        </GoogleOAuthProvider>
+        <SessionProvider>
+          <SettingsProvider>
+            <CourseTypeProvider>
+              <div className="flex min-h-dvh w-full flex-1 overflow-hidden">
+                {hideLayout ? (
+                  <main className="flex-1 overflow-auto p-4">{children}</main>
+                ) : (
+                  <LayoutComponent>{children}</LayoutComponent>
+                )}
+              </div>
+              <Toaster />
+              <TanStackRouterDevtools position="bottom-right" />
+              <Scripts />
+            </CourseTypeProvider>
+          </SettingsProvider>
+        </SessionProvider>
       </body>
     </html>
   )

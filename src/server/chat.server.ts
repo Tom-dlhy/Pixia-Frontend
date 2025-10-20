@@ -18,13 +18,16 @@ const ChatMessageSchema = z.object({
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
-    const { user_id, chatId, message, title } = data;
-    const res = await sendChat(user_id, chatId ?? "", message, title ?? "");
+    const { user_id, chatId, message, title } = data
+    const res = await sendChat(user_id, chatId ?? "", message, title ?? "")
+
+    console.log("🧠 Réponse sendChat:", res)
 
     return {
-      reply: res.reply,
-      session_id: res.session_id,
+      reply: res.reply ?? "", // ✅ Fallback vide
+      session_id: res.session_id ?? chatId ?? "",
       title: res.title ?? null,
-    };
-  });
+    }
+  })
+
 

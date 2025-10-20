@@ -44,7 +44,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
   return (
     <Sidebar>
       <SidebarContent className="p-4">
-        <Empty className="border border-dashed border-sidebar-border/50 bg-sidebar/40 p-6">
+        <Empty >
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <MessageSquare className="size-6" />

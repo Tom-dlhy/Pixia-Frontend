@@ -1,46 +1,32 @@
 import { createFileRoute, redirect } from "@tanstack/react-router"
-import { createServerFn } from "@tanstack/react-start"
+import { SESSION_PROFILE_STORAGE_KEY } from "~/utils/session"
 
-// Simple loginFn: appelle le backend FastAPI pour authentifier
-export const loginFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { email: string; password: string }) => d)
-  .handler(async ({ data }) => {
-    try {
-      const res = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      })
+function buildSearchString(search: unknown): string {
+  if (!search || typeof search !== "object") {
+    return ""
+  }
 
-      if (!res.ok) {
-        const msg = await res.text()
-        return {
-          error: true,
-          message: msg,
-          userNotFound: res.status === 404,
-        }
-      }
+  const params = new URLSearchParams()
 
-      const result = await res.json()
-      if (result?.token) {
-        return {
-          success: true,
-          token: result.token as string,
-          email: (result.email as string | undefined) ?? null,
-          userNotFound: false,
-        }
-      }
+  Object.entries(search as Record<string, unknown>).forEach(([key, value]) => {
+    if (value == null) return
 
-      return { error: true, message: "Invalid response from backend" }
-    } catch (err) {
-      console.error("Erreur de connexion :", err)
-      return {
-        error: true,
-        message: err instanceof Error ? err.message : "Unknown error",
-        userNotFound: false,
-      }
+    if (Array.isArray(value)) {
+      value.forEach((entry) => params.append(key, String(entry)))
+      return
     }
+
+    if (typeof value === "object") {
+      params.set(key, JSON.stringify(value))
+      return
+    }
+
+    params.set(key, String(value))
   })
+
+  const query = params.toString()
+  return query ? `?${query}` : ""
+}
 
 // Route protégée
 export const Route = createFileRoute("/_authed")({
@@ -48,10 +34,15 @@ export const Route = createFileRoute("/_authed")({
     const maybeUser = (context as { user?: unknown } | undefined)?.user
     const hasToken =
       typeof window !== "undefined" && Boolean(window.localStorage.getItem("access_token"))
+    const hasStoredProfile =
+      typeof window !== "undefined" &&
+      Boolean(window.localStorage.getItem(SESSION_PROFILE_STORAGE_KEY))
 
-    if (!maybeUser && !hasToken) {
+    if (!maybeUser && !hasToken && !hasStoredProfile) {
       const { pathname, search, hash } = location
-      const redirectPath = `${pathname ?? ""}${search ?? ""}${hash ?? ""}` || "/"
+      const searchString = buildSearchString(search)
+      const hashString = hash ? String(hash) : ""
+      const redirectPath = `${pathname ?? ""}${searchString}${hashString}` || "/"
       throw redirect({
         to: "/login",
         search: (prev) => ({

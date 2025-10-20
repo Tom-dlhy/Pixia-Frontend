@@ -6,13 +6,7 @@ import { GraduationCap, BookOpen, PenLine, AudioLines } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
-import dynamic from "next/dynamic"
 import { useAppSession } from "~/utils/session"
-
-// ✅ Import dynamique pour éviter les erreurs d’hydratation SSR
-const GradientText = dynamic(() => import("./ui/gradient-text").then(m => m.GradientText), {
-  ssr: false,
-})
 
 type CourseType = "exercice" | "cours" | "discuss" | "deep" | "none"
 
@@ -140,12 +134,18 @@ export function SectionCards() {
     <div className="w-full max-w-3xl mx-auto px-4 py-8">
       {/* 🌈 Titre avec gradient animé */}
       <div className="text-center text-3xl font-bold mb-10">
-        <GradientText
+        <div
           key={courseType}
           className="text-4xl font-bold"
-          text={`Bienvenue sur Pixia ${firstName}`}
-          gradient={activeGradient}
-        />
+          style={{
+            backgroundImage: activeGradient,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
+          Bienvenue sur Pixia {firstName}
+        </div>
       </div>
 
       {/* 🧊 Grille des cartes */}
@@ -156,8 +156,10 @@ export function SectionCards() {
             <Card
               key={c.key}
               onClick={() => {
-                setCourseType(c.key)
-                if (c.key === "deep") navigate({ to: "/deep-courses" })
+                setCourseType(courseType === c.key ? "none" : c.key)
+                if (c.key === "deep" && courseType !== "deep") {
+                  navigate({ to: "/deep-courses" })
+                }
               }}
               role="button"
               className={cn(glassTint(c.key, isDark, courseType === c.key))}
@@ -177,7 +179,6 @@ export function SectionCards() {
                   >
                     <Icon className={cn("h-5 w-5", isDark ? "text-white" : "text-gray-800")} />
                   </div>
-                  {/* numéro retiré */}
                 </div>
 
                 <CardTitle
