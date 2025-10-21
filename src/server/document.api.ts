@@ -1,6 +1,6 @@
 import { ExerciseOutput, CourseOutput } from "~/models/Document"
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000"
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
 
 /**
  * Classe pour gérer les erreurs API

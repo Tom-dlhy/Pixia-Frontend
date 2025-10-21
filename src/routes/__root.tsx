@@ -19,6 +19,7 @@ import { seo } from "~/utils/seo"
 import { SessionProvider } from "~/utils/session"
 import { SettingsProvider } from "~/context/SettingsProvider"
 import { CourseTypeProvider } from "~/context/CourseTypeContext"
+import { CourseContentProvider } from "~/context/CourseContentContext"
 import { ChatSessionsProvider } from "~/context/ChatSessionsContext"
 
 import "~/styles/app.css"
@@ -50,9 +51,11 @@ function RootApp() {
     <SessionProvider>
       <SettingsProvider>
         <CourseTypeProvider>
-          <ChatSessionsProvider>
-            <AppShell />
-          </ChatSessionsProvider>
+          <CourseContentProvider>
+            <ChatSessionsProvider>
+              <AppShell />
+            </ChatSessionsProvider>
+          </CourseContentProvider>
         </CourseTypeProvider>
       </SettingsProvider>
     </SessionProvider>

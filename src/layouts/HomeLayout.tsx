@@ -47,24 +47,6 @@ function HomeLayoutContent({ user, children }: { user?: any; children: React.Rea
         </GradientBackground>
 
         <main className="relative z-10 flex flex-col w-full h-full overflow-y-auto px-4 sm:px-6 lg:px-10 py-8">
-          {/* Debug Buttons */}
-          <div className="fixed bottom-6 right-6 flex flex-col gap-3 z-50">
-            {/* Green button for /course */}
-            <Button
-              onClick={() => navigate({ to: "/course/$id", params: { id: "test-course-id" } as any })}
-              className="rounded-full bg-green-500 hover:bg-green-600 transition-all"
-            >
-              🟢
-            </Button>
-            
-            {/* Blue button for /exercise */}
-            <Button
-              onClick={() => navigate({ to: "/exercise/$id", params: { id: "test-exercise-id" } as any })}
-              className="rounded-full bg-blue-500 hover:bg-blue-600 transition-all"
-            >
-              🔵
-            </Button>
-          </div>
           
           <section className="flex flex-1 flex-col gap-8 min-h-0">
             {children}

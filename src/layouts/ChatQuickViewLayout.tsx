@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect } from "react"
+import { useMemo, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "@tanstack/react-router"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import ChatHeader from "~/layouts/ChatHeader"
@@ -27,6 +27,7 @@ export function ChatQuickViewLayout({
   const location = useLocation()
   const { courseType: contextCourseType, setCourseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
+  const contentRef = useRef<HTMLDivElement>(null)
   
   // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
   const courseType = overrideCourseType || contextCourseType
@@ -86,15 +87,15 @@ export function ChatQuickViewLayout({
           <ChatHeader
             title={displayTitle}
             leftAction={<BackButton onClick={() => navigate({ to: backTo })} />}
-            rightAction={<ChatActionButton />}
+            rightAction={<ChatActionButton contentRef={contentRef} />}
           />
         </div>
 
         {/* MAIN CONTENT */}
         <div className="flex flex-1 gap-6 overflow-hidden px-10 pb-10 pt-6 min-h-0">
           {/* LEFT PANEL — Conversation Area */}
-                    {/* LEFT PANEL — Conversation Area */}
           <div
+            ref={contentRef}
             className="
               flex flex-[0.7] flex-col overflow-hidden
               rounded-[28px] border border-white/20 dark:border-white/10

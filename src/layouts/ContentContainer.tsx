@@ -19,6 +19,7 @@ export default function ContentContainer({
 }: ContentContainerProps) {
   return (
     <section
+      data-content-container
       className={cn(
         "flex flex-1 min-h-full",
         "rounded-[28px] border border-white/20 dark:border-white/10",

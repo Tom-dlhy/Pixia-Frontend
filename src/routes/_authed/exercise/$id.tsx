@@ -1,11 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useParams } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { useChatWithDocument } from '~/hooks/useDocument'
+import { useCourseContent } from '~/context/CourseContentContext'
+import { useDocumentTitle } from '~/context/DocumentTitleContext'
 import { Spinner } from '~/components/ui/spinner'
 import { AlertCircle } from 'lucide-react'
 import { CourseViewer } from '~/components/viewers/CourseViewer'
 import { ExerciseViewer } from '~/components/viewers/ExerciseViewer'
-import { isCourseOutput, isExerciseOutput } from '~/models/Document'
+import { isCourseOutput, isExerciseOutput, CourseOutput } from '~/models/Document'
+import { CourseWithChapters, Chapter } from '~/models/Course'
 
 export const Route = createFileRoute('/_authed/exercise/$id')({
   component: RouteComponent,
@@ -14,6 +18,35 @@ export const Route = createFileRoute('/_authed/exercise/$id')({
 function RouteComponent() {
   const { id } = useParams({ from: '/_authed/exercise/$id' })
   const { document, documentType, loading, error } = useChatWithDocument(id, 'exercise')
+  const { setCourse } = useCourseContent()
+  const { setTitle } = useDocumentTitle()
+
+  // Mettre à jour le contexte si le document est en fait un cours
+  useEffect(() => {
+    if (document && isCourseOutput(document)) {
+      const courseDoc = document as CourseOutput
+      
+      // Utiliser 'parts' en fallback si 'chapters' n'est pas disponible
+      const chapters = courseDoc.chapters || courseDoc.parts || []
+      
+      // Convertir CourseOutput en CourseWithChapters
+      const courseData: CourseWithChapters = {
+        id: courseDoc.id || id,
+        title: courseDoc.title || "Cours",
+        chapters: chapters.map((ch: any): Chapter => ({
+          id: ch.id_chapter || Math.random().toString(),
+          title: ch.title || "",
+          content: ch.content || "",
+        })),
+        type: "cours",
+      }
+      
+      setCourse(courseData)
+      setTitle(courseData.title)
+      
+      console.log("✅ [exercise.$id] Course data set in context:", courseData)
+    }
+  }, [document, id, setCourse, setTitle])
 
   if (loading) {
     return (

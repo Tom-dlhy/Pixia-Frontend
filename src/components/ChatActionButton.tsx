@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef, useState } from "react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,12 +10,44 @@ import {
 import { Button } from "~/components/ui/button"
 import { Mail, FileText, Database, HardDrive, Menu } from "lucide-react"
 import { useCourseType } from "~/context/CourseTypeContext"
+import { usePdfExport } from "~/hooks/usePdfExport"
+import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { useCourseContent } from "~/context/CourseContentContext"
+import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
 import { cn } from "~/lib/utils"
 
-export function ChatActionButton() {
-  const { courseType } = useCourseType()
+export interface ChatActionButtonProps {
+  contentRef?: React.RefObject<HTMLDivElement | null>
+}
 
-  // Palette d’accents cohérente avec ton style global
+export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
+  const { courseType } = useCourseType()
+  const { title: documentTitle } = useDocumentTitle()
+  const { course } = useCourseContent()
+  const { exportToPdf } = usePdfExport()
+
+  // Ne pas afficher le bouton si ce n'est pas un cours
+  if (courseType === 'exercice' || courseType === 'discuss' || courseType === 'deep') {
+    return null
+  }
+
+  // Récupérer la référence au contenu depuis le DOM
+  const handleExportPdf = async () => {
+    // Vérifier si on a les données du cours
+    if (!course) {
+      console.error('❌ [ChatActionButton] Course data not available')
+      return
+    }
+
+    console.log('✅ [ChatActionButton] Generating PDF from course data...')
+
+    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
+    
+    // Utiliser la nouvelle fonction avec données structurées
+    await generatePdfFromCourseData(course, filename)
+  }
+
+  // Palette d'accents cohérente avec ton style global
   const accentMap: Record<string, { light: string; dark: string }> = {
     none: { light: "rgba(209,213,219,0.3)", dark: "rgba(82,82,91,0.25)" },
     cours: { light: "rgba(167,243,208,0.25)", dark: "rgba(16,185,129,0.25)" },
@@ -78,7 +111,7 @@ export function ChatActionButton() {
           {
             label: "Enregistrer en PDF",
             icon: FileText,
-            action: () => console.log("Enregistrer en PDF"),
+            action: handleExportPdf,
           },
         ].map(({ label, icon: Icon, action }, idx, arr) => (
           <div key={label}>

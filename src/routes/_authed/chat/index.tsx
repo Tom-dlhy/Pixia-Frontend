@@ -226,11 +226,6 @@ function ChatPage() {
     navigate({ to: "/chat" })
   }
 
-  // 🟢 Debug: bouton pour aller à /course/$id
-  const debugGoToCourse = () => {
-    navigate({ to: "/course/$id", params: { id: "test-id" } })
-  }
-
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 relative">
 

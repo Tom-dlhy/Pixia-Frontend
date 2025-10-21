@@ -1,3 +1,6 @@
+/* Styles pour l'export PDF */
+@import './pdf.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

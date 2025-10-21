@@ -4,8 +4,12 @@
  * (comme dans ChatQuickViewLayout)
  */
 
+import { useEffect } from "react"
 import { useChatWithDocument } from "~/hooks/useDocument"
-import { isQCM, isOpen } from "~/models/Document"
+import { useCourseContent } from "~/context/CourseContentContext"
+import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { isQCM, isOpen, CourseOutput } from "~/models/Document"
+import { CourseWithChapters, Chapter } from "~/models/Course"
 
 interface CombinedViewProps {
   sessionId: string
@@ -18,6 +22,36 @@ export function CombinedDocumentChatView({
 }: CombinedViewProps) {
   const { messages, document, documentType: detectedType, loading, error } =
     useChatWithDocument(sessionId, documentType)
+  
+  const { setCourse } = useCourseContent()
+  const { setTitle } = useDocumentTitle()
+
+  // Quand le document est chargé, mettre à jour le contexte
+  useEffect(() => {
+    if (document && detectedType === "course") {
+      const courseDoc = document as CourseOutput
+      
+      // Utiliser 'parts' en fallback si 'chapters' n'est pas disponible
+      const chapters = courseDoc.chapters || courseDoc.parts || []
+      
+      // Convertir CourseOutput en CourseWithChapters
+      const courseData: CourseWithChapters = {
+        id: courseDoc.id || "",
+        title: courseDoc.title || "Cours",
+        chapters: chapters.map((ch: any): Chapter => ({
+          id: ch.id_chapter || Math.random().toString(),
+          title: ch.title || "",
+          content: ch.content || "",
+        })),
+        type: "cours",
+      }
+      
+      setCourse(courseData)
+      setTitle(courseData.title)
+      
+      console.log("✅ [CombinedDocumentChatView] Course data set in context:", courseData)
+    }
+  }, [document, detectedType, setCourse, setTitle])
 
   if (loading) {
     return <div className="flex items-center justify-center p-8">Chargement...</div>
