@@ -1,0 +1,187 @@
+{
+  "chat_id": "897fdc68-b901-4c7a-b1df-b98167eef4ef",
+  "agent_used": "ExerciseAgent",
+  "scene": "exercise",
+  "answer_type": "exercise",
+  "answer": {
+    "id": "0a6f94a4-c114-4cd2-a8ec-c1a49cbf76f7",
+    "title": "Nombres Complexes",
+    "exercises": [
+      {
+        "id": "2586d45a-7742-41d7-9dfb-bd6e79169ce6",
+        "type": "qcm",
+        "topic": "Formes Algébriques des Nombres Complexes",
+        "questions": [
+          {
+            "id": "c1a72074-3b65-4327-b85e-3802e763e08e",
+            "question": "Quelle est la forme algébrique du nombre complexe $z = 3 + 4i$ ?",
+            "answers": [
+              { "id": "64d54490-f73e-46dd-bc02-f6e40989c12b", "text": "$a=3$, $b=4$", "is_correct": true, "is_selected": false },
+              { "id": "6949dcf6-a75b-4f33-bbb6-e504474a54d7", "text": "$a=4$, $b=3$", "is_correct": false, "is_selected": false },
+              { "id": "efbdcc2b-f1ad-48fa-9cd8-65a5649e3717", "text": "$z=7$", "is_correct": false, "is_selected": false },
+              { "id": "33163a6d-6467-45cd-9741-f455573085f5", "text": "$z=12i$", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "La forme algébrique d'un nombre complexe est $z = a + bi$, où $a$ est la partie réelle et $b$ est la partie imaginaire. Ici, $a=3$ et $b=4$.",
+            "multi_answers": false,
+            "is_corrected": false
+          },
+          {
+            "id": "ad8b5b75-6171-4802-a95f-cbcbb9f5e749",
+            "question": "Si $z = -2 - 5i$, quelle est la partie réelle et la partie imaginaire ?",
+            "answers": [
+              { "id": "29e75523-e903-4eee-8d3d-f2e03b8132ba", "text": "Partie réelle = -2, Partie imaginaire = -5", "is_correct": true, "is_selected": false },
+              { "id": "1c3a54f8-d786-4653-ae34-617d346976a6", "text": "Partie réelle = 2, Partie imaginaire = 5", "is_correct": false, "is_selected": false },
+              { "id": "3ee445b3-101b-4ccf-8759-acfdd68dc3c6", "text": "Partie réelle = -5, Partie imaginaire = -2", "is_correct": false, "is_selected": false },
+              { "id": "672af04e-72ec-4df3-abd6-517515b14221", "text": "Partie réelle = -2, Partie imaginaire = 5", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Dans la forme algébrique $z = a + bi$, $a$ est la partie réelle et $b$ est la partie imaginaire. Pour $z = -2 - 5i$, $a = -2$ et $b = -5$.",
+            "multi_answers": false,
+            "is_corrected": false
+          },
+          {
+            "id": "e5b73dd0-a26b-4fd7-ace2-e86b0ec9afdf",
+            "question": "Lequel de ces nombres est un nombre complexe dont la partie réelle est nulle ?",
+            "answers": [
+              { "id": "7a1092e7-a319-4b64-9300-cc557305dccd", "text": "$7i$", "is_correct": true, "is_selected": false },
+              { "id": "ecc7ca3a-9a16-49e8-8600-cf896116eaa6", "text": "$7$", "is_correct": false, "is_selected": false },
+              { "id": "76da3b1e-3b99-4eed-92ef-14bc95c09c73", "text": "$i+7$", "is_correct": false, "is_selected": false },
+              { "id": "01acfe60-6bd9-48ce-82e6-11c75ae9ce17", "text": "$-i$", "is_correct": true, "is_selected": false }
+            ],
+            "explanation": "Un nombre complexe de la forme $bi$ (où $b$ est un réel) est dit imaginaire pur, sa partie réelle $a$ est donc nulle. $7i$ et $-i$ correspondent à $0 + 7i$ et $0 - 1i$.",
+            "multi_answers": true,
+            "is_corrected": false
+          },
+          {
+            "id": "731891d1-9483-4d43-bd2c-03f03a74d961",
+            "question": "Soit le nombre complexe $z$ tel que sa partie réelle est 5 et sa partie imaginaire est -1. Quelle est sa forme algébrique ?",
+            "answers": [
+              { "id": "60900eee-fc70-43fb-9d4f-0cbaebfa0dd4", "text": "$5 - i$", "is_correct": true, "is_selected": false },
+              { "id": "312302e5-b098-41c2-a717-89cd68a5981a", "text": "$5 + i$", "is_correct": false, "is_selected": false },
+              { "id": "fb03d604-9bd2-4b1e-a434-4e725a8472ee", "text": "$-1 + 5i$", "is_correct": false, "is_selected": false },
+              { "id": "8ee84444-e586-46f9-b71b-623149359e93", "text": "$5i - 1$", "is_correct": true, "is_selected": false }
+            ],
+            "explanation": "La forme algébrique est $z = a + bi$. Ici, $a=5$ et $b=-1$, donc $z = 5 + (-1)i = 5 - i$. L'ordre des termes dans l'addition peut être inversé, donc $5 - i$ est équivalent à $-1 + 5i$ n'est pas correct car il faut respecter la partie réelle et la partie imaginaire. $5i - 1$ est bien la forme algébrique $a+bi$ sous la forme $bi+a$.",
+            "multi_answers": true,
+            "is_corrected": false
+          },
+          {
+            "id": "daa85e9f-c0cc-4406-a34b-29889ed1af77",
+            "question": "Parmi les propositions suivantes, laquelle représente un nombre complexe dont la partie imaginaire est 1 ?",
+            "answers": [
+              { "id": "32c22b22-6df4-4edd-a29f-7c97a4a1221e", "text": "$2 + i$", "is_correct": true, "is_selected": false },
+              { "id": "7dba9370-b1c2-4d80-b4c2-053d782eac26", "text": "$3 - i$", "is_correct": false, "is_selected": false },
+              { "id": "dcd343db-1c93-4c0a-9474-d5df2db9b39e", "text": "$i$", "is_correct": true, "is_selected": false },
+              { "id": "6f2188f8-b38f-428c-b7d3-98a1de976a5a", "text": "$1 + 2i$", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "La partie imaginaire $b$ est le coefficient du terme $i$. Dans $2+i$, $b=1$. Dans $i$, c'est $0+1i$, donc $b=1$.",
+            "multi_answers": true,
+            "is_corrected": false
+          }
+        ]
+      },
+      {
+        "id": "6c926672-9b4f-b357-3f61d7d2a2d3",
+        "type": "open",
+        "topic": "Nombres Complexes : Somme et Produit",
+        "questions": [
+          {
+            "id": "f64b2bca-50ac-4ce9-924d-b6c9a434748d",
+            "question": "Soient deux nombres complexes $z_1 = 3 + 2i$ et $z_2 = 1 - 4i$. Calculez la somme $z_1 + z_2$ et le produit $z_1 \\times z_2$.",
+            "answers": "",
+            "is_correct": false,
+            "is_corrected": false,
+            "explanation": "Pour additionner deux nombres complexes sous forme algébrique $z_1 = a + bi$ et $z_2 = c + di$, on additionne les parties réelles et les parties imaginaires séparément : $z_1 + z_2 = (a+c) + (b+d)i$.\nPour multiplier deux nombres complexes, on utilise la distributivité, en se rappelant que $i^2 = -1$ : $z_1 \\times z_2 = (a + bi)(c + di) = ac + adi + bci + bdi^2 = (ac - bd) + (ad + bc)i$.\n\nAppliquons ces règles à $z_1 = 3 + 2i$ et $z_2 = 1 - 4i$ :\n\nSomme : $z_1 + z_2 = (3 + 1) + (2 + (-4))i = 4 - 2i$.\nProduit : $z_1 \\times z_2 = (3 + 2i)(1 - 4i) = 3 - 12i + 2i - 8i^2 = (3 + 8) + (-12 + 2)i = 11 - 10i$.\n\nLa somme est $4 - 2i$ et le produit est $11 - 10i$."
+          },
+          {
+            "id": "8e0e8840-58cc-4c40-ac65-da37b765134d",
+            "question": "Démontrez que pour deux nombres complexes quelconques $z_1$ et $z_2$, la somme $z_1 + z_2$ est commutative.",
+            "answers": "",
+            "is_correct": false,
+            "is_corrected": false,
+            "explanation": "Soient $z_1 = a + bi$ et $z_2 = c + di$. $z_1 + z_2 = (a+c) + (b+d)i$ et $z_2 + z_1 = (c+a) + (d+b)i$. Comme l’addition des réels est commutative ($a+c=c+a$, $b+d=d+b$), on a $z_1 + z_2 = z_2 + z_1$."
+          },
+          {
+            "id": "915ad1f1-7109-4e9a-a4ab-f393ebfe7cf6",
+            "question": "Soit $z$ un nombre complexe. Calculez le produit de $z$ par son conjugué, $\\bar{z}$.",
+            "answers": "",
+            "is_correct": false,
+            "is_corrected": false,
+            "explanation": "Soit $z = a + bi$. Son conjugué est $\\bar{z} = a - bi$. Donc $z\\bar{z} = (a+bi)(a-bi) = a^2 - (bi)^2 = a^2 + b^2$. C’est un réel positif égal à $|z|^2$."
+          }
+        ]
+      },
+      {
+        "id": "e32831d4-3e13-47f0-ad0e-8f0050f3a55e",
+        "type": "qcm",
+        "topic": "Module d'un nombre complexe",
+        "questions": [
+          {
+            "id": "1aafc69a-0112-4a19-8885-feb23f525917",
+            "question": "Quel est le module du nombre complexe $z = 3 + 4i$ ?",
+            "answers": [
+              { "id": "f0a4ca68-be41-40c6-b573-cdddba8ec1b5", "text": "5", "is_correct": true, "is_selected": false },
+              { "id": "154b0649-e625-4df8-a704-1537343e6c38", "text": "7", "is_correct": false, "is_selected": false },
+              { "id": "f52d86ef-f233-44d9-97fe-424155947155", "text": "12", "is_correct": false, "is_selected": false },
+              { "id": "a2a4ed59-4427-4595-a2d4-c20292fe8df1", "text": "$3 - 4i$", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Le module d’un nombre complexe $z = a + bi$ est $|z| = \\sqrt{a^2 + b^2} = 5$.",
+            "multi_answers": false,
+            "is_corrected": false
+          },
+          {
+            "id": "8d4ba0d9-428d-4b98-9524-08d20784d23f",
+            "question": "Si un nombre complexe $z$ a pour module 10 et pour argument $\\pi/4$, quelle est sa forme algébrique $a+bi$ ?",
+            "answers": [
+              { "id": "9f097115-44de-4866-85e6-311e9b9da541", "text": "$5\\sqrt{2} + 5\\sqrt{2}i$", "is_correct": true, "is_selected": false },
+              { "id": "e68f336b-bb1e-416a-a478-9ec3946fac58", "text": "$10\\cos(\\pi/4) + 10\\sin(\\pi/4)i$", "is_correct": true, "is_selected": false },
+              { "id": "771e3e6d-2201-4e35-9cd8-c5abbc5f095d", "text": "$5\\sqrt{2} - 5\\sqrt{2}i$", "is_correct": false, "is_selected": false },
+              { "id": "389f9156-839e-4da2-bfa6-f944db0e2e4e", "text": "$10 + i\\pi/4$", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Forme algébrique : $a = 10\\cos(\\pi/4) = 5\\sqrt{2}$, $b = 10\\sin(\\pi/4) = 5\\sqrt{2}$, donc $z = 5\\sqrt{2} + 5\\sqrt{2}i$.",
+            "multi_answers": true,
+            "is_corrected": false
+          },
+          {
+            "id": "45108a22-9fc9-42ed-ba62-d2526df76971",
+            "question": "Parmi les affirmations suivantes concernant le module d'un nombre complexe, laquelle est correcte ?",
+            "answers": [
+              { "id": "03f2317e-fff4-4272-bcd5-3699fe65db52", "text": "Le module d'un nombre complexe est toujours un nombre réel positif ou nul.", "is_correct": true, "is_selected": false },
+              { "id": "3e918943-a917-42c3-9780-504269be534e", "text": "Le module d'un nombre complexe $z$ est égal à sa partie réelle.", "is_correct": false, "is_selected": false },
+              { "id": "e39e55cc-1d24-401e-a8b9-9d6396550207", "text": "Le module de la somme de deux nombres complexes est la somme de leurs modules.", "is_correct": false, "is_selected": false },
+              { "id": "5114b76f-c809-42cb-8e86-6a64eab34a4a", "text": "Le module d'un nombre complexe $z$ est égal à $|a| + |b|$ si $z=a+bi$.", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Le module est toujours réel et positif : $|z| = \\sqrt{a^2+b^2}$.",
+            "multi_answers": false,
+            "is_corrected": false
+          },
+          {
+            "id": "b6a46995-5fef-4fd6-b0be-65c50b4ea447",
+            "question": "Quel est le module du nombre complexe $z = -2 - 2i$ ?",
+            "answers": [
+              { "id": "1cf7870a-2bc3-41b3-a82d-b8b697f53aff", "text": "$2\\sqrt{2}$", "is_correct": true, "is_selected": false },
+              { "id": "0594b65c-ca2e-481e-8480-a2a89899581f", "text": "4", "is_correct": false, "is_selected": false },
+              { "id": "75e24dc3-6153-4957-b97a-186925a3e785", "text": "$2\\sqrt{5}$", "is_correct": false, "is_selected": false },
+              { "id": "8eeb1d12-beb4-468d-904b-da061449fc32", "text": "-4", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Le module est $|z| = \\sqrt{(-2)^2 + (-2)^2} = 2\\sqrt{2}$.",
+            "multi_answers": false,
+            "is_corrected": false
+          },
+          {
+            "id": "34b11918-9035-4cab-ac47-017d86d15846",
+            "question": "Soient $z_1 = 1+i$ et $z_2 = 2-i$. Le module du produit $z_1 \\times z_2$ est égal à :",
+            "answers": [
+              { "id": "3d395e04-13f3-48db-8971-55d2cc3d173d", "text": "Le produit des modules de $z_1$ et $z_2$", "is_correct": true, "is_selected": false },
+              { "id": "1d3f2f9a-d645-42d9-9a88-0b900cbe9136", "text": "La somme des modules de $z_1$ et $z_2$", "is_correct": false, "is_selected": false },
+              { "id": "6001cec7-0f7d-43b9-98cc-0c26acda18e8", "text": "$|z_1| \\times |z_2| = \\sqrt{2} \\times \\sqrt{5} = \\sqrt{10}$", "is_correct": true, "is_selected": false },
+              { "id": "1a941590-16fe-462e-afcd-1b954c06396e", "text": "La différence des modules de $z_1$ et $z_2$", "is_correct": false, "is_selected": false }
+            ],
+            "explanation": "Propriété : $|z_1 z_2| = |z_1| \\times |z_2| = \\sqrt{2} \\times \\sqrt{5} = \\sqrt{10}$.",
+            "multi_answers": true,
+            "is_corrected": false
+          }
+        ]
+      }
+    ]
+  }
+}

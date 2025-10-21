@@ -2,11 +2,13 @@
 
 import { useMemo, useEffect } from "react"
 import { useNavigate, useLocation } from "@tanstack/react-router"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import ChatHeader from "~/layouts/ChatHeader"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import BackButton from "~/components/BackButton"
 import { ChatActionButton } from "~/components/ChatActionButton"
 import { useCourseType, type CourseType } from "~/context/CourseTypeContext"
+import { useDocumentTitle } from "~/context/DocumentTitleContext"
 
 interface ChatQuickViewLayoutProps {
   children: React.ReactNode
@@ -24,6 +26,7 @@ export function ChatQuickViewLayout({
   const navigate = useNavigate()
   const location = useLocation()
   const { courseType: contextCourseType, setCourseType } = useCourseType()
+  const { title: documentTitle } = useDocumentTitle()
   
   // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
   const courseType = overrideCourseType || contextCourseType
@@ -66,30 +69,34 @@ export function ChatQuickViewLayout({
     return stored || "Session"
   }, [location.pathname])
 
-  // 🔹 Format d’affichage convivial
+  // 🔹 Format d'affichage convivial
   const formattedSession = useMemo(() => {
     if (sessionId.startsWith("chat-")) return `Chat ${sessionId.split("chat-")[1]}`
     return sessionId
   }, [sessionId])
 
+  // Use document title if available, otherwise use passed title
+  const displayTitle = documentTitle || title
+
   return (
-    <div className="flex min-h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
-      <div className="flex min-h-full w-full flex-col overflow-hidden bg-background">
+    <div className="flex h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
+      <div className="flex h-full w-full flex-col overflow-hidden bg-background">
         {/* HEADER */}
-        <div className="flex-none px-10 pt-10">
+        <div className="flex-shrink-0 px-10 pt-10 pb-4">
           <ChatHeader
-            title={title}
+            title={displayTitle}
             leftAction={<BackButton onClick={() => navigate({ to: backTo })} />}
             rightAction={<ChatActionButton />}
           />
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex flex-1 gap-6 overflow-hidden px-10 pb-10 pt-6">
+        <div className="flex flex-1 gap-6 overflow-hidden px-10 pb-10 pt-6 min-h-0">
           {/* LEFT PANEL — Conversation Area */}
+                    {/* LEFT PANEL — Conversation Area */}
           <div
             className="
-              flex flex-[0.7] flex-col justify-between overflow-y-auto
+              flex flex-[0.7] flex-col overflow-hidden
               rounded-[28px] border border-white/20 dark:border-white/10
               bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]
               backdrop-blur-xl backdrop-saturate-150
@@ -97,22 +104,15 @@ export function ChatQuickViewLayout({
               transition-all duration-300 p-6
             "
           >
-            <div>
-              <h3 className="text-lg font-semibold">Zone de conversation</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Ici s’affiche le contenu de la session active.
-              </p>
-              <p className="mt-6 text-sm text-muted-foreground/80">
-                Session ID : {formattedSession}
-              </p>
-
-              {/* ✅ Contenu injecté dynamiquement */}
-              <div className="mt-6">{children}</div>
-            </div>
+            <ScrollArea className="h-full w-full rounded-lg">
+              <div className="pr-4">
+                <div className="mt-2">{children}</div>
+              </div>
+            </ScrollArea>
           </div>
 
           {/* RIGHT PANEL — Copilote */}
-          <div className="flex h-full flex-[0.3] flex-col">
+          <div className="flex flex-[0.3] flex-col overflow-hidden min-h-0">
             <CopiloteContainer sessionId={sessionId} />
           </div>
         </div>

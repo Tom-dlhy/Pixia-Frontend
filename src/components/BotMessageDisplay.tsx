@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 import { TextGenerateEffect } from "~/components/ui/text-generate-effect"
-import { ShimmeringText } from "~/components/ui/shimmering-text"
 
 interface BotMessageDisplayProps {
   content: string
@@ -12,9 +12,9 @@ interface BotMessageDisplayProps {
 }
 
 /**
- * Composant réutilisable pour afficher les messages du bot avec effet shimmering
- * - Premier message: effet shimmering avec TextGenerateEffect
- * - Messages antérieurs: texte normal
+ * Composant réutilisable pour afficher les messages du bot avec markdown et effet shimmering
+ * - Premier message avec showShimmering=true: effet shimmering avec TextGenerateEffect
+ * - Messages antérieurs: rendu markdown avec react-markdown
  */
 export function BotMessageDisplay({
   content,
@@ -35,10 +35,6 @@ export function BotMessageDisplay({
     return () => observer.disconnect()
   }, [])
 
-  // 🎨 Couleurs dynamiques selon le thème
-  const shimmerColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.7)"
-  const baseColor = isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.3)"
-
   // 🎬 Si c'est le dernier message ET on veut l'effet shimmering
   if (isLatest && showShimmering) {
     return (
@@ -52,6 +48,23 @@ export function BotMessageDisplay({
     )
   }
 
-  // 📝 Texte normal pour les anciens messages
-  return <span className={`text-foreground ${className}`}>{content}</span>
+  // 📝 Rendu markdown pour les anciens messages ou sans shimmering
+  return (
+    <div className={`prose prose-sm dark:prose-invert max-w-none text-foreground ${className}`}>
+      <ReactMarkdown
+        components={{
+          p: ({node, ...props}) => <p className="mb-2" {...props} />,
+          ul: ({node, ...props}) => <ul className="list-disc list-inside mb-2" {...props} />,
+          ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-2" {...props} />,
+          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+          strong: ({node, ...props}) => <strong className="font-semibold" {...props} />,
+          em: ({node, ...props}) => <em className="italic" {...props} />,
+          code: ({node, ...props}) => <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />,
+          pre: ({node, ...props}) => <pre className="bg-muted p-2 rounded mb-2 overflow-x-auto" {...props} />,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
 }

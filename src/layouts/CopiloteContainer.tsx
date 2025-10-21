@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect, type CSSProperties } from "react"
+import { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties } from "react"
+import ReactMarkdown from "react-markdown"
 import {
   Empty,
   EmptyHeader,
@@ -9,6 +10,7 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "~/components/ui/empty"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import { BotMessageSquare } from "lucide-react"
 import { ChatInput } from "~/components/ChatInput"
 import { useCourseType } from "~/context/CourseTypeContext"
@@ -30,6 +32,8 @@ interface CopiloteContainerProps {
 export default function CopiloteContainer({ className = "", sessionId }: CopiloteContainerProps) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
+  const [isNewMessage, setIsNewMessage] = useState(false) // Track si c'est un nouveau message reçu
+  const messagesEndRef = useRef<HTMLDivElement>(null)
   const { courseType } = useCourseType()
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
@@ -49,8 +53,6 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         console.log(`📝 [CopiloteContainer] Chargement des messages`)
         console.log(`  - user_id: ${userId}`)
         console.log(`  - session_id: ${sessionId}`)
-        console.log(`  - session.userId: ${session.userId}`)
-        console.log(`  - typeof sessionId: ${typeof sessionId}`)
 
         const messages = await getChat({
           data: {
@@ -70,15 +72,22 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         }
 
         setMessages(displayMessages)
+        setIsNewMessage(false) // Pas de shimmering au chargement initial
         console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés`)
       } catch (err) {
         console.error(`❌ [CopiloteContainer] Erreur lors du chargement des messages:`, err)
         setMessages([])
+        setIsNewMessage(false)
       }
     }
 
     loadMessages()
   }, [sessionId, session.userId])
+
+  // 📜 Auto-scroll vers le bas quand les messages changent
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
   const contentText = useMemo(() => {
     switch (courseType) {
@@ -134,6 +143,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
       // Add the response to messages
       setMessages((m) => [...m, prompt.trim(), res.reply])
       setPrompt("")
+      setIsNewMessage(true) // ✨ Activer le shimmering pour le nouveau message du bot
 
       // 🎯 Redirection basée sur l'agent et redirect_id (via hook)
       handleRedirect(res)
@@ -148,7 +158,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
     <aside
       className={cn(
         `
-        hidden md:flex flex-1 flex-col
+        hidden md:flex flex-col h-full
         rounded-[28px] border 
         backdrop-blur-[22px] backdrop-saturate-150
         bg-[linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]
@@ -157,13 +167,13 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_8px_30px_rgba(0,0,0,0.25)]
         transition-all duration-500 ease-out
         hover:shadow-[inset_0_1px_6px_rgba(255,255,255,0.25),0_12px_40px_rgba(0,0,0,0.35)]
-        p-6
+        p-6 overflow-hidden
       `,
         className
       )}
     >
-      {/* Header */}
-      <div className="flex flex-1 flex-col gap-4 overflow-y-auto">
+      {/* Header + Messages Container */}
+      <div className="flex flex-col gap-4 overflow-hidden flex-1 min-h-0">
         <div>
           <h2 className="text-lg font-semibold" style={headingStyle}>
             Copilote
@@ -173,11 +183,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
           </p>
         </div>
 
-        {/* Empty state when there are no messages */}
-        {/**
-         * NOTE: messages are local to this container for now. If you have a
-         * global/message store, replace this with the real messages array.
-         */}
+        {/* Messages Area with ScrollArea */}
         {messages.length === 0 ? (
           <Empty className="mt-6">
             <EmptyMedia className="mb-4">
@@ -198,38 +204,40 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
             </EmptyContent>
           </Empty>
         ) : (
-          /* Display conversation messages */
-          <div className="flex flex-col gap-3 overflow-y-auto pr-2">
-            {messages.map((message, index) => {
-              const isUserMessage = index % 2 === 0
-              return (
-                <div
-                  key={index}
-                  className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}
-                >
+          <ScrollArea className="flex-1 min-h-0 rounded-lg">
+            <div className="flex flex-col gap-3 pr-4">
+              {messages.map((message, index) => {
+                const isUserMessage = index % 2 === 0
+                return (
                   <div
-                    className={cn(
-                      "max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap transition-all duration-300",
-                      isUserMessage
-                        ? "rounded-2xl px-4 py-2 backdrop-blur-xl bg-[rgba(173,216,230,0.15)] dark:bg-[rgba(173,216,230,0.08)] text-black dark:text-white shadow-lg border border-white/20"
-                        : "bg-transparent text-foreground"
-                    )}
+                    key={index}
+                    className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}
                   >
-                    {/* 💬 Afficher avec shimmering si c'est le dernier message (réponse du bot) */}
-                    {!isUserMessage ? (
-                      <BotMessageDisplay
-                        content={message}
-                        isLatest={index === messages.length - 1}
-                        showShimmering={true}
-                      />
-                    ) : (
-                      message
-                    )}
+                    <div
+                      className={cn(
+                        "max-w-[75%] text-sm leading-relaxed transition-all duration-300",
+                        isUserMessage
+                          ? "rounded-2xl px-4 py-2 backdrop-blur-xl bg-[rgba(173,216,230,0.15)] dark:bg-[rgba(173,216,230,0.08)] text-black dark:text-white shadow-lg border border-white/20"
+                          : "bg-transparent text-foreground"
+                      )}
+                    >
+                      {/* 💬 Afficher avec shimmering UNIQUEMENT si c'est un nouveau message reçu (pas au chargement initial) */}
+                      {!isUserMessage ? (
+                        <BotMessageDisplay
+                          content={message}
+                          isLatest={index === messages.length - 1}
+                          showShimmering={isNewMessage && index === messages.length - 1}
+                        />
+                      ) : (
+                        message
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
         )}
       </div>
 
@@ -240,7 +248,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         onSubmit={handleSubmit}
         disableAttachments={false}
         isSending={false}
-        className="mt-auto"
+        className="flex-shrink-0"
         placeholder="Demandez une assistance au copilote..."
       />
     </aside>

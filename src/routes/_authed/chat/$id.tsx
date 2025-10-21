@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
 import { Chat, ChatMessage, loadConversation, saveConversation } from "~/components/Chat"
 import { ChatInput } from "~/components/ChatInput"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import { sendChatMessage } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { useSidebar } from "~/components/ui/sidebar"
@@ -131,9 +132,9 @@ function ChatSessionPage() {
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto mb-4">
+          <ScrollArea className="flex-1 mb-4 rounded-lg">
             <Chat messages={messages} sending={sending} error={error} />
-          </div>
+          </ScrollArea>
         </div>
       </div>
 

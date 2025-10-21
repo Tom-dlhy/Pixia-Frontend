@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { ChatQuickViewLayout } from "~/layouts/ChatQuickViewLayout"
+import { DocumentTitleProvider } from "~/context/DocumentTitleContext"
 
 export const Route = createFileRoute('/_authed/exercise')({
   component: RouteComponent,
@@ -7,8 +8,10 @@ export const Route = createFileRoute('/_authed/exercise')({
 
 function RouteComponent() {
   return (
-    <ChatQuickViewLayout courseType="exercice">
-      <Outlet />
-    </ChatQuickViewLayout>
+    <DocumentTitleProvider>
+      <ChatQuickViewLayout courseType="exercice">
+        <Outlet />
+      </ChatQuickViewLayout>
+    </DocumentTitleProvider>
   )
 }
