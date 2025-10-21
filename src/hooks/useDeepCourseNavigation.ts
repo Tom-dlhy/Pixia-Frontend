@@ -13,11 +13,18 @@ export function useDeepCourseParams() {
     const deepCourseIndex = segments.indexOf("deep-course")
     const depth = deepCourseIndex === -1 ? 0 : segments.length - deepCourseIndex
 
-    return {
+    const result = {
       depth,
       deepcourseId: depth >= 2 ? segments[deepCourseIndex + 1] : undefined,
       chapterId: depth >= 3 ? segments[deepCourseIndex + 2] : undefined,
     }
+
+    console.log(`🔍 [useDeepCourseParams] pathname="${location.pathname}"`)
+    console.log(`  - segments: [${segments.join(", ")}]`)
+    console.log(`  - deepCourseIndex: ${deepCourseIndex}`)
+    console.log(`  - result:`, result)
+
+    return result
   }, [location.pathname])
 }
 

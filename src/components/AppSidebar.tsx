@@ -5,6 +5,7 @@ import { useChatSessions } from "~/context/ChatSessionsContext"
 import { useNavigate } from "@tanstack/react-router"
 import { Button } from "~/components/ui/button"
 import { cn } from "~/lib/utils"
+import { getChat } from "~/server/chat.server"
 import {
   Empty,
   EmptyContent,
@@ -45,6 +46,34 @@ export function AppSidebar({ user }: AppSidebarProps) {
       }
     : null
 
+  // Handler pour charger la session et naviguer
+  const handleSessionClick = async (sessionId: string, isExercise: boolean) => {
+    try {
+      const userId = session.userId != null ? String(session.userId) : "anonymous-user"
+      
+      console.log(`📝 [AppSidebar] Chargement de la session: ${sessionId}`)
+      
+      // Appel à getChat pour récupérer l'historique
+      await getChat({
+        data: {
+          user_id: userId,
+          session_id: sessionId,
+        },
+      })
+
+      // Navigation après chargement réussi
+      const route = isExercise ? `/exercise/${sessionId}` : `/course/${sessionId}`
+      navigate({ to: route })
+      
+      console.log(`✅ [AppSidebar] Session chargée et navigation vers ${route}`)
+    } catch (err) {
+      console.error(`❌ [AppSidebar] Erreur lors du chargement de la session:`, err)
+      // On navigue quand même
+      const route = isExercise ? `/exercise/${sessionId}` : `/course/${sessionId}`
+      navigate({ to: route })
+    }
+  }
+
   return (
     <Sidebar>
       <SidebarContent className="p-4 space-y-4">
@@ -61,14 +90,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
                 const bgColor = isExercise ? "bg-blue-500/10 hover:bg-blue-500/20" : "bg-green-500/10 hover:bg-green-500/20"
                 const textColor = isExercise ? "text-blue-600 dark:text-blue-300" : "text-green-600 dark:text-green-300"
                 const borderColor = isExercise ? "border-blue-500/30" : "border-green-500/30"
-                
-                // Déterminer la route en fonction du type
-                const route = isExercise ? `/exercise/${session.session_id}` : `/course/${session.session_id}`
 
                 return (
                   <Button
                     key={session.session_id}
-                    onClick={() => navigate({ to: route })}
+                    onClick={() => handleSessionClick(session.session_id, isExercise)}
                     variant="ghost"
                     className={cn(
                       "w-full justify-start text-left h-auto py-2 px-2 rounded-md border text-xs transition-all",

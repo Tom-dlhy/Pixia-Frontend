@@ -9,7 +9,9 @@ interface DeepCourseMainContentProps {
 }
 
 export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentProps) {
-  const { depth } = useDeepCourseParams()
+  const { depth, chapterId } = useDeepCourseParams()
+
+  console.log(`🔍 [DeepCourseMainContent] depth=${depth}, chapterId=${chapterId}`)
 
   // À depth === 3 : affiche le contenu du chapitre avec le copilote
   if (depth === 3) {
@@ -34,7 +36,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
               : "opacity-100 translate-x-0"
           )}
         >
-          {!isEvaluating && <CopiloteContainer className="h-full" />}
+          {!isEvaluating && <CopiloteContainer className="h-full" sessionId={chapterId} />}
         </div>
       </div>
     )

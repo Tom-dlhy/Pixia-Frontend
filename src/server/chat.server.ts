@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat } from "./chatApi"
 
 // -------------------------
 // 🔹 Validation des entrées
@@ -103,6 +103,32 @@ export const getAllDeepCourses = createServerFn({ method: "POST" })
       return res.sessions
     } catch (error) {
       console.error(`❌ [getAllDeepCourses] Erreur:`, error)
+      throw error
+    }
+  })
+
+// -------------------------
+// 🔹 Validation pour fetchChat
+// -------------------------
+const FetchChatSchema = z.object({
+  user_id: z.string().min(1),
+  session_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Récupérer l'historique d'une session
+// -------------------------
+export const getChat = createServerFn({ method: "POST" })
+  .inputValidator(FetchChatSchema)
+  .handler(async ({ data }) => {
+    const { user_id, session_id } = data
+
+    try {
+      const res = await fetchChat(user_id, session_id)
+      console.log(`✅ [getChat] ${res.messages.length} messages récupérés pour session: ${session_id}`)
+      return res.messages
+    } catch (error) {
+      console.error(`❌ [getChat] Erreur:`, error)
       throw error
     }
   })

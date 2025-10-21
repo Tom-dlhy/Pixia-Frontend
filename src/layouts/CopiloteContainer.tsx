@@ -14,10 +14,9 @@ import { ChatInput } from "~/components/ChatInput"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
-import { sendChatMessage } from "~/server/chat.server"
+import { sendChatMessage, getChat } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
-import { loadConversation } from "~/components/Chat"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 
 interface CopiloteContainerProps {
@@ -38,15 +37,48 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
 
   // 🔄 Charger les messages de la session au montage
   useEffect(() => {
-    if (sessionId) {
-      const conversation = loadConversation(sessionId)
-      if (conversation && conversation.length > 0) {
-        // Créer une liste plate des messages (alternant user/assistant)
-        const flatMessages = conversation.flatMap((msg) => [msg.content])
-        setMessages(flatMessages)
+    if (!sessionId) {
+      console.warn(`⚠️ [CopiloteContainer] Pas de sessionId reçu`)
+      return
+    }
+
+    const loadMessages = async () => {
+      try {
+        const userId = session.userId != null ? String(session.userId) : "anonymous-user"
+        
+        console.log(`📝 [CopiloteContainer] Chargement des messages`)
+        console.log(`  - user_id: ${userId}`)
+        console.log(`  - session_id: ${sessionId}`)
+        console.log(`  - session.userId: ${session.userId}`)
+        console.log(`  - typeof sessionId: ${typeof sessionId}`)
+
+        const messages = await getChat({
+          data: {
+            user_id: userId,
+            session_id: sessionId,
+          },
+        })
+
+        console.log(`✅ [CopiloteContainer] getChat retourné avec:`, messages)
+
+        // Convertir les EventMessages en format d'affichage (alternant user/bot)
+        const displayMessages: string[] = []
+        for (const msg of messages) {
+          if (msg.text) {
+            displayMessages.push(msg.text)
+          }
+        }
+
+        setMessages(displayMessages)
+        console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés`)
+      } catch (err) {
+        console.error(`❌ [CopiloteContainer] Erreur lors du chargement des messages:`, err)
+        setMessages([])
       }
     }
-  }, [sessionId])
+
+    loadMessages()
+  }, [sessionId, session.userId])
 
   const contentText = useMemo(() => {
     switch (courseType) {

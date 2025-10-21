@@ -26,6 +26,21 @@ export type FetchAllDeepCoursesResponse = {
   sessions: DeepCourse[]
 }
 
+// -------------------------
+// 🔹 Message de chat
+// -------------------------
+export type EventMessage = {
+  type: "user" | "bot" | "system" | "unknown"
+  text: string | null
+  timestamp: string | null
+}
+
+export type FetchChatResponse = {
+  session_id: string | null
+  user_id: string
+  messages: EventMessage[]
+}
+
 async function handle<T = any>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.text().catch(() => "")
@@ -94,6 +109,31 @@ export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepC
   
   const result = await handle<FetchAllDeepCoursesResponse>(r)
   console.log(`📡 [fetchAllDeepCourses] ${result.sessions.length} deep-courses récupérés`)
+  
+  return result
+}
+
+// -------------------------
+// 🔹 Récupérer l'historique d'une session de chat
+// -------------------------
+export async function fetchChat(
+  userId: string,
+  sessionId: string
+): Promise<FetchChatResponse> {
+  console.log(`📡 [fetchChat] Appel API pour user_id: ${userId}, session_id: ${sessionId}`)
+  
+  // Utiliser FormData pour passer les paramètres comme le backend l'attend
+  const formData = new FormData()
+  formData.append("user_id", userId)
+  formData.append("session_id", sessionId)
+  
+  const r = await fetch(`${API_BASE}/testfetchchat`, {
+    method: "POST",
+    body: formData,
+  })
+  
+  const result = await handle<FetchChatResponse>(r)
+  console.log(`📡 [fetchChat] ${result.messages.length} messages récupérés`)
   
   return result
 }

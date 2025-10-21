@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useEffect } from "react"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useLocation } from "@tanstack/react-router"
 import ChatHeader from "~/layouts/ChatHeader"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import BackButton from "~/components/BackButton"
@@ -22,6 +22,7 @@ export function ChatQuickViewLayout({
   courseType: overrideCourseType
 }: ChatQuickViewLayoutProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { courseType: contextCourseType, setCourseType } = useCourseType()
   
   // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
@@ -34,12 +35,36 @@ export function ChatQuickViewLayout({
     }
   }, [overrideCourseType, contextCourseType, setCourseType])
 
-  // 🔹 Récupération de la session stockée localement (ou valeur par défaut)
+  // 🔹 Récupération du sessionId depuis l'URL ou sessionStorage
   const sessionId = useMemo(() => {
-    if (typeof window === "undefined") return "Session"
+    // Extraire l'ID de l'URL: /course/{id} ou /exercise/{id}
+    const pathSegments = location.pathname.split("/").filter(Boolean)
+    
+    // Chercher après "course" ou "exercise"
+    const courseIndex = pathSegments.indexOf("course")
+    const exerciseIndex = pathSegments.indexOf("exercise")
+    
+    if (courseIndex !== -1 && pathSegments[courseIndex + 1]) {
+      const id = pathSegments[courseIndex + 1]
+      console.log(`✅ [ChatQuickViewLayout] Utilisation du sessionId depuis URL course: ${id}`)
+      return id
+    }
+    
+    if (exerciseIndex !== -1 && pathSegments[exerciseIndex + 1]) {
+      const id = pathSegments[exerciseIndex + 1]
+      console.log(`✅ [ChatQuickViewLayout] Utilisation du sessionId depuis URL exercise: ${id}`)
+      return id
+    }
+    
+    if (typeof window === "undefined") {
+      console.warn(`⚠️ [ChatQuickViewLayout] Pas de sessionId et pas de window`)
+      return "Session"
+    }
+    
     const stored = sessionStorage.getItem("chatSession")
+    console.log(`📦 [ChatQuickViewLayout] Utilisation du sessionId depuis sessionStorage: ${stored}`)
     return stored || "Session"
-  }, [])
+  }, [location.pathname])
 
   // 🔹 Format d’affichage convivial
   const formattedSession = useMemo(() => {
