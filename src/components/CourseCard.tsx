@@ -1,5 +1,6 @@
 import { type LucideIcon } from "lucide-react"
 import { type KeyboardEvent } from "react"
+import { IoCheckmarkDoneCircle } from "react-icons/io5"
 import { cn } from "~/lib/utils"
 import {
   Card,
@@ -13,17 +14,17 @@ interface CourseCardProps {
   title: string
   description: string
   icon: LucideIcon
-  badge?: string
+  completion?: number // 0-100
   onClick?: () => void
   className?: string
-  gradient?: string // permet d’ajouter un fond gradient (ex: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60")
+  gradient?: string // permet d'ajouter un fond gradient (ex: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60")
 }
 
 export function CourseCard({
   title,
   description,
   icon: Icon,
-  badge,
+  completion = 0,
   onClick,
   gradient,
   className,
@@ -75,15 +76,10 @@ export function CourseCard({
             <Icon className="h-5 w-5" />
           </span>
 
-          {badge && (
-            <span
-              className={cn(
-                "rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground shadow-sm backdrop-blur-sm",
-                "transition-all duration-300 group-hover:shadow-md"
-              )}
-            >
-              {badge}
-            </span>
+          {completion === 100 ? (
+            <IoCheckmarkDoneCircle className="h-6 w-6 text-green-400 drop-shadow-sm" />
+          ) : (
+            <div className="h-6 w-6 rounded-full border-2 border-white/40 shadow-sm" />
           )}
         </div>
 
@@ -97,9 +93,25 @@ export function CourseCard({
         </div>
       </CardHeader>
 
-      <CardFooter className="relative z-10 mt-6 flex items-center gap-2 p-0 text-sm font-medium text-sidebar-foreground/90 transition-all duration-300 group-hover:translate-x-1">
-        <span>Accéder au cours</span>
-        <span aria-hidden>→</span>
+      <CardFooter className="relative z-10 mt-6 flex flex-col gap-3 p-0">
+        {completion < 100 && (
+          <div className="w-full">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs font-medium text-sidebar-foreground/70">Progression</span>
+              <span className="text-xs font-semibold text-sidebar-foreground/80">{Math.round(completion)}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden backdrop-blur-sm border border-white/20">
+              <div
+                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 transition-all duration-500 ease-out rounded-full"
+                style={{ width: `${completion}%` }}
+              />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2 text-sm font-medium text-sidebar-foreground/90 transition-all duration-300 group-hover:translate-x-1">
+          <span>Accéder au cours</span>
+          <span aria-hidden>→</span>
+        </div>
       </CardFooter>
     </Card>
   )

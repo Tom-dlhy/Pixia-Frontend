@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses } from "./chatApi"
 
 // -------------------------
 // 🔹 Validation des entrées
@@ -78,6 +78,31 @@ export const getAllChatSessions = createServerFn({ method: "POST" })
       return res.sessions
     } catch (error) {
       console.error(`❌ [getAllChatSessions] Erreur:`, error)
+      throw error
+    }
+  })
+
+// -------------------------
+// 🔹 Validation pour fetchAllDeepCourses
+// -------------------------
+const FetchAllDeepCoursesSchema = z.object({
+  user_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Récupérer tous les deep-courses
+// -------------------------
+export const getAllDeepCourses = createServerFn({ method: "POST" })
+  .inputValidator(FetchAllDeepCoursesSchema)
+  .handler(async ({ data }) => {
+    const { user_id } = data
+
+    try {
+      const res = await fetchAllDeepCourses(user_id)
+      console.log(`✅ [getAllDeepCourses] ${res.sessions.length} deep-courses récupérés`)
+      return res.sessions
+    } catch (error) {
+      console.error(`❌ [getAllDeepCourses] Erreur:`, error)
       throw error
     }
   })

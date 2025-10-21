@@ -158,7 +158,7 @@ export function SectionCards() {
               onClick={() => {
                 setCourseType(courseType === c.key ? "none" : c.key)
                 if (c.key === "deep" && courseType !== "deep") {
-                  navigate({ to: "/deep-courses" })
+                  navigate({ to: "/deep-course" })
                 }
               }}
               role="button"

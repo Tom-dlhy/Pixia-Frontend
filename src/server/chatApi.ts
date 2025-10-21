@@ -17,6 +17,15 @@ export type FetchAllChatResponse = {
   sessions: ChatSession[]
 }
 
+export type DeepCourse = {
+  deepcourse_id: string
+  title: string
+}
+
+export type FetchAllDeepCoursesResponse = {
+  sessions: DeepCourse[]
+}
+
 async function handle<T = any>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.text().catch(() => "")
@@ -67,6 +76,24 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
   
   const result = await handle<FetchAllChatResponse>(r)
   console.log(`📡 [fetchAllChat] ${result.sessions.length} sessions récupérées`)
+  
+  return result
+}
+
+// -------------------------
+// 🔹 Récupérer tous les deep-courses
+// -------------------------
+export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepCoursesResponse> {
+  console.log(`📡 [fetchAllDeepCourses] Appel API pour user_id: ${userId}`)
+  
+  const params = new URLSearchParams({ user_id: userId })
+  const r = await fetch(`${API_BASE}/testfetchalldeepcourses?${params}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+  })
+  
+  const result = await handle<FetchAllDeepCoursesResponse>(r)
+  console.log(`📡 [fetchAllDeepCourses] ${result.sessions.length} deep-courses récupérés`)
   
   return result
 }
