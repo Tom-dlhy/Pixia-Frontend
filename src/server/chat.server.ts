@@ -2,6 +2,9 @@ import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
 import { sendChat } from "./chatApi"
 
+// -------------------------
+// 🔹 Validation des entrées
+// -------------------------
 const ChatMessageSchema = z.object({
   user_id: z.string().min(1),
   message: z.string().min(1),
@@ -18,6 +21,9 @@ const ChatMessageSchema = z.object({
     .optional(),
 })
 
+// -------------------------
+// 🔹 Fonction serveur
+// -------------------------
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
@@ -30,16 +36,23 @@ export const sendChatMessage = createServerFn({ method: "POST" })
 
     for (const f of files) {
       const buffer = Buffer.from(f.data, "base64")
-      const blob = new Blob([buffer], { type: f.type ?? "application/octet-stream" })
+      const blob = new Blob([buffer], {
+        type: f.type ?? "application/octet-stream",
+      })
       formData.append("files", blob, f.name)
     }
 
     const res = await sendChat(formData)
 
+    console.log("📡 RAW API RESPONSE (type):", typeof res)
+    console.log("📡 RAW API RESPONSE (full):", JSON.stringify(res, null, 2))
+    console.log("📡 session_id exists?", "session_id" in res, res.session_id)
+
+    // ✅ Mapping backend → frontend
     return {
       reply: res.answer,
       session_id: res.session_id,
-      agent: res.agent ?? null,
-      title: res.redirect_id ?? null,
+      agent: res.agent,
+      redirect_id: res.redirect_id,
     }
   })

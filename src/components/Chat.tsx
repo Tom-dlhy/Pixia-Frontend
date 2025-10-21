@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Paperclip } from "lucide-react"
 import { ShimmeringText } from "~/components/ui/shimmering-text"
 import { TextGenerateEffect } from "~/components/ui/text-generate-effect"
+import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 
 // ----------------------
 // 🔹 Types
@@ -97,8 +98,6 @@ export function Chat({
           },
         ]
 
-  console.log("Messages rendus :", messages)
-
   // 📜 Scroll automatique
   useEffect(() => {
     const list = listRef.current
@@ -122,14 +121,12 @@ export function Chat({
                   : "bg-transparent text-foreground"
               }`}
             >
-              {/* 💬 Si c’est la dernière réponse de l’assistant → effet mot par mot */}
-              {m.role === "assistant" && index === messages.length - 1 ? (
-                <TextGenerateEffect
-                  words={m.content}
-                  duration={0.3}
-                  staggerDelay={0.06}
-                  filter
-                  className="font-normal text-foreground"
+              {/* 💬 Si c'est la dernière réponse de l'assistant → effet mot par mot */}
+              {m.role === "assistant" ? (
+                <BotMessageDisplay
+                  content={m.content}
+                  isLatest={index === messages.length - 1}
+                  showShimmering={true}
                 />
               ) : (
                 m.content

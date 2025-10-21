@@ -3,8 +3,8 @@ const API_BASE: string | undefined = process.env.API_BASE
 export type SendChatResponse = {
   session_id: string
   answer: string
-  agent?: string
-  redirect_id?: string
+  agent: string
+  redirect_id: string
 }
 
 async function handle<T = any>(r: Response): Promise<T> {

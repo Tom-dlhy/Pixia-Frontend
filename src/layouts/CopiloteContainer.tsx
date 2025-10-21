@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo, type CSSProperties } from "react"
+import { useState, useCallback, useMemo, useEffect, type CSSProperties } from "react"
 import {
   Empty,
   EmptyHeader,
@@ -14,19 +14,39 @@ import { ChatInput } from "~/components/ChatInput"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
+import { sendChatMessage } from "~/server/chat.server"
+import { useAppSession } from "~/utils/session"
+import { useApiRedirect } from "~/hooks/useApiRedirect"
+import { loadConversation } from "~/components/Chat"
+import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 
 interface CopiloteContainerProps {
   className?: string
+  sessionId?: string
 }
 
 /**
  * Right-side assistant panel with dynamic glassmorphism & accent gradient.
  */
-export default function CopiloteContainer({ className = "" }: CopiloteContainerProps) {
+export default function CopiloteContainer({ className = "", sessionId }: CopiloteContainerProps) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
   const { courseType } = useCourseType()
+  const { session } = useAppSession()
+  const { handleRedirect } = useApiRedirect()
   const accent = useMemo(() => getCourseAccent(courseType === "deep" ? "none" : courseType), [courseType])
+
+  // 🔄 Charger les messages de la session au montage
+  useEffect(() => {
+    if (sessionId) {
+      const conversation = loadConversation(sessionId)
+      if (conversation && conversation.length > 0) {
+        // Créer une liste plate des messages (alternant user/assistant)
+        const flatMessages = conversation.flatMap((msg) => [msg.content])
+        setMessages(flatMessages)
+      }
+    }
+  }, [sessionId])
 
   const contentText = useMemo(() => {
     switch (courseType) {
@@ -57,13 +77,40 @@ export default function CopiloteContainer({ className = "" }: CopiloteContainerP
     [accent]
   )
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!prompt.trim()) return
-    console.info("Copilote prompt:", prompt)
-    // Add the prompt to local messages so the empty state disappears
-    setMessages((m) => [...m, prompt.trim()])
-    setPrompt("")
-  }, [prompt])
+    
+    const userId =
+      session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user")
+    
+    try {
+      console.info("Copilote prompt:", prompt)
+      
+      const res = await sendChatMessage({
+        data: {
+          user_id: userId,
+          message: prompt,
+        },
+      })
+
+      console.log("%c🤖 Copilote Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {
+        agent: res.agent,
+        redirect_id: res.redirect_id,
+        reply: res.reply,
+      })
+
+      // Add the response to messages
+      setMessages((m) => [...m, prompt.trim(), res.reply])
+      setPrompt("")
+
+      // 🎯 Redirection basée sur l'agent et redirect_id (via hook)
+      handleRedirect(res)
+    } catch (err) {
+      console.error("❌ Erreur Copilote:", err)
+      setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
+      setPrompt("")
+    }
+  }, [prompt, session, handleRedirect])
 
   return (
     <aside
@@ -119,14 +166,37 @@ export default function CopiloteContainer({ className = "" }: CopiloteContainerP
             </EmptyContent>
           </Empty>
         ) : (
-          /* Content blocks when messages exist */
-          <div className="flex flex-col gap-3 text-sm">
-            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-white/5 dark:bg-white/5 p-3 backdrop-blur-md">
-              Suggestions personnalisées
-            </div>
-            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-white/5 dark:bg-white/5 p-3 backdrop-blur-md">
-              Historique des interactions
-            </div>
+          /* Display conversation messages */
+          <div className="flex flex-col gap-3 overflow-y-auto pr-2">
+            {messages.map((message, index) => {
+              const isUserMessage = index % 2 === 0
+              return (
+                <div
+                  key={index}
+                  className={`flex ${isUserMessage ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={cn(
+                      "max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap transition-all duration-300",
+                      isUserMessage
+                        ? "rounded-2xl px-4 py-2 backdrop-blur-xl bg-[rgba(173,216,230,0.15)] dark:bg-[rgba(173,216,230,0.08)] text-black dark:text-white shadow-lg border border-white/20"
+                        : "bg-transparent text-foreground"
+                    )}
+                  >
+                    {/* 💬 Afficher avec shimmering si c'est le dernier message (réponse du bot) */}
+                    {!isUserMessage ? (
+                      <BotMessageDisplay
+                        content={message}
+                        isLatest={index === messages.length - 1}
+                        showShimmering={true}
+                      />
+                    ) : (
+                      message
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>

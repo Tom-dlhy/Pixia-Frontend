@@ -1,14 +1,38 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 import { useNavigate } from "@tanstack/react-router"
 import ChatHeader from "~/layouts/ChatHeader"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import BackButton from "~/components/BackButton"
 import { ChatActionButton } from "~/components/ChatActionButton"
+import { useCourseType, type CourseType } from "~/context/CourseTypeContext"
 
-export function ChatQuickViewLayout({ children }: { children: React.ReactNode }) {
+interface ChatQuickViewLayoutProps {
+  children: React.ReactNode
+  title?: string
+  backTo?: string
+  courseType?: CourseType
+}
+
+export function ChatQuickViewLayout({ 
+  children, 
+  title = "Session Conversationnelle",
+  backTo = "/chat",
+  courseType: overrideCourseType
+}: ChatQuickViewLayoutProps) {
   const navigate = useNavigate()
+  const { courseType: contextCourseType, setCourseType } = useCourseType()
+  
+  // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
+  const courseType = overrideCourseType || contextCourseType
+  
+  // Si un courseType override est fourni, le définir dans le contexte
+  useEffect(() => {
+    if (overrideCourseType && overrideCourseType !== contextCourseType) {
+      setCourseType(overrideCourseType)
+    }
+  }, [overrideCourseType, contextCourseType, setCourseType])
 
   // 🔹 Récupération de la session stockée localement (ou valeur par défaut)
   const sessionId = useMemo(() => {
@@ -29,8 +53,8 @@ export function ChatQuickViewLayout({ children }: { children: React.ReactNode })
         {/* HEADER */}
         <div className="flex-none px-10 pt-10">
           <ChatHeader
-            title="Session Conversationnelle"
-            leftAction={<BackButton onClick={() => navigate({ to: "/chat" })} />}
+            title={title}
+            leftAction={<BackButton onClick={() => navigate({ to: backTo })} />}
             rightAction={<ChatActionButton />}
           />
         </div>
@@ -64,7 +88,7 @@ export function ChatQuickViewLayout({ children }: { children: React.ReactNode })
 
           {/* RIGHT PANEL — Copilote */}
           <div className="flex h-full flex-[0.3] flex-col">
-            <CopiloteContainer />
+            <CopiloteContainer sessionId={sessionId} />
           </div>
         </div>
       </div>
