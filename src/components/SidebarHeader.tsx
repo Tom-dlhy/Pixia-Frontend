@@ -20,7 +20,6 @@ type AppSidebarProps = {
     image?: string | null
     givenName?: string | null
     familyName?: string | null
-    locale?: string | null
   } | null
 }
 

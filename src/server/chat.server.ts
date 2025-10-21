@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat } from "./chatApi"
+import { sendChat, fetchAllChat } from "./chatApi"
 
 // -------------------------
 // 🔹 Validation des entrées
@@ -54,5 +54,30 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       session_id: res.session_id,
       agent: res.agent,
       redirect_id: res.redirect_id,
+    }
+  })
+
+// -------------------------
+// 🔹 Validation pour fetchAllChat
+// -------------------------
+const FetchAllChatSchema = z.object({
+  user_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Récupérer toutes les sessions
+// -------------------------
+export const getAllChatSessions = createServerFn({ method: "POST" })
+  .inputValidator(FetchAllChatSchema)
+  .handler(async ({ data }) => {
+    const { user_id } = data
+
+    try {
+      const res = await fetchAllChat(user_id)
+      console.log(`✅ [getAllChatSessions] ${res.sessions.length} sessions récupérées`)
+      return res.sessions
+    } catch (error) {
+      console.error(`❌ [getAllChatSessions] Erreur:`, error)
+      throw error
     }
   })

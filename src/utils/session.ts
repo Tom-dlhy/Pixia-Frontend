@@ -17,9 +17,6 @@ export type UserSession = {
   userId?: string | number | null
   givenName?: string | null
   familyName?: string | null
-  picture?: string | null
-  locale?: string | null
-  googleSub?: string | null
   isLoggedIn?: boolean
 }
 
@@ -40,9 +37,6 @@ const defaultSession: UserSession = {
   userId: null,
   givenName: null,
   familyName: null,
-  picture: null,
-  locale: null,
-  googleSub: null,
   isLoggedIn: false,
 }
 
@@ -53,9 +47,6 @@ type StoredProfile = {
   userId?: string | number | null
   givenName?: string | null
   familyName?: string | null
-  picture?: string | null
-  locale?: string | null
-  googleSub?: string | null
 }
 
 const SessionContext = createContext<SessionContextValue>({
@@ -92,9 +83,6 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
             userId: profile.userId ?? null,
             givenName: profile.givenName ?? null,
             familyName: profile.familyName ?? null,
-            picture: profile.picture ?? null,
-            locale: profile.locale ?? null,
-            googleSub: profile.googleSub ?? null,
             isLoggedIn: true,
           })
         } else {
@@ -117,13 +105,10 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
           userId: profile?.userId ?? decoded.user_id ?? null,
           givenName: profile?.givenName ?? null,
           familyName: profile?.familyName ?? null,
-          picture: profile?.picture ?? null,
-          locale: profile?.locale ?? null,
-          googleSub: profile?.googleSub ?? null,
           isLoggedIn: true,
         })
       } catch (error) {
-        console.error("Erreur lors du décodage du token :", error)
+        console.error("❌ Erreur lors du décodage du token :", error)
         window.localStorage.removeItem("access_token")
         window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
         setSession(defaultSession)
@@ -150,16 +135,12 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const { userEmail, userId, givenName, familyName, picture, locale, googleSub, isLoggedIn } =
-      session
+    const { userEmail, userId, givenName, familyName, isLoggedIn } = session
     const hasProfile = Boolean(
       userEmail ||
         (userId !== null && userId !== undefined) ||
         givenName ||
-        familyName ||
-        picture ||
-        locale ||
-        googleSub,
+        familyName,
     )
 
     if (!hasProfile || !isLoggedIn) {
@@ -168,17 +149,23 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
     }
 
     try {
+      // 🔍 Vérifier si les données ont réellement changé avant de sauvegarder
+      const stored = window.localStorage.getItem(SESSION_PROFILE_STORAGE_KEY)
+      const newData = {
+        email: userEmail ?? null,
+        userId: userId ?? null,
+        givenName: givenName ?? null,
+        familyName: familyName ?? null,
+      }
+      
+      if (stored === JSON.stringify(newData)) {
+        // Pas de changement, ne pas resauvegarder
+        return
+      }
+
       window.localStorage.setItem(
         SESSION_PROFILE_STORAGE_KEY,
-        JSON.stringify({
-          email: userEmail ?? null,
-          userId: userId ?? null,
-          givenName: givenName ?? null,
-          familyName: familyName ?? null,
-          picture: picture ?? null,
-          locale: locale ?? null,
-          googleSub: googleSub ?? null,
-        }),
+        JSON.stringify(newData),
       )
     } catch (error) {
       console.error("Erreur lors de l'enregistrement du profil en session :", error)

@@ -8,10 +8,6 @@ export type SendLoginResponse = {
   user_id?: string
   given_name?: string
   family_name?: string
-  token?: string
-  picture?: string
-  locale?: string
-  google_sub?: string
 }
 
 async function handle<T = any>(r: Response): Promise<T> {

@@ -63,14 +63,14 @@ function SignupComp() {
 
       console.log("Inscription réussie :", data)
 
+      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
+      const userId = data.user_id || data.email || null
+
       setSession({
         userEmail: data.email,
-        userId: data.user_id,
+        userId: userId,
         givenName: data.given_name,
         familyName: data.family_name,
-        googleSub: data.user_id,
-        picture: null,
-        locale: null,
       })
 
       router.navigate({ to: redirect ?? "/chat" })

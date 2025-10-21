@@ -34,7 +34,7 @@ function ChatSessionPage() {
   }, [id, setOpen])
 
   const userId =
-    session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user")
+    session.userId != null ? String(session.userId) : "anonymous-user"
 
   const handleSend = async () => {
     if (!input.trim()) return

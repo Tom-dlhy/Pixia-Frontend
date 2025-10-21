@@ -1,9 +1,7 @@
 import { BaseEntity, ID, Timestamp, hydrateByIds } from "./GlobalType"
 import type { Attachment } from "./Attachment"
-import { useAppSession } from "~/utils/session"
 
-const { session } = useAppSession()
-const userId = session.googleSub || "unknown_user"
+// Note: userId should be obtained from session when needed, not globally
 
 // ----------------------------------------------
 // Enum-like types

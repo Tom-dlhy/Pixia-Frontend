@@ -18,9 +18,6 @@ function LogoutScreen() {
       userId: null,
       givenName: null,
       familyName: null,
-      picture: null,
-      locale: null,
-      googleSub: null,
     })
 
     navigate({ to: "/login" })

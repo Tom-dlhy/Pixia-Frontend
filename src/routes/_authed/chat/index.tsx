@@ -6,13 +6,14 @@ import { useCallback, useState, useEffect } from "react"
 import { Chat, ChatMessage, saveConversation } from "~/components/Chat"
 import { ChatInput } from "~/components/ChatInput"
 import { SectionCards } from "~/components/SectionCards"
-import { sendChatMessage } from "~/server/chat.server"
+import { sendChatMessage, getAllChatSessions } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { Button } from "~/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { cn } from "~/lib/utils"
 import { useSidebar } from "~/components/ui/sidebar"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
+import { useChatSessions } from "~/context/ChatSessionsContext"
 
 export const Route = createFileRoute("/_authed/chat/")({
   component: ChatPage,
@@ -24,6 +25,7 @@ function ChatPage() {
   const { session } = useAppSession()
   const { setOpen } = useSidebar()
   const { handleRedirect } = useApiRedirect()
+  const { setSessions: setGlobalSessions } = useChatSessions()
 
   const [showCards, setShowCards] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -34,8 +36,22 @@ function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [hasInitialized, setHasInitialized] = useState(false)
 
+  // 📋 Sessions d'historique
+  const [sessions, setSessions] = useState<any[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(false)
+
   // 🔍 Vérifier si on est sur /chat (pas /chat/$id)
   const isOnChatHome = location.pathname === "/chat" || location.pathname === "/chat/"
+
+  const userId =
+    session.userId != null ? String(session.userId) : "anonymous-user"
+
+  // 🐛 Debug: Afficher les infos de session au montage
+  useEffect(() => {
+    if (userId !== "anonymous-user") {
+      console.log("🔐 [ChatPage] Utilisateur authentifié:", { userId, email: session.userEmail })
+    }
+  }, [userId])
 
   useEffect(() => {
     const stored = sessionStorage.getItem("chatSession")
@@ -51,8 +67,55 @@ function ChatPage() {
     if (sessionId) sessionStorage.setItem("chatSession", sessionId)
   }, [sessionId])
 
-  const userId =
-    session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user")
+  // 📤 Mettre à jour le context global avec les sessions
+  useEffect(() => {
+    setGlobalSessions(sessions)
+  }, [sessions, setGlobalSessions])
+
+  // 📋 Charger les sessions à chaque arrivée sur /chat
+  useEffect(() => {
+    const loadSessions = async () => {
+      if (!userId || userId === "anonymous-user") {
+        console.log("⚠️ [fetchAllChat] Utilisateur non authentifié, skip")
+        return
+      }
+      setLoadingSessions(true)
+      try {
+        console.log(`\n🔄 [fetchAllChat] Appel API pour user_id: ${userId}`)
+        const res = await getAllChatSessions({
+          data: {
+            user_id: userId,
+          },
+        })
+        setSessions(res)
+        
+        // 📊 Logs détaillés
+        console.log(`\n� [fetchAllChat] Résultats:`)
+        console.log(`   ✅ Nombre total de sessions: ${res.length}`)
+        
+        if (res.length > 0) {
+          res.forEach((session, index) => {
+            console.log(`\n   Session #${index + 1}:`)
+            console.log(`     • ID: ${session.session_id}`)
+            console.log(`     • Title: ${session.title}`)
+            console.log(`     • Course Type: ${session.course_type}`)
+          })
+        } else {
+          console.log(`   ℹ️ Aucune session trouvée`)
+        }
+        console.log(`\n📋 Full data:`, res)
+      } catch (err) {
+        console.error("❌ [fetchAllChat] Erreur lors du chargement des sessions:", err)
+      } finally {
+        setLoadingSessions(false)
+      }
+    }
+
+    if (isOnChatHome) {
+      console.log("🚀 [fetchAllChat] Route /chat détectée, chargement des sessions...")
+      loadSessions()
+    }
+  }, [userId, isOnChatHome])
 
   // 📩 Envoi d'un message
   const handleSend = useCallback(async () => {

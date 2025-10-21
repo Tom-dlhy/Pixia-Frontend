@@ -6,21 +6,14 @@ export type StoredProfile = {
   userId?: string | number | null
   givenName?: string | null
   familyName?: string | null
-  picture?: string | null
-  locale?: string | null
-  googleSub?: string | null
 }
 
 export type AuthLikeResult = {
   success: boolean
-  token?: string | null
   email?: string | null
   user_id?: string | number | null
   given_name?: string | null
   family_name?: string | null
-  picture?: string | null
-  locale?: string | null
-  google_sub?: string | null
 }
 
 export const persistProfile = (profile: StoredProfile) => {
@@ -46,17 +39,9 @@ export const applyAuthResult = <T extends AuthLikeResult>(
     userId: result.user_id ?? null,
     givenName: result.given_name ?? null,
     familyName: result.family_name ?? null,
-    picture: result.picture ?? null,
-    locale: result.locale ?? null,
-    googleSub: result.google_sub ?? null,
   }
 
   if (typeof window !== "undefined") {
-    if (result.token) {
-      window.localStorage.setItem("access_token", result.token)
-    } else {
-      window.localStorage.removeItem("access_token")
-    }
     persistProfile(profile)
     window.dispatchEvent(new Event("session:refresh"))
   }
@@ -66,9 +51,6 @@ export const applyAuthResult = <T extends AuthLikeResult>(
     userId: profile.userId ?? prev.userId ?? null,
     givenName: profile.givenName ?? prev.givenName ?? null,
     familyName: profile.familyName ?? prev.familyName ?? null,
-    picture: profile.picture ?? prev.picture ?? null,
-    locale: profile.locale ?? prev.locale ?? null,
-    googleSub: profile.googleSub ?? prev.googleSub ?? null,
     isLoggedIn: true,
   }))
 

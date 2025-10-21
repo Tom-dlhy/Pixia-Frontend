@@ -81,7 +81,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
     if (!prompt.trim()) return
     
     const userId =
-      session.googleSub ?? (session.userId != null ? String(session.userId) : "anonymous-user")
+      session.userId != null ? String(session.userId) : "anonymous-user"
     
     try {
       console.info("Copilote prompt:", prompt)

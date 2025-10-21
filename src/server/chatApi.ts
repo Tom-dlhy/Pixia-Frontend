@@ -7,6 +7,16 @@ export type SendChatResponse = {
   redirect_id: string
 }
 
+export type ChatSession = {
+  session_id: string
+  title: string
+  course_type: string
+}
+
+export type FetchAllChatResponse = {
+  sessions: ChatSession[]
+}
+
 async function handle<T = any>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.text().catch(() => "")
@@ -41,4 +51,22 @@ export async function sendChat(
 
   const r = await fetch(`${API_BASE}/testchat`, options)
   return handle<SendChatResponse>(r)
+}
+
+// -------------------------
+// 🔹 Récupérer toutes les sessions de chat
+// -------------------------
+export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse> {
+  console.log(`📡 [fetchAllChat] Appel API pour user_id: ${userId}`)
+  
+  const params = new URLSearchParams({ user_id: userId })
+  const r = await fetch(`${API_BASE}/testfetchallchats?${params}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+  })
+  
+  const result = await handle<FetchAllChatResponse>(r)
+  console.log(`📡 [fetchAllChat] ${result.sessions.length} sessions récupérées`)
+  
+  return result
 }

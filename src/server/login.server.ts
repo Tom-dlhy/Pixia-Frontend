@@ -28,15 +28,11 @@ export const loginUser = createServerFn({ method: "POST" })
         status: 200,
         message: null as string | null,
         existing_user: Boolean(res.existing_user),
-        token: res.token ?? null,
         user_id: res.user_id ?? null,
         email: res.email ?? email,
         given_name: res.given_name ?? null,
         family_name: res.family_name ?? null,
         userNotFound: false,
-        picture: res.picture ?? null,
-        locale: res.locale ?? null,
-        google_sub: res.google_sub ?? null,
       }
     } catch (error) {
       if (error instanceof HttpError) {
@@ -46,7 +42,6 @@ export const loginUser = createServerFn({ method: "POST" })
           status: error.status,
           message: error.body || `HTTP ${error.status}`,
           existing_user: false,
-          token: null,
           user_id: null,
           email,
           given_name: null,
@@ -62,7 +57,6 @@ export const loginUser = createServerFn({ method: "POST" })
         status: null,
         message: error instanceof Error ? error.message : "Unknown error",
         existing_user: false,
-        token: null,
         user_id: null,
         email,
         given_name: null,

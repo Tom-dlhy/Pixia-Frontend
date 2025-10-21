@@ -19,6 +19,7 @@ import { seo } from "~/utils/seo"
 import { SessionProvider } from "~/utils/session"
 import { SettingsProvider } from "~/context/SettingsProvider"
 import { CourseTypeProvider } from "~/context/CourseTypeContext"
+import { ChatSessionsProvider } from "~/context/ChatSessionsContext"
 
 import "~/styles/app.css"
 
@@ -30,7 +31,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       ...seo({
         title: "Hackathon | Full-Stack React Framework",
-        description: "Hackathon app using TanStack + FastAPI + Google OAuth",
+        description: "Hackathon app using TanStack + FastAPI",
       }),
     ],
   }),
@@ -49,7 +50,9 @@ function RootApp() {
     <SessionProvider>
       <SettingsProvider>
         <CourseTypeProvider>
-          <AppShell />
+          <ChatSessionsProvider>
+            <AppShell />
+          </ChatSessionsProvider>
         </CourseTypeProvider>
       </SettingsProvider>
     </SessionProvider>

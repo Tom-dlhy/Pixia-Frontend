@@ -1,6 +1,10 @@
 import { Sidebar, SidebarContent, SidebarFooter } from "~/components/ui/sidebar"
 import { NavGuest, NavUser } from "~/components/NavUser"
 import { useAppSession } from "~/utils/session"
+import { useChatSessions } from "~/context/ChatSessionsContext"
+import { useNavigate } from "@tanstack/react-router"
+import { Button } from "~/components/ui/button"
+import { cn } from "~/lib/utils"
 import {
   Empty,
   EmptyContent,
@@ -18,12 +22,14 @@ type AppSidebarProps = {
     image?: string | null
     givenName?: string | null
     familyName?: string | null
-    locale?: string | null
   } | null
 }
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const { session } = useAppSession()
+  const { sessions } = useChatSessions()
+  const navigate = useNavigate()
+
   const resolvedEmail = user?.email ?? session.userEmail ?? null
   const sessionFullName = session.givenName || session.familyName
     ? [session.givenName, session.familyName].filter(Boolean).join(" ")
@@ -33,35 +39,75 @@ export function AppSidebar({ user }: AppSidebarProps) {
     ? {
         email: resolvedEmail,
         name: user?.name ?? sessionFullName ?? null,
-        image: user?.image ?? session.picture ?? null,
+        image: user?.image ?? null,
         givenName: user?.givenName ?? session.givenName ?? null,
         familyName: user?.familyName ?? session.familyName ?? null,
-        locale: user?.locale ?? session.locale ?? null,
-        picture: session.picture ?? user?.image ?? null,
       }
     : null
 
   return (
     <Sidebar>
-      <SidebarContent className="p-4">
-        <Empty >
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <MessageSquare className="size-6" />
-            </EmptyMedia>
-            <EmptyTitle>Aucune conversation pour l’instant</EmptyTitle>
-            <EmptyDescription>
-              {displayName
-                ? `Commence, ${displayName}, une discussion pour remplir cette liste.`
-                : "Lance ta première discussion pour voir apparaître tes chats ici."}
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <p className="text-muted-foreground">
-              Crée un nouveau chat ou sélectionne une conversation existante pour la retrouver facilement.
-            </p>
-          </EmptyContent>
-        </Empty>
+      <SidebarContent className="p-4 space-y-4">
+        {/* 📋 Afficher les sessions si disponibles */}
+        {sessions.length > 0 ? (
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold text-sidebar-foreground/70">Historique</h3>
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {sessions.map((session) => {
+                // Déterminer si c'est un exercice (anglais ou français)
+                const courseTypeLower = session.course_type?.toLowerCase() || ""
+                const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
+                
+                const bgColor = isExercise ? "bg-blue-500/10 hover:bg-blue-500/20" : "bg-green-500/10 hover:bg-green-500/20"
+                const textColor = isExercise ? "text-blue-600 dark:text-blue-300" : "text-green-600 dark:text-green-300"
+                const borderColor = isExercise ? "border-blue-500/30" : "border-green-500/30"
+                
+                // Déterminer la route en fonction du type
+                const route = isExercise ? `/exercise/${session.session_id}` : `/course/${session.session_id}`
+
+                return (
+                  <Button
+                    key={session.session_id}
+                    onClick={() => navigate({ to: route })}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start text-left h-auto py-2 px-2 rounded-md border text-xs transition-all",
+                      bgColor,
+                      borderColor,
+                      textColor
+                    )}
+                  >
+                    <div className="flex flex-col gap-0.5 w-full truncate">
+                      <span className="font-medium truncate">{session.title || "Sans titre"}</span>
+                      <span className="text-xs opacity-70">
+                        {isExercise ? "🔵 Exercice" : "🟢 Cours"}
+                      </span>
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+        ) : (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <MessageSquare className="size-6" />
+              </EmptyMedia>
+              <EmptyTitle>Aucune conversation pour l'instant</EmptyTitle>
+              <EmptyDescription>
+                {displayName
+                  ? `Commence, ${displayName}, une discussion pour remplir cette liste.`
+                  : "Lance ta première discussion pour voir apparaître tes chats ici."}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <p className="text-muted-foreground">
+                Crée un nouveau chat ou sélectionne une conversation existante pour la retrouver facilement.
+              </p>
+            </EmptyContent>
+          </Empty>
+        )}
       </SidebarContent>
 
       <SidebarFooter className="mt-auto border-t border-sidebar-border pt-2">

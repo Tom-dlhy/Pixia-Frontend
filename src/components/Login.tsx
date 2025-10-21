@@ -17,10 +17,6 @@ type LoginResponse = {
   email: string | null
   given_name: string | null
   family_name: string | null
-  token?: string | null
-  picture?: string | null
-  locale?: string | null
-  google_sub?: string | null
 }
 
 export function Login() {
@@ -54,17 +50,16 @@ export function Login() {
 
       console.log("Connexion réussie :", data)
 
+      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
+      const userId = data.user_id || data.email || null
+
       applyAuthResult(
         {
           success: true,
-          token: data.token ?? null,
           email: data.email ?? null,
-          user_id: data.user_id ?? null,
+          user_id: userId,
           given_name: data.given_name ?? null,
           family_name: data.family_name ?? null,
-          picture: data.picture ?? null,
-          locale: data.locale ?? null,
-          google_sub: data.google_sub ?? null,
         },
         setSession,
       )
