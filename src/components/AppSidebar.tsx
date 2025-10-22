@@ -98,8 +98,8 @@ export function AppSidebar({ user }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar>
-      <SidebarContent className="p-4 space-y-4">
+    <Sidebar className="overflow-visible">
+      <SidebarContent className="p-4 space-y-4 overflow-visible">
         {/* 📋 Afficher les sessions si disponibles */}
         {filteredSessions.length > 0 ? (
           <div className="space-y-3">
@@ -107,15 +107,31 @@ export function AppSidebar({ user }: AppSidebarProps) {
               Historique
               {courseType !== "none" && ` (${courseType})`}
             </h3>
-            <div className="space-y-2 max-h-64 overflow-y-auto">
+            <div className="space-y-2 max-h-64 overflow-y-auto overflow-x-hidden [&>*]:overflow-visible">
               {filteredSessions.map((session) => {
                 // Déterminer si c'est un exercice (anglais ou français)
                 const courseTypeLower = session.course_type?.toLowerCase() || ""
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
                 
-                const bgColor = isExercise ? "bg-blue-500/10 hover:bg-blue-500/20" : "bg-green-500/10 hover:bg-green-500/20"
-                const textColor = isExercise ? "text-blue-600 dark:text-blue-300" : "text-green-600 dark:text-green-300"
-                const borderColor = isExercise ? "border-blue-500/30" : "border-green-500/30"
+                // 🧊 Glassmorphism styles matching global theme
+                const baseClass = "w-full justify-start text-left h-auto py-2 px-3 rounded-[16px] border transition-all duration-300 ease-out cursor-pointer relative"
+                const glassBg = "backdrop-blur-xl backdrop-saturate-150 border-white/20 dark:border-white/10"
+                const glassGlow = "shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.1)]"
+                const glassHover = "hover:scale-[1.02] hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.15)]"
+                
+                // Couleurs par type
+                let bgColor = ""
+                let textColor = ""
+                
+                if (isExercise) {
+                  // 🔵 Exercices: Bleu #5C8DD4
+                  bgColor = "bg-[rgba(92,141,212,0.25)] dark:bg-[rgba(92,141,212,0.15)]"
+                  textColor = "text-[#3d5a8a] dark:text-[#8caff0]"
+                } else {
+                  // 🟢 Cours: Teinte "verre dépoli" teal/turquoise
+                  bgColor = "bg-[rgba(29,233,182,0.2)] dark:bg-[rgba(0,196,180,0.12)]"
+                  textColor = "text-[#0b5e4d] dark:text-[#5ef1c2]"
+                }
 
                 return (
                   <Button
@@ -123,14 +139,16 @@ export function AppSidebar({ user }: AppSidebarProps) {
                     onClick={() => handleSessionClick(session.session_id, isExercise)}
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start text-left h-auto py-2 px-2 rounded-md border text-xs transition-all",
+                      baseClass,
+                      glassBg,
+                      glassGlow,
+                      glassHover,
                       bgColor,
-                      borderColor,
                       textColor
                     )}
                   >
                     <div className="flex flex-col gap-0.5 w-full truncate">
-                      <span className="font-medium truncate">{session.title || "Sans titre"}</span>
+                      <span className="font-medium truncate text-sm">{session.title || "Sans titre"}</span>
                       <span className="text-xs opacity-70">
                         {isExercise ? "🔵 Exercice" : "🟢 Cours"}
                       </span>

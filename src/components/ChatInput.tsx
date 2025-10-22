@@ -50,7 +50,10 @@ export function ChatInput({
   const accentKey = courseType === "deep" ? "none" : courseType
   const accent = useMemo(() => getCourseAccent(accentKey), [accentKey])
 
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document === "undefined") return false
+    return document.documentElement.classList.contains("dark")
+  })
 
   // 🎤 Reconnaissance vocale
   const {
@@ -73,7 +76,6 @@ export function ChatInput({
     if (typeof document === "undefined") return
     const checkDark = () =>
       document.documentElement.classList.contains("dark")
-    setIsDark(checkDark())
 
     const observer = new MutationObserver(() => {
       setIsDark(checkDark())

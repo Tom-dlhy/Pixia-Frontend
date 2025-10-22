@@ -117,7 +117,7 @@ export function Chat({
             <div
               className={`max-w-[75%] text-sm leading-relaxed whitespace-pre-wrap transition-all duration-300 ${
                 m.role === "user"
-                  ? "rounded-2xl px-4 py-2 backdrop-blur-xl bg-[rgba(173,216,230,0.15)] dark:bg-[rgba(173,216,230,0.08)] text-black dark:text-white shadow-lg border border-white/20"
+                  ? "rounded-2xl px-4 py-2 backdrop-blur-2xl backdrop-saturate-150 bg-white/15 dark:bg-white/10 text-zinc-900 dark:text-white shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.1)] border border-white/30 dark:border-white/20 hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.5),0_6px_16px_rgba(0,0,0,0.15)]"
                   : "bg-transparent text-foreground"
               }`}
             >
