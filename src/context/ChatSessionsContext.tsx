@@ -3,7 +3,7 @@ import { createContext, useContext, ReactNode, useState } from "react"
 export type ChatSessionType = {
   session_id: string
   title: string
-  course_type: string
+  document_type: string
 }
 
 type ChatSessionsContextType = {

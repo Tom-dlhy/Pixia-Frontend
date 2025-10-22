@@ -10,7 +10,7 @@ export type SendChatResponse = {
 export type ChatSession = {
   session_id: string
   title: string
-  course_type: string
+  document_type: string
 }
 
 export type FetchAllChatResponse = {
@@ -72,8 +72,9 @@ export async function sendChat(
       body: JSON.stringify(jsonBody),
     }
   }
+  console.log(`📡 [sendChat] Envoi du message :\n  - user_id: ${(data instanceof FormData) ? data.get("user_id") : data.user_id}\n  - session_id: ${(data instanceof FormData) ? data.get("session_id") : data.sessionId}\n  - message: ${(data instanceof FormData) ? data.get("message") : data.message}`)
 
-  const r = await fetch(`${API_BASE}/testchat`, options)
+  const r = await fetch(`${API_BASE}/chat`, options)
   return handle<SendChatResponse>(r)
 }
 
@@ -83,10 +84,10 @@ export async function sendChat(
 export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse> {
   console.log(`📡 [fetchAllChat] Appel API pour user_id: ${userId}`)
   
-  const params = new URLSearchParams({ user_id: userId })
-  const r = await fetch(`${API_BASE}/testfetchallchats?${params}`, {
+  const r = await fetch(`${API_BASE}/fetchallchats`, {
     method: "POST",
     headers: { "content-type": "application/json" },
+    body: JSON.stringify({ user_id: userId }),
   })
   
   const result = await handle<FetchAllChatResponse>(r)
@@ -101,10 +102,12 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
 export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepCoursesResponse> {
   console.log(`📡 [fetchAllDeepCourses] Appel API pour user_id: ${userId}`)
   
-  const params = new URLSearchParams({ user_id: userId })
-  const r = await fetch(`${API_BASE}/testfetchalldeepcourses?${params}`, {
+  const formData = new FormData()
+  formData.append("user_id", userId)
+  
+  const r = await fetch(`${API_BASE}/fetchalldeepcourses`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    body: formData,
   })
   
   const result = await handle<FetchAllDeepCoursesResponse>(r)
@@ -121,13 +124,14 @@ export async function fetchChat(
   sessionId: string
 ): Promise<FetchChatResponse> {
   console.log(`📡 [fetchChat] Appel API pour user_id: ${userId}, session_id: ${sessionId}`)
+  console.log(`📡 [fetchChat] user_id is ${userId === "" ? "EMPTY STRING" : userId === null ? "NULL" : userId === undefined ? "UNDEFINED" : "OK"}`)
   
   // Utiliser FormData pour passer les paramètres comme le backend l'attend
   const formData = new FormData()
   formData.append("user_id", userId)
   formData.append("session_id", sessionId)
   
-  const r = await fetch(`${API_BASE}/testfetchchat`, {
+  const r = await fetch(`${API_BASE}/fetchchat`, {
     method: "POST",
     body: formData,
   })

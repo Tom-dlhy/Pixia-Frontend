@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 import { Brain, Code2, Binary, Sparkles } from "lucide-react"
 
 import { useAppSession } from "~/utils/session"
-import { getAllDeepCourses } from "~/server/chat.server"
+import { useAllDeepCourses } from "~/hooks/useListCache"
 import { CourseCard } from "~/components/CourseCard"
 import {
   Empty,
@@ -40,42 +40,9 @@ const defaultCourses = [
 export default function DeepCourseListPage() {
   const navigate = useNavigate()
   const { session } = useAppSession()
-  const [deepCourses, setDeepCourses] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  const userId = session.userId != null ? String(session.userId) : "anonymous-user"
-
-  // 📋 Charger les deep-courses au montage
-  useEffect(() => {
-    const loadDeepCourses = async () => {
-      if (!userId || userId === "anonymous-user") {
-        console.log("⚠️ [DeepCourseListPage] Utilisateur non authentifié, skip")
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        console.log(`🔄 [DeepCourseListPage] Appel API pour user_id: ${userId}`)
-        const res = await getAllDeepCourses({
-          data: {
-            user_id: userId,
-          },
-        })
-        console.log(`✅ [DeepCourseListPage] Réponse:`, res)
-        console.log(`✅ [DeepCourseListPage] Premier élément:`, res?.[0])
-        setDeepCourses(res || [])
-        console.log(`✅ [DeepCourseListPage] ${res?.length || 0} deep-courses récupérés`)
-      } catch (err) {
-        console.error("❌ [DeepCourseListPage] Erreur lors du chargement:", err)
-        // Fallback to default courses
-        setDeepCourses(defaultCourses)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadDeepCourses()
-  }, [userId])
+  
+  // � Utiliser le hook de cache React Query
+  const { deepCourses, isLoading } = useAllDeepCourses()
 
   // Mapper les deep-courses avec des gradients
   const coursesWithGradients = useMemo(() => {
@@ -85,15 +52,14 @@ export default function DeepCourseListPage() {
     
     return deepCourses
       .map((course, index) => {
-        // Accepter la structure du backend: deepcourse_id, title, completion
-        const id = course.id || course.deepcourse_id || `course-${index}`
-        const title = course.title || course.name || `Course ${index + 1}`
-        const completion = typeof course.completion === 'number' ? course.completion : 0
+        // Utiliser la structure du backend: deepcourse_id, title
+        const id = course.deepcourse_id || `course-${index}`
+        const title = course.title || `Course ${index + 1}`
         
         return {
           id: String(id),
           title: String(title),
-          completion: Math.min(Math.max(completion, 0), 100), // Clamp 0-100
+          completion: 0, // Pas de completion pour l'instant
           gradient: courseGradients[gradientKeys[index % gradientKeys.length]],
           icon: [Brain, Code2, Binary, Sparkles][index % 4],
         }

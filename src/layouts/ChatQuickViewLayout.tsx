@@ -9,6 +9,7 @@ import BackButton from "~/components/BackButton"
 import { ChatActionButton } from "~/components/ChatActionButton"
 import { useCourseType, type CourseType } from "~/context/CourseTypeContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { useAppSession } from "~/utils/session"
 
 interface ChatQuickViewLayoutProps {
   children: React.ReactNode
@@ -27,6 +28,7 @@ export function ChatQuickViewLayout({
   const location = useLocation()
   const { courseType: contextCourseType, setCourseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
+  const { session } = useAppSession()
   const contentRef = useRef<HTMLDivElement>(null)
   
   // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
@@ -62,16 +64,24 @@ export function ChatQuickViewLayout({
     
     if (typeof window === "undefined") {
       console.warn(`⚠️ [ChatQuickViewLayout] Pas de sessionId et pas de window`)
-      return "Session"
+      return null
     }
     
-    const stored = sessionStorage.getItem("chatSession")
-    console.log(`📦 [ChatQuickViewLayout] Utilisation du sessionId depuis sessionStorage: ${stored}`)
-    return stored || "Session"
+    console.log(`📦 [ChatQuickViewLayout] Aucun sessionId trouvé en URL`)
+    return null
   }, [location.pathname])
+  
+  // 🔹 Récupération du userId depuis la session
+  const userId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
 
   // 🔹 Format d'affichage convivial
   const formattedSession = useMemo(() => {
+    if (!sessionId) return "Session"
     if (sessionId.startsWith("chat-")) return `Chat ${sessionId.split("chat-")[1]}`
     return sessionId
   }, [sessionId])
@@ -114,7 +124,7 @@ export function ChatQuickViewLayout({
 
           {/* RIGHT PANEL — Copilote */}
           <div className="flex flex-[0.3] flex-col overflow-hidden min-h-0">
-            <CopiloteContainer sessionId={sessionId} />
+            <CopiloteContainer sessionId={sessionId} userId={userId} />
           </div>
         </div>
       </div>

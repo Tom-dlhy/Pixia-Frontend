@@ -21,6 +21,7 @@ import { SettingsProvider } from "~/context/SettingsProvider"
 import { CourseTypeProvider } from "~/context/CourseTypeContext"
 import { CourseContentProvider } from "~/context/CourseContentContext"
 import { ChatSessionsProvider } from "~/context/ChatSessionsContext"
+import { QueryProvider } from "~/context/QueryProvider"
 
 import "~/styles/app.css"
 
@@ -48,17 +49,19 @@ export const Route = createRootRoute({
 // --- Root Providers Wrapper ---
 function RootApp() {
   return (
-    <SessionProvider>
-      <SettingsProvider>
-        <CourseTypeProvider>
-          <CourseContentProvider>
-            <ChatSessionsProvider>
-              <AppShell />
-            </ChatSessionsProvider>
-          </CourseContentProvider>
-        </CourseTypeProvider>
-      </SettingsProvider>
-    </SessionProvider>
+    <QueryProvider>
+      <SessionProvider>
+        <SettingsProvider>
+          <CourseTypeProvider>
+            <CourseContentProvider>
+              <ChatSessionsProvider>
+                <AppShell />
+              </ChatSessionsProvider>
+            </CourseContentProvider>
+          </CourseTypeProvider>
+        </SettingsProvider>
+      </SessionProvider>
+    </QueryProvider>
   )
 }
 
