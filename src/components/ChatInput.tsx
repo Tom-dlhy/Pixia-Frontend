@@ -16,6 +16,8 @@ import { BackgroundGradient } from "~/components/ui/background-gradient"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
+import { useSpeechRecognition } from "~/hooks/useSpeechRecognition"
+import { TextGenerateEffect } from "~/components/ui/text-generate-effect"
 
 export type ChatInputProps = {
   value: string
@@ -50,6 +52,22 @@ export function ChatInput({
 
   const [isDark, setIsDark] = useState(false)
 
+  // 🎤 Reconnaissance vocale
+  const {
+    transcript,
+    interimTranscript,
+    isListening,
+    isSupported: isSpeechSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+    error: speechError,
+  } = useSpeechRecognition({
+    language: "fr-FR",
+    continuous: false,
+    interimResults: true,
+  })
+
   // 🎨 Thème dynamique (dark / light)
   useEffect(() => {
     if (typeof document === "undefined") return
@@ -66,6 +84,14 @@ export function ChatInput({
     })
     return () => observer.disconnect()
   }, [])
+
+  // 🎤 Quand la reconnaissance vocale se termine, ajouter le texte
+  useEffect(() => {
+    if (!isListening && transcript && !isSending) {
+      onChange(value + transcript)
+      resetTranscript()
+    }
+  }, [isListening, transcript, value, isSending, onChange, resetTranscript])
 
   const hasContent = value.trim().length > 0 || queuedFiles.length > 0
   const actionIcon = hasContent ? (
@@ -118,6 +144,19 @@ export function ChatInput({
     if (!disableAttachments) fileInputRef.current?.click()
   }
 
+  const handleMicClick = () => {
+    if (!isSpeechSupported) {
+      console.warn("Speech Recognition not supported")
+      return
+    }
+    if (isListening) {
+      stopListening()
+    } else {
+      resetTranscript()
+      startListening()
+    }
+  }
+
   const handleFilesChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (!onFilesSelected) return
     const files = event.target.files
@@ -140,6 +179,17 @@ export function ChatInput({
             onSubmit={handleSubmit}
             className="flex flex-col gap-3 px-4 py-3 relative z-[2]"
           >
+            {/* 🎤 Affichage de la transcription vocale avec effet */}
+            {isListening && interimTranscript && (
+              <TextGenerateEffect
+                words={interimTranscript}
+                duration={0.1}
+                staggerDelay={0.02}
+                filter={false}
+                className="text-sm font-normal text-foreground"
+              />
+            )}
+
             {/* 🗂️ Pièces jointes */}
             {queuedFiles.length > 0 && (
               <div
@@ -194,7 +244,7 @@ export function ChatInput({
                       : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
                   )}
                   aria-label="Ajouter une pièce jointe"
-                  disabled={isSending || !onFilesSelected}
+                  disabled={isSending || !onFilesSelected || isListening}
                 >
                   <Paperclip className="h-5 w-5" />
                 </Button>
@@ -213,33 +263,68 @@ export function ChatInput({
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
                 rows={1}
-                disabled={isSending}
+                disabled={isSending || isListening}
                 className={cn(
                   "w-full min-h-[44px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto",
                   textColor
                 )}
               />
 
-              {/* 📨 Bouton d’envoi */}
-              <Button
-                type="submit"
-                disabled={isSending}
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-10 w-10 shrink-0 rounded-full transition",
-                  isDark
-                    ? hasContent
+              {/* 🎤 Bouton microphone ou 📨 Bouton d'envoi */}
+              {isSpeechSupported && !hasContent && !isListening && (
+                <Button
+                  type="button"
+                  onClick={handleMicClick}
+                  disabled={isSending}
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10 shrink-0 rounded-full transition",
+                    isDark
+                      ? "text-white/70 hover:text-white hover:bg-white/10"
+                      : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
+                  )}
+                  aria-label="Enregistrement vocal"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+              )}
+
+              {isListening && (
+                <Button
+                  type="button"
+                  onClick={handleMicClick}
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10 shrink-0 rounded-full transition animate-pulse bg-red-500/20",
+                    isDark
+                      ? "text-red-300 hover:bg-red-500/30"
+                      : "text-red-600 hover:bg-red-500/30"
+                  )}
+                  aria-label="Arrêter l'enregistrement"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+              )}
+
+              {(hasContent || isListening) && (
+                <Button
+                  type="submit"
+                  disabled={isSending || isListening}
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-10 w-10 shrink-0 rounded-full transition",
+                    isDark
                       ? "text-white/80 hover:text-white hover:bg-white/10"
-                      : "text-white/50 hover:text-white/70"
-                    : hasContent
-                    ? "text-zinc-800 hover:text-zinc-950 hover:bg-zinc-200/60"
-                    : "text-zinc-500 hover:text-zinc-700"
-                )}
-                aria-label={hasContent ? "Envoyer le message" : "Démarrer un message vocal"}
-              >
-                {actionIcon}
-              </Button>
+                      : "text-zinc-800 hover:text-zinc-950 hover:bg-zinc-200/60"
+                  )}
+                  aria-label="Envoyer le message"
+                >
+                  <Send className="h-5 w-5" />
+                </Button>
+              )}
             </div>
 
             {onFilesSelected && (

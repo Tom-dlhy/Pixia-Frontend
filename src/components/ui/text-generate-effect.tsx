@@ -38,7 +38,7 @@ function TextGenerateEffect({
     }
   }, [animate, duration, filter, scope, staggerDelay]);
   return (
-    <div ref={localRef} className={cn('font-bold', className)} data-slot="text-generate-effect" {...props}>
+    <div ref={localRef} className={cn(className)} data-slot="text-generate-effect" {...props}>
       <motion.div ref={scope}>
         {wordsArray.map((word, idx) => (
           <motion.span
