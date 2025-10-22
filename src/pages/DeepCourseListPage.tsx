@@ -135,13 +135,7 @@ export default function DeepCourseListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Vos Deep-Courses</h1>
-        <p className="text-muted-foreground">
-          Explorez et gérez vos cours approfondis
-        </p>
-      </div>
+    <div className="mt-16 flex flex-col gap-8">
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {coursesWithGradients.map((course, index) => (
@@ -150,7 +144,12 @@ export default function DeepCourseListPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            onClick={() => navigate({ to: `/deep-course/${course.id}` })}
+            onClick={() => {
+              // 💾 Sauvegarder le titre avant de naviguer
+              localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
+              console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
+              navigate({ to: `/deep-course/${course.id}` })
+            }}
             className="cursor-pointer"
           >
             <CourseCard

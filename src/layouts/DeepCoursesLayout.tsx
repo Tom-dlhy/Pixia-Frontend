@@ -25,6 +25,7 @@ import {
   useDeepCourseParams,
   useDeepCourseNavigation,
   useHeaderTitle,
+  useHeaderIcon,
   useRightAction,
 } from "~/hooks/useDeepCourseNavigation"
 
@@ -33,6 +34,7 @@ export function DeepCoursesLayout() {
   const { depth, deepcourseId, chapterId } = useDeepCourseParams()
   const { handleNavigateBack } = useDeepCourseNavigation()
   const headerTitle = useHeaderTitle()
+  const headerIcon = useHeaderIcon()
   const rightActionConfig = useRightAction()
 
   const [activeTab, setActiveTab] = useState<DeepCoursesTab>("cours")
@@ -89,6 +91,7 @@ export function DeepCoursesLayout() {
             leftAction={<BackButton onClick={handleNavigateBack} />}
             rightAction={rightActionConfig ? <ActionButton {...rightActionConfig} /> : null}
             className="text-foreground"
+            iconType={headerIcon}
           >
             {depth === 3 && (
               <DeepCourseTabs

@@ -49,6 +49,17 @@ export default function DeepCourseChaptersPage() {
   const navigate = useNavigate()
   const [chapters, setChapters] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [deepCourseTitle, setDeepCourseTitle] = useState<string>("")
+
+  // 💾 Sauvegarder le titre du deep course au montage
+  useEffect(() => {
+    if (deepcourseId) {
+      const title = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
+      setDeepCourseTitle(title)
+      localStorage.setItem(`deepcourse-title-${deepcourseId}`, title)
+      console.log(`💾 [DeepCourseChaptersPage] Titre sauvegardé: ${title}`)
+    }
+  }, [deepcourseId])
 
   // 📋 Charger les chapitres (pour maintenant, utilisons les mock)
   useEffect(() => {
@@ -82,7 +93,7 @@ export default function DeepCourseChaptersPage() {
           </EmptyMedia>
           <EmptyTitle>Aucun chapitre disponible</EmptyTitle>
           <EmptyDescription>
-            Cet deep-course ne contient pas encore de chapitres.
+            Cet cours approfondi ne contient pas encore de chapitres.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -96,14 +107,8 @@ export default function DeepCourseChaptersPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Chapitres du cours</h1>
-        <p className="text-muted-foreground">
-          Deep-Course: <span className="text-foreground font-mono">{deepcourseId}</span>
-        </p>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {chapters.map((chapter, index) => (
           <motion.div
             key={chapter.id}

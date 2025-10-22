@@ -1,5 +1,7 @@
 import { useLocation, useNavigate } from "@tanstack/react-router"
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
+import React from "react"
+import { GraduationCap, BookOpen } from "lucide-react"
 
 /**
  * Hook pour extraire et formater les IDs depuis l'URL
@@ -58,12 +60,46 @@ export function useDeepCourseNavigation() {
 export function useHeaderTitle() {
   const { depth, deepcourseId, chapterId } = useDeepCourseParams()
   const { formatTitle } = useDeepCourseNavigation()
+  const [deepCourseTitle, setDeepCourseTitle] = useState<string | null>(null)
+
+  // Récupérer et surveiller le titre du deep course
+  useEffect(() => {
+    if (deepcourseId) {
+      // Essayer d'abord depuis localStorage (cache)
+      const cached = localStorage.getItem(`deepcourse-title-${deepcourseId}`)
+      if (cached) {
+        console.log(`📖 [useHeaderTitle] Titre trouvé en cache: ${cached}`)
+        setDeepCourseTitle(cached)
+      } else {
+        // Si pas en cache, générer le titre par défaut
+        const defaultTitle = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
+        console.log(`📖 [useHeaderTitle] Titre généré par défaut: ${defaultTitle}`)
+        setDeepCourseTitle(defaultTitle)
+      }
+    }
+  }, [deepcourseId])
 
   return useMemo(() => {
-    if (depth <= 1) return "Vos cours"
-    if (depth === 2) return formatTitle("cours", deepcourseId)
+    if (depth <= 1) return "Vos cours approfondis"
+    if (depth === 2) {
+      // Si on a le titre mis en cache, l'utiliser, sinon fallback sur l'ID
+      return deepCourseTitle || formatTitle("cours", deepcourseId)
+    }
     return formatTitle("chapitre", chapterId)
-  }, [depth, deepcourseId, chapterId, formatTitle])
+  }, [depth, deepcourseId, chapterId, formatTitle, deepCourseTitle])
+}
+
+/**
+ * Hook pour obtenir le type d'icône appropriée basée sur le depth
+ */
+export function useHeaderIcon() {
+  const { depth } = useDeepCourseParams()
+
+  return useMemo(() => {
+    if (depth <= 1) return 'graduation-cap'
+    if (depth === 2) return 'book-open'
+    return null
+  }, [depth])
 }
 
 /**
