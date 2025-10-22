@@ -2,6 +2,7 @@ import { Sidebar, SidebarContent, SidebarFooter } from "~/components/ui/sidebar"
 import { NavGuest, NavUser } from "~/components/NavUser"
 import { useAppSession } from "~/utils/session"
 import { useChatSessions } from "~/context/ChatSessionsContext"
+import { useCourseType } from "~/context/CourseTypeContext"
 import { useNavigate } from "@tanstack/react-router"
 import { Button } from "~/components/ui/button"
 import { cn } from "~/lib/utils"
@@ -29,6 +30,7 @@ type AppSidebarProps = {
 export function AppSidebar({ user }: AppSidebarProps) {
   const { session } = useAppSession()
   const { sessions } = useChatSessions()
+  const { courseType } = useCourseType()
   const navigate = useNavigate()
 
   const resolvedEmail = user?.email ?? session.userEmail ?? null
@@ -45,6 +47,27 @@ export function AppSidebar({ user }: AppSidebarProps) {
         familyName: user?.familyName ?? session.familyName ?? null,
       }
     : null
+
+  // Filtrer les sessions en fonction du courseType sélectionné
+  const filteredSessions = sessions.filter((session) => {
+    // Si courseType === 'none', afficher toutes les sessions
+    if (courseType === "none") {
+      return true
+    }
+    
+    const courseTypeLower = session.course_type?.toLowerCase() || ""
+    
+    if (courseType === "exercice") {
+      return courseTypeLower === "exercice" || courseTypeLower === "exercise"
+    }
+    
+    if (courseType === "cours") {
+      return courseTypeLower === "cours" || courseTypeLower === "course"
+    }
+    
+    // Pour 'discuss' et 'deep', on peut ajouter la logique si nécessaire
+    return courseTypeLower === courseType
+  })
 
   // Handler pour charger la session et naviguer
   const handleSessionClick = async (sessionId: string, isExercise: boolean) => {
@@ -78,11 +101,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <Sidebar>
       <SidebarContent className="p-4 space-y-4">
         {/* 📋 Afficher les sessions si disponibles */}
-        {sessions.length > 0 ? (
+        {filteredSessions.length > 0 ? (
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-sidebar-foreground/70">Historique</h3>
+            <h3 className="text-sm font-semibold text-sidebar-foreground/70">
+              Historique
+              {courseType !== "none" && ` (${courseType})`}
+            </h3>
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {sessions.map((session) => {
+              {filteredSessions.map((session) => {
                 // Déterminer si c'est un exercice (anglais ou français)
                 const courseTypeLower = session.course_type?.toLowerCase() || ""
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
@@ -120,16 +146,24 @@ export function AppSidebar({ user }: AppSidebarProps) {
               <EmptyMedia variant="icon">
                 <MessageSquare className="size-6" />
               </EmptyMedia>
-              <EmptyTitle>Aucune conversation pour l'instant</EmptyTitle>
+              <EmptyTitle>
+                {courseType !== "none" 
+                  ? `Aucune conversation de type "${courseType}"` 
+                  : "Aucune conversation pour l'instant"}
+              </EmptyTitle>
               <EmptyDescription>
-                {displayName
+                {courseType !== "none"
+                  ? `Sélectionne "Tout afficher" pour voir toutes les conversations.`
+                  : displayName
                   ? `Commence, ${displayName}, une discussion pour remplir cette liste.`
                   : "Lance ta première discussion pour voir apparaître tes chats ici."}
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
               <p className="text-muted-foreground">
-                Crée un nouveau chat ou sélectionne une conversation existante pour la retrouver facilement.
+                {courseType !== "none"
+                  ? "Crée une nouvelle conversation de ce type."
+                  : "Crée un nouveau chat ou sélectionne une conversation existante pour la retrouver facilement."}
               </p>
             </EmptyContent>
           </Empty>

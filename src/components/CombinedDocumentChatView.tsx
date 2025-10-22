@@ -8,6 +8,7 @@ import { useEffect } from "react"
 import { useChatWithDocument } from "~/hooks/useDocument"
 import { useCourseContent } from "~/context/CourseContentContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { MarkdownRenderer } from '~/components/MarkdownRenderer'
 import { isQCM, isOpen, CourseOutput } from "~/models/Document"
 import { CourseWithChapters, Chapter } from "~/models/Course"
 
@@ -194,9 +195,8 @@ function CourseDisplay({ course }: any) {
       {course.chapters.map((chapter: any, idx: number) => (
         <div key={chapter.id_chapter || idx} className="border rounded-lg p-4">
           <h2 className="text-xl font-semibold">{chapter.title}</h2>
-          <div className="mt-4 prose prose-sm max-w-none">
-            {/* Ici, vous voudriez utiliser react-markdown pour le contenu */}
-            <p>{chapter.content}</p>
+          <div className="mt-4">
+            <MarkdownRenderer content={chapter.content} />
           </div>
           {chapter.schema_description && (
             <p className="text-sm text-gray-600 mt-4">

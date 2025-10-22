@@ -98,7 +98,7 @@ export async function generatePdfFromCourseData(
     pdf.setFontSize(9)
     pdf.setFont('Helvetica', 'normal')
     pdf.setTextColor(150, 150, 150)
-    pdf.text(`© Hackathon Frontend - ${new Date().getFullYear()}`, margin, pageHeight - 10)
+    pdf.text(`© Hackathon Google Equipe Pixia - ${new Date().getFullYear()}`, margin, pageHeight - 10)
 
     // Sauvegarder
     pdf.save(filename)

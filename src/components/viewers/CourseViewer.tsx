@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { CourseOutput } from '~/models/Document'
 import { ScrollArea } from '~/components/ui/scroll-area'
-import ReactMarkdown from 'react-markdown'
+import { MarkdownRenderer } from '~/components/MarkdownRenderer'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
 
 interface CourseViewerProps {
@@ -49,9 +49,7 @@ export function CourseViewer({ course }: CourseViewerProps) {
                     
                     {/* Content */}
                     {chapter.content && (
-                      <div className="prose dark:prose-invert prose-sm max-w-none text-foreground/90">
-                        <ReactMarkdown>{chapter.content}</ReactMarkdown>
-                      </div>
+                      <MarkdownRenderer content={chapter.content} />
                     )}
                   </div>
                 ))}

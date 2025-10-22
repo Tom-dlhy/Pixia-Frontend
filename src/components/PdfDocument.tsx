@@ -69,7 +69,7 @@ export function PdfDocument({ title, content, type }: any) {
           ))}
 
         <Text style={styles.footer}>
-          © Hackathon Google - Pixia - {new Date().getFullYear()}
+          © Hackathon Google - Equipe Pixia - {new Date().getFullYear()}
         </Text>
       </Page>
     </Document>

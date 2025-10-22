@@ -148,7 +148,7 @@ export function usePdfExport() {
       // Ajouter le titre si fourni
       if (title) {
         pdf.setFontSize(24)
-        pdf.setFont('Helvetica', 'bold')
+        pdf.setFont('Aptos', 'bold')
         pdf.setTextColor(0, 0, 0)
         pdf.text(title, margin, margin)
         
@@ -171,9 +171,9 @@ export function usePdfExport() {
       // 4. Ajouter les métadonnées et télécharger le PDF
       pdf.setProperties({
         title: title || 'Export',
-        author: 'Hackathon Frontend',
+        author: 'Equipe Pixia',
         keywords: 'course, exercise, learning',
-        creator: 'Hackathon Frontend',
+        creator: 'Equipe Pixia',
       })
 
       pdf.save(filename)
