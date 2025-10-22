@@ -3,6 +3,8 @@ import { cn } from "~/lib/utils"
 import ContentContainer from "~/layouts/ContentContainer"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import { useDeepCourseParams } from "~/hooks/useDeepCourseNavigation"
+import { useAppSession } from "~/utils/session"
+import { useMemo } from "react"
 
 interface DeepCourseMainContentProps {
   isEvaluating: boolean
@@ -10,6 +12,15 @@ interface DeepCourseMainContentProps {
 
 export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentProps) {
   const { depth, chapterId } = useDeepCourseParams()
+  const { session } = useAppSession()
+  
+  // 🔹 Récupération du userId depuis la session
+  const userId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
 
   console.log(`🔍 [DeepCourseMainContent] depth=${depth}, chapterId=${chapterId}`)
 
@@ -36,7 +47,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
               : "opacity-100 translate-x-0"
           )}
         >
-          {!isEvaluating && <CopiloteContainer className="h-full" sessionId={chapterId} />}
+          {!isEvaluating && <CopiloteContainer className="h-full" sessionId={chapterId} userId={userId} />}
         </div>
       </div>
     )

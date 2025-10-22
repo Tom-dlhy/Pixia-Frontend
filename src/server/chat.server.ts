@@ -169,17 +169,18 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
       console.log(`🏷️ doc_type: ${doc_type || 'auto-detect'}`)
       console.groupEnd()
 
-      // Récupérer le chat en parallèle avec les documents
+      // Récupérer le chat en parallèle avec les document(s)
       console.group(`%c🚀 [SERVER] Making parallel API calls`, 'color: #8b5cf6; font-weight: bold; font-size: 13px;')
+      console.log(`👤 user_id VALUE CHECK: ${user_id} (type: ${typeof user_id})`)
       console.log(`1️⃣ fetchChat(user_id=${user_id}, session_id=${session_id})`)
-      console.log(`2️⃣ getExercise(session_id=${session_id}) - ${doc_type === "exercise" || !doc_type ? "YES" : "NO"}`)
-      console.log(`3️⃣ getCourse(session_id=${session_id}) - ${doc_type === "course" || !doc_type ? "YES" : "NO"}`)
+      console.log(`2️⃣ getExercise(session_id=${session_id}) - ${doc_type !== "course" ? "YES" : "NO"}`)
+      console.log(`3️⃣ getCourse(session_id=${session_id}) - ${doc_type !== "exercise" ? "YES" : "NO"}`)
       console.groupEnd()
 
       const [chatRes, exerciseRes, courseRes] = await Promise.allSettled([
         fetchChat(user_id, session_id),
-        doc_type === "exercise" || !doc_type ? getExercise({ data: { session_id } }) : Promise.resolve(null),
-        doc_type === "course" || !doc_type ? getCourse({ data: { session_id } }) : Promise.resolve(null),
+        doc_type !== "course" ? getExercise({ data: { session_id } }) : Promise.resolve(null),
+        doc_type !== "exercise" ? getCourse({ data: { session_id } }) : Promise.resolve(null),
       ])
 
       // Extraire les messages du chat

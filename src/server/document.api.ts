@@ -28,11 +28,11 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
 
   try {
     console.group(`%c🌐 [API] fetchExercise Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/api/testfetchexercise`)
+    console.log(`📍 Endpoint: ${API_BASE_URL}/api/fetchexercise`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/api/testfetchexercise`, {
+    const response = await fetch(`${API_BASE_URL}/api/fetchexercise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -87,11 +87,11 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
 
   try {
     console.group(`%c🌐 [API] fetchCourse Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/api/testfetchcourse`)
+    console.log(`📍 Endpoint: ${API_BASE_URL}/api/fetchcourse`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/api/testfetchcourse`, {
+    const response = await fetch(`${API_BASE_URL}/api/fetchcourse`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

@@ -16,14 +16,16 @@ import { ChatInput } from "~/components/ChatInput"
 import { useCourseType, CourseTypeProvider } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
-import { sendChatMessage, getChat } from "~/server/chat.server"
+import { sendChatMessage } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
+import { useSessionCache } from "~/hooks/useSessionCache"
 
 interface CopiloteContainerProps {
   className?: string
-  sessionId?: string
+  sessionId?: string | null
+  userId?: string | null
   isCopiloteModal?: boolean
   forceDeepMode?: boolean
 }
@@ -34,6 +36,7 @@ interface CopiloteContainerProps {
 function CopiloteContainerContent({
   className = "",
   sessionId,
+  userId,
   isCopiloteModal = false,
 }: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
@@ -43,53 +46,55 @@ function CopiloteContainerContent({
   const { courseType } = useCourseType()
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
+  
+  // ⏳ Utiliser le userId passé en props EN PRIORITÉ, sinon récupérer de la session
+  const effectiveUserId = useMemo(() => {
+    if (userId) {
+      console.log(`✅ [CopiloteContainer] Utilisation du userId passé en props: ${userId}`)
+      return userId
+    }
+    if (session.userId != null) {
+      const sessionUserId = String(session.userId)
+      console.log(`✅ [CopiloteContainer] Utilisation du userId de la session: ${sessionUserId}`)
+      return sessionUserId
+    }
+    console.warn(`⚠️ [CopiloteContainer] Session pas encore hydratée, userId = ${session.userId}`)
+    return null
+  }, [userId, session.userId])
+  
+  // 🚀 Déterminer le docType basé sur le courseType
+  const docType = useMemo(() => {
+    if (courseType === "exercice") return "exercise"
+    if (courseType === "cours") return "course"
+    if (courseType === "deep") return "course" // Deep courses are courses
+    return undefined // Fallback à auto-detect si vraiment on sait pas
+  }, [courseType])
+
+  // 🚀 Utiliser le cache React Query avec le bon docType
+  const { data, isLoading: chatLoading } = useSessionCache(
+    sessionId || null,
+    docType,
+    effectiveUserId || undefined,
+    { enabled: !!sessionId && !!effectiveUserId && !!docType }
+  )
+  
   // Use courseType directly, will be forced to "deep" by provider if in modal
   const accent = useMemo(() => getCourseAccent(courseType), [courseType])
 
-  // 🔄 Charger les messages de la session au montage
+  // 🔄 Mettre à jour les messages quand le cache se charge
   useEffect(() => {
-    if (!sessionId) {
-      console.warn(`⚠️ [CopiloteContainer] Pas de sessionId reçu`)
-      return
-    }
-
-    const loadMessages = async () => {
-      try {
-        const userId = session.userId != null ? String(session.userId) : "anonymous-user"
-        
-        console.log(`📝 [CopiloteContainer] Chargement des messages`)
-        console.log(`  - user_id: ${userId}`)
-        console.log(`  - session_id: ${sessionId}`)
-
-        const messages = await getChat({
-          data: {
-            user_id: userId,
-            session_id: sessionId,
-          },
-        })
-
-        console.log(`✅ [CopiloteContainer] getChat retourné avec:`, messages)
-
-        // Convertir les EventMessages en format d'affichage (alternant user/bot)
-        const displayMessages: string[] = []
-        for (const msg of messages) {
-          if (msg.text) {
-            displayMessages.push(msg.text)
-          }
+    if (data?.messages) {
+      const displayMessages: string[] = []
+      for (const msg of data.messages) {
+        if (msg.text) {
+          displayMessages.push(msg.text)
         }
-
-        setMessages(displayMessages)
-        setIsNewMessage(false) // Pas de shimmering au chargement initial
-        console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés`)
-      } catch (err) {
-        console.error(`❌ [CopiloteContainer] Erreur lors du chargement des messages:`, err)
-        setMessages([])
-        setIsNewMessage(false)
       }
+      setMessages(displayMessages)
+      setIsNewMessage(false)
+      console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés du cache`)
     }
-
-    loadMessages()
-  }, [sessionId, session.userId])
+  }, [data?.messages])
 
   // 📜 Auto-scroll vers le bas quand les messages changent
   useEffect(() => {
@@ -126,17 +131,20 @@ function CopiloteContainerContent({
   )
 
   const handleSubmit = useCallback(async () => {
-    if (!prompt.trim()) return
-    
-    const userId =
-      session.userId != null ? String(session.userId) : "anonymous-user"
+    if (!prompt.trim() || !effectiveUserId) {
+      if (!effectiveUserId) {
+        console.warn(`⚠️ [CopiloteContainer] Impossible d'envoyer: userId non disponible`)
+      }
+      return
+    }
     
     try {
       console.info("Copilote prompt:", prompt)
+      console.log(`📤 [CopiloteContainer] Envoi avec userId: ${effectiveUserId}`)
       
       const res = await sendChatMessage({
         data: {
-          user_id: userId,
+          user_id: effectiveUserId,
           message: prompt,
         },
       })
@@ -159,7 +167,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }
-  }, [prompt, session, handleRedirect])
+  }, [prompt, effectiveUserId, handleRedirect])
 
   return (
     <aside
@@ -285,6 +293,7 @@ function ForcedDeepModeWrapper({ children }: { children: React.ReactNode }) {
 export default function CopiloteContainer({
   className = "",
   sessionId,
+  userId,
   isCopiloteModal = false,
   forceDeepMode = false,
 }: CopiloteContainerProps) {
@@ -295,6 +304,7 @@ export default function CopiloteContainer({
         <CopiloteContainerContent
           className={className}
           sessionId={sessionId}
+          userId={userId}
           isCopiloteModal={isCopiloteModal}
         />
       </ForcedDeepModeProvider>
@@ -306,6 +316,7 @@ export default function CopiloteContainer({
     <CopiloteContainerContent
       className={className}
       sessionId={sessionId}
+      userId={userId}
       isCopiloteModal={isCopiloteModal}
     />
   )
