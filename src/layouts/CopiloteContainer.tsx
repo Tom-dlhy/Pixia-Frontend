@@ -166,14 +166,11 @@ function CopiloteContainerContent({
       className={cn(
         `
         flex flex-col h-full
-        rounded-[28px] border 
-        backdrop-blur-[22px] backdrop-saturate-150
-        bg-[linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]
-        dark:bg-[linear-gradient(135deg,rgba(24,24,27,0.35),rgba(39,39,42,0.25))]
-        border-white/30 dark:border-white/10
-        shadow-[inset_0_1px_3px_rgba(255,255,255,0.2),0_8px_30px_rgba(0,0,0,0.25)]
-        transition-all duration-500 ease-out
-        hover:shadow-[inset_0_1px_6px_rgba(255,255,255,0.25),0_12px_40px_rgba(0,0,0,0.35)]
+        rounded-[28px] border border-white/20 dark:border-white/10
+        backdrop-blur-xl backdrop-saturate-150
+        bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]
+        shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.25)]
+        transition-all duration-300
         p-6 overflow-hidden
       `,
         !isCopiloteModal && "hidden md:flex",

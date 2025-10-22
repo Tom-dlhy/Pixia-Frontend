@@ -121,7 +121,9 @@ export function ChatInput({
   }, [courseType])
 
   // 🎨 Couleurs selon le thème
-  const backgroundColor = isDark ? "bg-neutral-900" : "bg-gray-200"
+  const backgroundColor = isDark ? "bg-neutral-900/40" : "bg-gray-200/30"
+  const backgroundColorNormal = isDark ? "bg-neutral-900" : "bg-gray-200"
+
   const textColor = isDark
     ? "text-white placeholder:text-white/60"
     : "text-zinc-900 placeholder:text-zinc-500"
@@ -167,9 +169,176 @@ export function ChatInput({
     event.target.value = ""
   }
 
+  // 📝 Contenu du formulaire (réutilisable pour deep et normal)
+  const formContent = (
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-3 px-4 py-3 relative z-[2]"
+    >
+      {/* 🎤 Affichage de la transcription vocale avec effet */}
+      {isListening && interimTranscript && (
+        <TextGenerateEffect
+          words={interimTranscript}
+          duration={0.1}
+          staggerDelay={0.02}
+          filter={false}
+          className="text-sm font-normal text-foreground"
+        />
+      )}
+
+      {/* 🗂️ Pièces jointes */}
+      {queuedFiles.length > 0 && (
+        <div
+          className={cn(
+            "flex flex-wrap gap-2 text-xs",
+            isDark ? "text-white/70" : "text-zinc-600"
+          )}
+        >
+          {queuedFiles.map((file, index) => (
+            <span
+              key={`${file.name}-${index}`}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-3 py-1 backdrop-blur-sm",
+                isDark ? "bg-white/10" : "bg-zinc-200/60"
+              )}
+            >
+              <Paperclip className="h-3.5 w-3.5" />
+              <span className="max-w-[120px] truncate">{file.name}</span>
+              {onRemoveAttachment && (
+                <button
+                  type="button"
+                  onClick={() => onRemoveAttachment(index)}
+                  className={cn(
+                    "rounded-full p-0.5 transition",
+                    isDark
+                      ? "text-white/60 hover:bg-white/10"
+                      : "text-zinc-700 hover:bg-zinc-300/40"
+                  )}
+                  aria-label={`Retirer ${file.name}`}
+                  disabled={isSending}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 💬 Zone de saisie */}
+      <div className="flex items-center gap-3">
+        {!disableAttachments && (
+          <Button
+            type="button"
+            onClick={handleAttachmentClick}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full transition",
+              isDark
+                ? "text-white/70 hover:text-white hover:bg-white/10"
+                : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
+            )}
+            aria-label="Ajouter une pièce jointe"
+            disabled={isSending || !onFilesSelected || isListening}
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+        )}
+
+        <Textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onInput={() => {
+            const el = textareaRef.current
+            if (!el) return
+            el.style.height = "auto"
+            el.style.height = `${Math.min(el.scrollHeight, 192)}px`
+          }}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          rows={1}
+          disabled={isSending || isListening}
+          className={cn(
+            "w-full min-h-[44px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto",
+            textColor
+          )}
+        />
+
+        {/* 🎤 Bouton microphone ou 📨 Bouton d'envoi */}
+        {isSpeechSupported && !hasContent && !isListening && (
+          <Button
+            type="button"
+            onClick={handleMicClick}
+            disabled={isSending}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full transition",
+              isDark
+                ? "text-white/70 hover:text-white hover:bg-white/10"
+                : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
+            )}
+            aria-label="Enregistrement vocal"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+        )}
+
+        {isListening && (
+          <Button
+            type="button"
+            onClick={handleMicClick}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full transition animate-pulse bg-red-500/20",
+              isDark
+                ? "text-red-300 hover:bg-red-500/30"
+                : "text-red-600 hover:bg-red-500/30"
+            )}
+            aria-label="Arrêter l'enregistrement"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
+        )}
+
+        {(hasContent || isListening) && (
+          <Button
+            type="submit"
+            disabled={isSending || isListening}
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-10 w-10 shrink-0 rounded-full transition",
+              isDark
+                ? "text-white/80 hover:text-white hover:bg-white/10"
+                : "text-zinc-800 hover:text-zinc-950 hover:bg-zinc-200/60"
+            )}
+            aria-label="Envoyer le message"
+          >
+            <Send className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+
+      {onFilesSelected && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          multiple
+          onChange={handleFilesChange}
+        />
+      )}
+    </form>
+  )
+
   return (
     <div className={cn("w-full relative", className)}>
-      <BackgroundGradient className="rounded-[22px] w-full p-[0.5px]" colors={gradientColors}>
+      {courseType === "deep" ? (
+        // Mode deep: pas de gradient, juste le fond transparent
         <div
           className={cn(
             "relative z-[1] rounded-[20px] border backdrop-blur-md transition-colors duration-500",
@@ -177,170 +346,22 @@ export function ChatInput({
             borderColor
           )}
         >
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-3 px-4 py-3 relative z-[2]"
-          >
-            {/* 🎤 Affichage de la transcription vocale avec effet */}
-            {isListening && interimTranscript && (
-              <TextGenerateEffect
-                words={interimTranscript}
-                duration={0.1}
-                staggerDelay={0.02}
-                filter={false}
-                className="text-sm font-normal text-foreground"
-              />
-            )}
-
-            {/* 🗂️ Pièces jointes */}
-            {queuedFiles.length > 0 && (
-              <div
-                className={cn(
-                  "flex flex-wrap gap-2 text-xs",
-                  isDark ? "text-white/70" : "text-zinc-600"
-                )}
-              >
-                {queuedFiles.map((file, index) => (
-                  <span
-                    key={`${file.name}-${index}`}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-3 py-1 backdrop-blur-sm",
-                      isDark ? "bg-white/10" : "bg-zinc-200/60"
-                    )}
-                  >
-                    <Paperclip className="h-3.5 w-3.5" />
-                    <span className="max-w-[120px] truncate">{file.name}</span>
-                    {onRemoveAttachment && (
-                      <button
-                        type="button"
-                        onClick={() => onRemoveAttachment(index)}
-                        className={cn(
-                          "rounded-full p-0.5 transition",
-                          isDark
-                            ? "text-white/60 hover:bg-white/10"
-                            : "text-zinc-700 hover:bg-zinc-300/40"
-                        )}
-                        aria-label={`Retirer ${file.name}`}
-                        disabled={isSending}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* 💬 Zone de saisie */}
-            <div className="flex items-center gap-3">
-              {!disableAttachments && (
-                <Button
-                  type="button"
-                  onClick={handleAttachmentClick}
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10 shrink-0 rounded-full transition",
-                    isDark
-                      ? "text-white/70 hover:text-white hover:bg-white/10"
-                      : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
-                  )}
-                  aria-label="Ajouter une pièce jointe"
-                  disabled={isSending || !onFilesSelected || isListening}
-                >
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-              )}
-
-              <Textarea
-                ref={textareaRef}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                onInput={() => {
-                  const el = textareaRef.current
-                  if (!el) return
-                  el.style.height = "auto"
-                  el.style.height = `${Math.min(el.scrollHeight, 192)}px`
-                }}
-                onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-                rows={1}
-                disabled={isSending || isListening}
-                className={cn(
-                  "w-full min-h-[44px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto",
-                  textColor
-                )}
-              />
-
-              {/* 🎤 Bouton microphone ou 📨 Bouton d'envoi */}
-              {isSpeechSupported && !hasContent && !isListening && (
-                <Button
-                  type="button"
-                  onClick={handleMicClick}
-                  disabled={isSending}
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10 shrink-0 rounded-full transition",
-                    isDark
-                      ? "text-white/70 hover:text-white hover:bg-white/10"
-                      : "text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200/60"
-                  )}
-                  aria-label="Enregistrement vocal"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-              )}
-
-              {isListening && (
-                <Button
-                  type="button"
-                  onClick={handleMicClick}
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10 shrink-0 rounded-full transition animate-pulse bg-red-500/20",
-                    isDark
-                      ? "text-red-300 hover:bg-red-500/30"
-                      : "text-red-600 hover:bg-red-500/30"
-                  )}
-                  aria-label="Arrêter l'enregistrement"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
-              )}
-
-              {(hasContent || isListening) && (
-                <Button
-                  type="submit"
-                  disabled={isSending || isListening}
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-10 w-10 shrink-0 rounded-full transition",
-                    isDark
-                      ? "text-white/80 hover:text-white hover:bg-white/10"
-                      : "text-zinc-800 hover:text-zinc-950 hover:bg-zinc-200/60"
-                  )}
-                  aria-label="Envoyer le message"
-                >
-                  <Send className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-
-            {onFilesSelected && (
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                multiple
-                onChange={handleFilesChange}
-              />
-            )}
-          </form>
+          {formContent}
         </div>
-      </BackgroundGradient>
+      ) : (
+        // Mode normal: avec gradient
+        <BackgroundGradient className="rounded-[22px] w-full p-[0.5px]" colors={gradientColors}>
+          <div
+            className={cn(
+              "relative z-[1] rounded-[20px] border backdrop-blur-md transition-colors duration-500",
+              backgroundColorNormal,
+              borderColor
+            )}
+          >
+            {formContent}
+          </div>
+        </BackgroundGradient>
+      )}
     </div>
   )
 }
