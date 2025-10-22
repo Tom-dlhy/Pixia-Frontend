@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties } from "react"
+import React, { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties } from "react"
 import ReactMarkdown from "react-markdown"
 import {
   Empty,
@@ -13,7 +13,7 @@ import {
 import { ScrollArea } from "~/components/ui/scroll-area"
 import { BotMessageSquare } from "lucide-react"
 import { ChatInput } from "~/components/ChatInput"
-import { useCourseType } from "~/context/CourseTypeContext"
+import { useCourseType, CourseTypeProvider } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
 import { sendChatMessage, getChat } from "~/server/chat.server"
@@ -24,20 +24,27 @@ import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 interface CopiloteContainerProps {
   className?: string
   sessionId?: string
+  isCopiloteModal?: boolean
+  forceDeepMode?: boolean
 }
 
 /**
- * Right-side assistant panel with dynamic glassmorphism & accent gradient.
+ * Internal component with actual content - wrapped with forced courseType provider
  */
-export default function CopiloteContainer({ className = "", sessionId }: CopiloteContainerProps) {
+function CopiloteContainerContent({
+  className = "",
+  sessionId,
+  isCopiloteModal = false,
+}: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
-  const [isNewMessage, setIsNewMessage] = useState(false) // Track si c'est un nouveau message reçu
+  const [isNewMessage, setIsNewMessage] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { courseType } = useCourseType()
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
-  const accent = useMemo(() => getCourseAccent(courseType === "deep" ? "none" : courseType), [courseType])
+  // Use courseType directly, will be forced to "deep" by provider if in modal
+  const accent = useMemo(() => getCourseAccent(courseType), [courseType])
 
   // 🔄 Charger les messages de la session au montage
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
     <aside
       className={cn(
         `
-        hidden md:flex flex-col h-full
+        flex flex-col h-full
         rounded-[28px] border 
         backdrop-blur-[22px] backdrop-saturate-150
         bg-[linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.05))]
@@ -169,6 +176,7 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         hover:shadow-[inset_0_1px_6px_rgba(255,255,255,0.25),0_12px_40px_rgba(0,0,0,0.35)]
         p-6 overflow-hidden
       `,
+        !isCopiloteModal && "hidden md:flex",
         className
       )}
     >
@@ -178,9 +186,6 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
           <h2 className="text-lg font-semibold" style={headingStyle}>
             Copilote
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Retrouvez ici les recommandations et les ressources contextuelles liées à votre contenu.
-          </p>
         </div>
 
         {/* Messages Area with ScrollArea */}
@@ -252,5 +257,59 @@ export default function CopiloteContainer({ className = "", sessionId }: Copilot
         placeholder="Demandez une assistance au copilote..."
       />
     </aside>
+  )
+}
+
+/**
+ * Forced "deep" mode provider for modal use
+ */
+function ForcedDeepModeProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <CourseTypeProvider>
+      <ForcedDeepModeWrapper>{children}</ForcedDeepModeWrapper>
+    </CourseTypeProvider>
+  )
+}
+
+/**
+ * Wrapper that forces courseType to "deep"
+ */
+function ForcedDeepModeWrapper({ children }: { children: React.ReactNode }) {
+  const { setCourseType } = useCourseType()
+  useEffect(() => {
+    setCourseType("deep")
+  }, [setCourseType])
+  return <>{children}</>
+}
+
+/**
+ * Wrapper component that forces "deep" courseType when in modal mode
+ */
+export default function CopiloteContainer({
+  className = "",
+  sessionId,
+  isCopiloteModal = false,
+  forceDeepMode = false,
+}: CopiloteContainerProps) {
+  // If forceDeepMode is true, wrap content with provider forcing "deep"
+  if (forceDeepMode) {
+    return (
+      <ForcedDeepModeProvider>
+        <CopiloteContainerContent
+          className={className}
+          sessionId={sessionId}
+          isCopiloteModal={isCopiloteModal}
+        />
+      </ForcedDeepModeProvider>
+    )
+  }
+
+  // Otherwise, render content normally (inherits context from parent)
+  return (
+    <CopiloteContainerContent
+      className={className}
+      sessionId={sessionId}
+      isCopiloteModal={isCopiloteModal}
+    />
   )
 }

@@ -84,6 +84,7 @@ export function ChatInput({
       case "discuss":
         return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] // violet lavande
       case "deep":
+        return ["#fda4af", "#fb7185", "#f43f5e", "#b91c1c"] // rouge corail
       case "none":
         return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"] // neutre
       default:

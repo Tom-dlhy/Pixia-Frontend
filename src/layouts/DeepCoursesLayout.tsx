@@ -15,6 +15,7 @@ import {
 import DeepCourseHeader from "~/layouts/DeepCourseHeader"
 import DeepCourseTabs from "~/layouts/DeepCourseTabs"
 import { DeepCourseMainContent } from "~/layouts/DeepCourseMainContent"
+import { CopiloteModal } from "~/layouts/CopiloteModal"
 import BackButton from "~/components/BackButton"
 import ActionButton from "~/components/ActionButton"
 import { cn } from "~/lib/utils"
@@ -40,6 +41,7 @@ export function DeepCoursesLayout() {
   const [activeTab, setActiveTab] = useState<DeepCoursesTab>("cours")
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isEvaluating, setIsEvaluating] = useState(false)
+  const [isCopiloteModalOpen, setIsCopiloteModalOpen] = useState(false)
   const [isDark, setIsDark] = useState(
     typeof document !== "undefined" &&
       document.documentElement.classList.contains("dark")
@@ -57,6 +59,26 @@ export function DeepCoursesLayout() {
   useEffect(() => {
     if (depth < 3) setActiveTab("cours")
   }, [depth])
+
+  // Callbacks pour ouvrir le modal Copilote
+  const handleOpenCopiloteModal = () => {
+    setIsCopiloteModalOpen(true)
+  }
+
+  const handleCloseCopiloteModal = () => {
+    setIsCopiloteModalOpen(false)
+  }
+
+  // Enrichir le rightActionConfig avec les callbacks du modal
+  const enrichedActionConfig = useMemo(() => {
+    if (!rightActionConfig) return null
+    
+    return {
+      ...rightActionConfig,
+      onCreateCourse: handleOpenCopiloteModal,
+      onAddChapter: handleOpenCopiloteModal,
+    }
+  }, [rightActionConfig])
 
   const contextValue = useMemo(
     () => ({
@@ -82,14 +104,14 @@ export function DeepCoursesLayout() {
         <div
           className={cn(
             "flex flex-1 flex-col gap-14 px-6 py-10 sm:px-10 transition-all duration-500",
-            drawerOpen && "blur-md brightness-75 pointer-events-none"
+            (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
           )}
         >
           {/* Header */}
           <DeepCourseHeader
             title={headerTitle}
             leftAction={<BackButton onClick={handleNavigateBack} />}
-            rightAction={rightActionConfig ? <ActionButton {...rightActionConfig} /> : null}
+            rightAction={enrichedActionConfig ? <ActionButton {...enrichedActionConfig} /> : null}
             className="text-foreground"
             iconType={headerIcon}
           >
@@ -106,6 +128,13 @@ export function DeepCoursesLayout() {
           {/* Main Content */}
           <DeepCourseMainContent isEvaluating={isEvaluating} />
         </div>
+
+        {/* Copilote Modal */}
+        <CopiloteModal
+          isOpen={isCopiloteModalOpen}
+          onClose={handleCloseCopiloteModal}
+          sessionId={chapterId}
+        />
       </main>
     </DeepCoursesLayoutContext.Provider>
   )
