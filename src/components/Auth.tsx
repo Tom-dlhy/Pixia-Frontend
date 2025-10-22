@@ -3,20 +3,54 @@ import { Card } from "~/components/ui/card"
 import { Input } from "~/components/ui/input"
 import { Label } from "~/components/ui/label"
 
+export type AuthField = {
+  name: string
+  label: string
+  type?: React.HTMLInputTypeAttribute
+  placeholder?: string
+  autoComplete?: string
+  required?: boolean
+}
+
+const defaultFields: AuthField[] = [
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    placeholder: "m@example.com",
+    autoComplete: "email",
+    required: true,
+  },
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    placeholder: "********",
+    autoComplete: "current-password",
+    required: true,
+  },
+]
+
 export function Auth({
-  actionText,
+  primaryText,
+  secondaryText,
   onSubmit,
   status,
   afterSubmit,
   onTestUser,
   socialSlot,
+  onSecondaryAction,
+  fields,
 }: {
-  actionText: string
+  primaryText?: string
+  secondaryText?: string
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
   status: "pending" | "idle" | "success" | "error"
   afterSubmit?: React.ReactNode
   onTestUser?: () => void
   socialSlot?: React.ReactNode
+  onSecondaryAction?: () => void
+  fields?: AuthField[]
 }) {
   return (
     <div
@@ -39,12 +73,13 @@ export function Auth({
         />
 
         <h1 className="relative z-10 text-3xl font-bold text-center drop-shadow-sm">
-          {actionText}
+          {primaryText}
         </h1>
         <p className="relative z-10 text-sm text-muted-foreground/80 text-center">
-          Enter your credentials to {actionText.toLowerCase()}.
+          {primaryText
+            ? `Enter your credentials to ${primaryText.toLowerCase()}.`
+            : "Enter your credentials."}
         </p>
-
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -52,59 +87,66 @@ export function Auth({
           }}
           className="relative z-10 space-y-4"
         >
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              name="email"
-              id="email"
-              placeholder="m@example.com"
-              required
-              className="border-white/30 bg-white/30 dark:bg-white/10 backdrop-blur-md
-                         focus-visible:ring-2 focus-visible:ring-emerald-400 text-foreground
-                         placeholder:text-muted-foreground/70"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              type="password"
-              name="password"
-              id="password"
-              placeholder="********"
-              required
-              className="border-white/30 bg-white/30 dark:bg-white/10 backdrop-blur-md
-                         focus-visible:ring-2 focus-visible:ring-emerald-400 text-foreground
-                         placeholder:text-muted-foreground/70"
-            />
-          </div>
+          {(fields ?? defaultFields).map((field: AuthField) => (
+            <div key={field.name} className="grid gap-2">
+              <Label htmlFor={field.name}>{field.label}</Label>
+              <Input
+                type={field.type ?? "text"}
+                name={field.name}
+                id={field.name}
+                placeholder={field.placeholder}
+                autoComplete={field.autoComplete}
+                required={field.required ?? true}
+                className="border-white/30 bg-white/30 dark:bg-white/10 backdrop-blur-md
+                           focus-visible:ring-2 focus-visible:ring-emerald-400 text-foreground
+                           placeholder:text-muted-foreground/70"
+              />
+            </div>
+          ))}
 
           <div className="flex flex-col gap-2 pt-2">
-            <Button
-              type="submit"
-              disabled={status === "pending"}
-              className="w-full bg-emerald-500/80 hover:bg-emerald-400/90 text-white
-                         backdrop-blur-md shadow-[0_4px_20px_rgba(16,185,129,0.4)]
-                         transition-all duration-300 hover:scale-[1.02]"
-            >
-              {status === "pending" ? "..." : actionText}
-            </Button>
+            {primaryText && (
+              <Button
+                variant="outline"
+                type="submit"
+                disabled={status === "pending"}
+                className="w-full bg-white/20 dark:bg-white/10 border-white/30
+                          text-foreground backdrop-blur-md hover:scale-[1.02] 
+                          transition-all duration-300"
+              >
+                {status === "pending" ? "..." : primaryText}
+              </Button>
+            )}
 
-            {onTestUser ? (
+            {secondaryText && (
+              <Button
+                variant="outline"
+                type="button"
+                disabled={status === "pending"}
+                onClick={onSecondaryAction}
+                className="w-full bg-white/20 dark:bg-white/10 border-white/30
+                          text-foreground backdrop-blur-md hover:scale-[1.02] 
+                          transition-all duration-300"
+              >
+                {status === "pending" ? "..." : secondaryText}
+              </Button>
+            )}
+
+            {onTestUser && (
               <Button
                 variant="outline"
                 type="button"
                 disabled={status === "pending"}
                 onClick={onTestUser}
                 className="w-full bg-white/20 dark:bg-white/10 border-white/30
-                           text-foreground backdrop-blur-md hover:scale-[1.02] 
-                           transition-all duration-300"
+                          text-foreground backdrop-blur-md hover:scale-[1.02] 
+                          transition-all duration-300"
               >
                 {status === "pending" ? "..." : "Utilisateur Test"}
               </Button>
-            ) : null}
+            )}
           </div>
+
 
           {socialSlot ? (
             <div className="relative z-10 space-y-4 pt-2">

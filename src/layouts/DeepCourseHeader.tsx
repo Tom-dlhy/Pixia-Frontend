@@ -1,5 +1,6 @@
 import SectionTitle from "~/components/SectionTitle"
 import { cn } from "~/lib/utils"
+import { GraduationCap, BookOpen } from "lucide-react"
 
 interface DeepCourseHeaderProps {
   title: string
@@ -8,6 +9,7 @@ interface DeepCourseHeaderProps {
   rightAction?: React.ReactNode
   children?: React.ReactNode
   className?: string
+  iconType?: 'graduation-cap' | 'book-open' | null
 }
 
 export default function DeepCourseHeader({
@@ -17,7 +19,14 @@ export default function DeepCourseHeader({
   rightAction,
   children,
   className,
+  iconType,
 }: DeepCourseHeaderProps) {
+  const iconMap = {
+    'graduation-cap': <GraduationCap className="h-8 w-8" />,
+    'book-open': <BookOpen className="h-8 w-8" />,
+    null: undefined,
+  }
+
   return (
     <header className={cn("relative flex flex-col gap-8", className)}>
       {/* Ligne principale : boutons + titre centré */}
@@ -32,6 +41,7 @@ export default function DeepCourseHeader({
             subtitle={subtitle}
             align="center"
             size="lg"
+            icon={iconType ? iconMap[iconType] : undefined}
           />
         </div>
 

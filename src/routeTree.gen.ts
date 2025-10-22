@@ -8,6 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -18,16 +20,25 @@ import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthedDeepCoursesRouteImport } from './routes/_authed/deep-courses'
-import { Route as AuthedChatRouteImport } from './routes/_authed/chat'
+import { Route as AuthedDeepCourseRouteImport } from './routes/_authed/deep-course'
 import { Route as AuthedPostsRouteRouteImport } from './routes/_authed/posts.route'
+import { Route as AuthedExerciseRouteRouteImport } from './routes/_authed/exercise/route'
+import { Route as AuthedCourseRouteRouteImport } from './routes/_authed/course/route'
+import { Route as AuthedChatRouteRouteImport } from './routes/_authed/chat/route'
 import { Route as AuthedPostsIndexRouteImport } from './routes/_authed/posts.index'
-import { Route as AuthedDeepCoursesIndexRouteImport } from './routes/_authed/deep-courses.index'
+import { Route as AuthedExerciseIndexRouteImport } from './routes/_authed/exercise/index'
+import { Route as AuthedDeepCourseIndexRouteImport } from './routes/_authed/deep-course/index'
+import { Route as AuthedCourseIndexRouteImport } from './routes/_authed/course/index'
+import { Route as AuthedChatIndexRouteImport } from './routes/_authed/chat/index'
 import { Route as AuthedPostsPostIdRouteImport } from './routes/_authed/posts.$postId'
-import { Route as AuthedDeepCoursesCourseIdRouteImport } from './routes/_authed/deep-courses.$courseId'
-import { Route as AuthedChatChatIdRouteImport } from './routes/_authed/chat.$chatId'
-import { Route as AuthedDeepCoursesCourseIdIndexRouteImport } from './routes/_authed/deep-courses.$courseId.index'
-import { Route as AuthedDeepCoursesCourseIdChapterIdRouteImport } from './routes/_authed/deep-courses.$courseId.$chapterId'
+import { Route as AuthedLayer_layoutRouteImport } from './routes/_authed/layer/__layout'
+import { Route as AuthedExerciseIdRouteImport } from './routes/_authed/exercise/$id'
+import { Route as AuthedDeepCourseDeepcourseIdRouteImport } from './routes/_authed/deep-course/$deepcourseId'
+import { Route as AuthedCourseIdRouteImport } from './routes/_authed/course/$id'
+import { Route as AuthedChatIdRouteImport } from './routes/_authed/chat/$id'
+import { Route as AuthedDeepCourseDeepcourseIdChapterIdRouteImport } from './routes/_authed/deep-course/$deepcourseId/$chapterId'
+
+const AuthedLayerRouteImport = createFileRoute('/_authed/layer')()
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -73,14 +84,14 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedDeepCoursesRoute = AuthedDeepCoursesRouteImport.update({
-  id: '/deep-courses',
-  path: '/deep-courses',
+const AuthedLayerRoute = AuthedLayerRouteImport.update({
+  id: '/layer',
+  path: '/layer',
   getParentRoute: () => AuthedRoute,
 } as any)
-const AuthedChatRoute = AuthedChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
+const AuthedDeepCourseRoute = AuthedDeepCourseRouteImport.update({
+  id: '/deep-course',
+  path: '/deep-course',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedPostsRouteRoute = AuthedPostsRouteRouteImport.update({
@@ -88,43 +99,81 @@ const AuthedPostsRouteRoute = AuthedPostsRouteRouteImport.update({
   path: '/posts',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedExerciseRouteRoute = AuthedExerciseRouteRouteImport.update({
+  id: '/exercise',
+  path: '/exercise',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedCourseRouteRoute = AuthedCourseRouteRouteImport.update({
+  id: '/course',
+  path: '/course',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedChatRouteRoute = AuthedChatRouteRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedPostsIndexRoute = AuthedPostsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedPostsRouteRoute,
 } as any)
-const AuthedDeepCoursesIndexRoute = AuthedDeepCoursesIndexRouteImport.update({
+const AuthedExerciseIndexRoute = AuthedExerciseIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AuthedDeepCoursesRoute,
+  getParentRoute: () => AuthedExerciseRouteRoute,
+} as any)
+const AuthedDeepCourseIndexRoute = AuthedDeepCourseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedDeepCourseRoute,
+} as any)
+const AuthedCourseIndexRoute = AuthedCourseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedCourseRouteRoute,
+} as any)
+const AuthedChatIndexRoute = AuthedChatIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedChatRouteRoute,
 } as any)
 const AuthedPostsPostIdRoute = AuthedPostsPostIdRouteImport.update({
   id: '/$postId',
   path: '/$postId',
   getParentRoute: () => AuthedPostsRouteRoute,
 } as any)
-const AuthedDeepCoursesCourseIdRoute =
-  AuthedDeepCoursesCourseIdRouteImport.update({
-    id: '/$courseId',
-    path: '/$courseId',
-    getParentRoute: () => AuthedDeepCoursesRoute,
-  } as any)
-const AuthedChatChatIdRoute = AuthedChatChatIdRouteImport.update({
-  id: '/$chatId',
-  path: '/$chatId',
-  getParentRoute: () => AuthedChatRoute,
+const AuthedLayer_layoutRoute = AuthedLayer_layoutRouteImport.update({
+  id: '/__layout',
+  getParentRoute: () => AuthedLayerRoute,
 } as any)
-const AuthedDeepCoursesCourseIdIndexRoute =
-  AuthedDeepCoursesCourseIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthedDeepCoursesCourseIdRoute,
+const AuthedExerciseIdRoute = AuthedExerciseIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthedExerciseRouteRoute,
+} as any)
+const AuthedDeepCourseDeepcourseIdRoute =
+  AuthedDeepCourseDeepcourseIdRouteImport.update({
+    id: '/$deepcourseId',
+    path: '/$deepcourseId',
+    getParentRoute: () => AuthedDeepCourseRoute,
   } as any)
-const AuthedDeepCoursesCourseIdChapterIdRoute =
-  AuthedDeepCoursesCourseIdChapterIdRouteImport.update({
+const AuthedCourseIdRoute = AuthedCourseIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthedCourseRouteRoute,
+} as any)
+const AuthedChatIdRoute = AuthedChatIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthedChatRouteRoute,
+} as any)
+const AuthedDeepCourseDeepcourseIdChapterIdRoute =
+  AuthedDeepCourseDeepcourseIdChapterIdRouteImport.update({
     id: '/$chapterId',
     path: '/$chapterId',
-    getParentRoute: () => AuthedDeepCoursesCourseIdRoute,
+    getParentRoute: () => AuthedDeepCourseDeepcourseIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -136,16 +185,23 @@ export interface FileRoutesByFullPath {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/chat': typeof AuthedChatRouteRouteWithChildren
+  '/course': typeof AuthedCourseRouteRouteWithChildren
+  '/exercise': typeof AuthedExerciseRouteRouteWithChildren
   '/posts': typeof AuthedPostsRouteRouteWithChildren
-  '/chat': typeof AuthedChatRouteWithChildren
-  '/deep-courses': typeof AuthedDeepCoursesRouteWithChildren
-  '/chat/$chatId': typeof AuthedChatChatIdRoute
-  '/deep-courses/$courseId': typeof AuthedDeepCoursesCourseIdRouteWithChildren
+  '/deep-course': typeof AuthedDeepCourseRouteWithChildren
+  '/chat/$id': typeof AuthedChatIdRoute
+  '/course/$id': typeof AuthedCourseIdRoute
+  '/deep-course/$deepcourseId': typeof AuthedDeepCourseDeepcourseIdRouteWithChildren
+  '/exercise/$id': typeof AuthedExerciseIdRoute
+  '/layer': typeof AuthedLayer_layoutRoute
   '/posts/$postId': typeof AuthedPostsPostIdRoute
-  '/deep-courses/': typeof AuthedDeepCoursesIndexRoute
+  '/chat/': typeof AuthedChatIndexRoute
+  '/course/': typeof AuthedCourseIndexRoute
+  '/deep-course/': typeof AuthedDeepCourseIndexRoute
+  '/exercise/': typeof AuthedExerciseIndexRoute
   '/posts/': typeof AuthedPostsIndexRoute
-  '/deep-courses/$courseId/$chapterId': typeof AuthedDeepCoursesCourseIdChapterIdRoute
-  '/deep-courses/$courseId/': typeof AuthedDeepCoursesCourseIdIndexRoute
+  '/deep-course/$deepcourseId/$chapterId': typeof AuthedDeepCourseDeepcourseIdChapterIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,13 +212,18 @@ export interface FileRoutesByTo {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
-  '/chat': typeof AuthedChatRouteWithChildren
-  '/chat/$chatId': typeof AuthedChatChatIdRoute
+  '/chat/$id': typeof AuthedChatIdRoute
+  '/course/$id': typeof AuthedCourseIdRoute
+  '/deep-course/$deepcourseId': typeof AuthedDeepCourseDeepcourseIdRouteWithChildren
+  '/exercise/$id': typeof AuthedExerciseIdRoute
+  '/layer': typeof AuthedLayer_layoutRoute
   '/posts/$postId': typeof AuthedPostsPostIdRoute
-  '/deep-courses': typeof AuthedDeepCoursesIndexRoute
+  '/chat': typeof AuthedChatIndexRoute
+  '/course': typeof AuthedCourseIndexRoute
+  '/deep-course': typeof AuthedDeepCourseIndexRoute
+  '/exercise': typeof AuthedExerciseIndexRoute
   '/posts': typeof AuthedPostsIndexRoute
-  '/deep-courses/$courseId/$chapterId': typeof AuthedDeepCoursesCourseIdChapterIdRoute
-  '/deep-courses/$courseId': typeof AuthedDeepCoursesCourseIdIndexRoute
+  '/deep-course/$deepcourseId/$chapterId': typeof AuthedDeepCourseDeepcourseIdChapterIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -175,16 +236,24 @@ export interface FileRoutesById {
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/_authed/chat': typeof AuthedChatRouteRouteWithChildren
+  '/_authed/course': typeof AuthedCourseRouteRouteWithChildren
+  '/_authed/exercise': typeof AuthedExerciseRouteRouteWithChildren
   '/_authed/posts': typeof AuthedPostsRouteRouteWithChildren
-  '/_authed/chat': typeof AuthedChatRouteWithChildren
-  '/_authed/deep-courses': typeof AuthedDeepCoursesRouteWithChildren
-  '/_authed/chat/$chatId': typeof AuthedChatChatIdRoute
-  '/_authed/deep-courses/$courseId': typeof AuthedDeepCoursesCourseIdRouteWithChildren
+  '/_authed/deep-course': typeof AuthedDeepCourseRouteWithChildren
+  '/_authed/chat/$id': typeof AuthedChatIdRoute
+  '/_authed/course/$id': typeof AuthedCourseIdRoute
+  '/_authed/deep-course/$deepcourseId': typeof AuthedDeepCourseDeepcourseIdRouteWithChildren
+  '/_authed/exercise/$id': typeof AuthedExerciseIdRoute
+  '/_authed/layer': typeof AuthedLayerRouteWithChildren
+  '/_authed/layer/__layout': typeof AuthedLayer_layoutRoute
   '/_authed/posts/$postId': typeof AuthedPostsPostIdRoute
-  '/_authed/deep-courses/': typeof AuthedDeepCoursesIndexRoute
+  '/_authed/chat/': typeof AuthedChatIndexRoute
+  '/_authed/course/': typeof AuthedCourseIndexRoute
+  '/_authed/deep-course/': typeof AuthedDeepCourseIndexRoute
+  '/_authed/exercise/': typeof AuthedExerciseIndexRoute
   '/_authed/posts/': typeof AuthedPostsIndexRoute
-  '/_authed/deep-courses/$courseId/$chapterId': typeof AuthedDeepCoursesCourseIdChapterIdRoute
-  '/_authed/deep-courses/$courseId/': typeof AuthedDeepCoursesCourseIdIndexRoute
+  '/_authed/deep-course/$deepcourseId/$chapterId': typeof AuthedDeepCourseDeepcourseIdChapterIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,16 +266,23 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/signup'
-    | '/posts'
     | '/chat'
-    | '/deep-courses'
-    | '/chat/$chatId'
-    | '/deep-courses/$courseId'
+    | '/course'
+    | '/exercise'
+    | '/posts'
+    | '/deep-course'
+    | '/chat/$id'
+    | '/course/$id'
+    | '/deep-course/$deepcourseId'
+    | '/exercise/$id'
+    | '/layer'
     | '/posts/$postId'
-    | '/deep-courses/'
+    | '/chat/'
+    | '/course/'
+    | '/deep-course/'
+    | '/exercise/'
     | '/posts/'
-    | '/deep-courses/$courseId/$chapterId'
-    | '/deep-courses/$courseId/'
+    | '/deep-course/$deepcourseId/$chapterId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,13 +293,18 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/signup'
-    | '/chat'
-    | '/chat/$chatId'
+    | '/chat/$id'
+    | '/course/$id'
+    | '/deep-course/$deepcourseId'
+    | '/exercise/$id'
+    | '/layer'
     | '/posts/$postId'
-    | '/deep-courses'
+    | '/chat'
+    | '/course'
+    | '/deep-course'
+    | '/exercise'
     | '/posts'
-    | '/deep-courses/$courseId/$chapterId'
-    | '/deep-courses/$courseId'
+    | '/deep-course/$deepcourseId/$chapterId'
   id:
     | '__root__'
     | '/'
@@ -235,16 +316,24 @@ export interface FileRouteTypes {
     | '/search'
     | '/settings'
     | '/signup'
-    | '/_authed/posts'
     | '/_authed/chat'
-    | '/_authed/deep-courses'
-    | '/_authed/chat/$chatId'
-    | '/_authed/deep-courses/$courseId'
+    | '/_authed/course'
+    | '/_authed/exercise'
+    | '/_authed/posts'
+    | '/_authed/deep-course'
+    | '/_authed/chat/$id'
+    | '/_authed/course/$id'
+    | '/_authed/deep-course/$deepcourseId'
+    | '/_authed/exercise/$id'
+    | '/_authed/layer'
+    | '/_authed/layer/__layout'
     | '/_authed/posts/$postId'
-    | '/_authed/deep-courses/'
+    | '/_authed/chat/'
+    | '/_authed/course/'
+    | '/_authed/deep-course/'
+    | '/_authed/exercise/'
     | '/_authed/posts/'
-    | '/_authed/deep-courses/$courseId/$chapterId'
-    | '/_authed/deep-courses/$courseId/'
+    | '/_authed/deep-course/$deepcourseId/$chapterId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -324,18 +413,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/deep-courses': {
-      id: '/_authed/deep-courses'
-      path: '/deep-courses'
-      fullPath: '/deep-courses'
-      preLoaderRoute: typeof AuthedDeepCoursesRouteImport
+    '/_authed/layer': {
+      id: '/_authed/layer'
+      path: '/layer'
+      fullPath: '/layer'
+      preLoaderRoute: typeof AuthedLayerRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/chat': {
-      id: '/_authed/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthedChatRouteImport
+    '/_authed/deep-course': {
+      id: '/_authed/deep-course'
+      path: '/deep-course'
+      fullPath: '/deep-course'
+      preLoaderRoute: typeof AuthedDeepCourseRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/posts': {
@@ -345,6 +434,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedPostsRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/exercise': {
+      id: '/_authed/exercise'
+      path: '/exercise'
+      fullPath: '/exercise'
+      preLoaderRoute: typeof AuthedExerciseRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/course': {
+      id: '/_authed/course'
+      path: '/course'
+      fullPath: '/course'
+      preLoaderRoute: typeof AuthedCourseRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/chat': {
+      id: '/_authed/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthedChatRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/posts/': {
       id: '/_authed/posts/'
       path: '/'
@@ -352,12 +462,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedPostsIndexRouteImport
       parentRoute: typeof AuthedPostsRouteRoute
     }
-    '/_authed/deep-courses/': {
-      id: '/_authed/deep-courses/'
+    '/_authed/exercise/': {
+      id: '/_authed/exercise/'
       path: '/'
-      fullPath: '/deep-courses/'
-      preLoaderRoute: typeof AuthedDeepCoursesIndexRouteImport
-      parentRoute: typeof AuthedDeepCoursesRoute
+      fullPath: '/exercise/'
+      preLoaderRoute: typeof AuthedExerciseIndexRouteImport
+      parentRoute: typeof AuthedExerciseRouteRoute
+    }
+    '/_authed/deep-course/': {
+      id: '/_authed/deep-course/'
+      path: '/'
+      fullPath: '/deep-course/'
+      preLoaderRoute: typeof AuthedDeepCourseIndexRouteImport
+      parentRoute: typeof AuthedDeepCourseRoute
+    }
+    '/_authed/course/': {
+      id: '/_authed/course/'
+      path: '/'
+      fullPath: '/course/'
+      preLoaderRoute: typeof AuthedCourseIndexRouteImport
+      parentRoute: typeof AuthedCourseRouteRoute
+    }
+    '/_authed/chat/': {
+      id: '/_authed/chat/'
+      path: '/'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof AuthedChatIndexRouteImport
+      parentRoute: typeof AuthedChatRouteRoute
     }
     '/_authed/posts/$postId': {
       id: '/_authed/posts/$postId'
@@ -366,36 +497,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedPostsPostIdRouteImport
       parentRoute: typeof AuthedPostsRouteRoute
     }
-    '/_authed/deep-courses/$courseId': {
-      id: '/_authed/deep-courses/$courseId'
-      path: '/$courseId'
-      fullPath: '/deep-courses/$courseId'
-      preLoaderRoute: typeof AuthedDeepCoursesCourseIdRouteImport
-      parentRoute: typeof AuthedDeepCoursesRoute
+    '/_authed/layer/__layout': {
+      id: '/_authed/layer/__layout'
+      path: '/layer'
+      fullPath: '/layer'
+      preLoaderRoute: typeof AuthedLayer_layoutRouteImport
+      parentRoute: typeof AuthedLayerRoute
     }
-    '/_authed/chat/$chatId': {
-      id: '/_authed/chat/$chatId'
-      path: '/$chatId'
-      fullPath: '/chat/$chatId'
-      preLoaderRoute: typeof AuthedChatChatIdRouteImport
-      parentRoute: typeof AuthedChatRoute
+    '/_authed/exercise/$id': {
+      id: '/_authed/exercise/$id'
+      path: '/$id'
+      fullPath: '/exercise/$id'
+      preLoaderRoute: typeof AuthedExerciseIdRouteImport
+      parentRoute: typeof AuthedExerciseRouteRoute
     }
-    '/_authed/deep-courses/$courseId/': {
-      id: '/_authed/deep-courses/$courseId/'
-      path: '/'
-      fullPath: '/deep-courses/$courseId/'
-      preLoaderRoute: typeof AuthedDeepCoursesCourseIdIndexRouteImport
-      parentRoute: typeof AuthedDeepCoursesCourseIdRoute
+    '/_authed/deep-course/$deepcourseId': {
+      id: '/_authed/deep-course/$deepcourseId'
+      path: '/$deepcourseId'
+      fullPath: '/deep-course/$deepcourseId'
+      preLoaderRoute: typeof AuthedDeepCourseDeepcourseIdRouteImport
+      parentRoute: typeof AuthedDeepCourseRoute
     }
-    '/_authed/deep-courses/$courseId/$chapterId': {
-      id: '/_authed/deep-courses/$courseId/$chapterId'
+    '/_authed/course/$id': {
+      id: '/_authed/course/$id'
+      path: '/$id'
+      fullPath: '/course/$id'
+      preLoaderRoute: typeof AuthedCourseIdRouteImport
+      parentRoute: typeof AuthedCourseRouteRoute
+    }
+    '/_authed/chat/$id': {
+      id: '/_authed/chat/$id'
+      path: '/$id'
+      fullPath: '/chat/$id'
+      preLoaderRoute: typeof AuthedChatIdRouteImport
+      parentRoute: typeof AuthedChatRouteRoute
+    }
+    '/_authed/deep-course/$deepcourseId/$chapterId': {
+      id: '/_authed/deep-course/$deepcourseId/$chapterId'
       path: '/$chapterId'
-      fullPath: '/deep-courses/$courseId/$chapterId'
-      preLoaderRoute: typeof AuthedDeepCoursesCourseIdChapterIdRouteImport
-      parentRoute: typeof AuthedDeepCoursesCourseIdRoute
+      fullPath: '/deep-course/$deepcourseId/$chapterId'
+      preLoaderRoute: typeof AuthedDeepCourseDeepcourseIdChapterIdRouteImport
+      parentRoute: typeof AuthedDeepCourseDeepcourseIdRoute
     }
   }
 }
+
+interface AuthedChatRouteRouteChildren {
+  AuthedChatIdRoute: typeof AuthedChatIdRoute
+  AuthedChatIndexRoute: typeof AuthedChatIndexRoute
+}
+
+const AuthedChatRouteRouteChildren: AuthedChatRouteRouteChildren = {
+  AuthedChatIdRoute: AuthedChatIdRoute,
+  AuthedChatIndexRoute: AuthedChatIndexRoute,
+}
+
+const AuthedChatRouteRouteWithChildren = AuthedChatRouteRoute._addFileChildren(
+  AuthedChatRouteRouteChildren,
+)
+
+interface AuthedCourseRouteRouteChildren {
+  AuthedCourseIdRoute: typeof AuthedCourseIdRoute
+  AuthedCourseIndexRoute: typeof AuthedCourseIndexRoute
+}
+
+const AuthedCourseRouteRouteChildren: AuthedCourseRouteRouteChildren = {
+  AuthedCourseIdRoute: AuthedCourseIdRoute,
+  AuthedCourseIndexRoute: AuthedCourseIndexRoute,
+}
+
+const AuthedCourseRouteRouteWithChildren =
+  AuthedCourseRouteRoute._addFileChildren(AuthedCourseRouteRouteChildren)
+
+interface AuthedExerciseRouteRouteChildren {
+  AuthedExerciseIdRoute: typeof AuthedExerciseIdRoute
+  AuthedExerciseIndexRoute: typeof AuthedExerciseIndexRoute
+}
+
+const AuthedExerciseRouteRouteChildren: AuthedExerciseRouteRouteChildren = {
+  AuthedExerciseIdRoute: AuthedExerciseIdRoute,
+  AuthedExerciseIndexRoute: AuthedExerciseIndexRoute,
+}
+
+const AuthedExerciseRouteRouteWithChildren =
+  AuthedExerciseRouteRoute._addFileChildren(AuthedExerciseRouteRouteChildren)
 
 interface AuthedPostsRouteRouteChildren {
   AuthedPostsPostIdRoute: typeof AuthedPostsPostIdRoute
@@ -410,58 +595,63 @@ const AuthedPostsRouteRouteChildren: AuthedPostsRouteRouteChildren = {
 const AuthedPostsRouteRouteWithChildren =
   AuthedPostsRouteRoute._addFileChildren(AuthedPostsRouteRouteChildren)
 
-interface AuthedChatRouteChildren {
-  AuthedChatChatIdRoute: typeof AuthedChatChatIdRoute
+interface AuthedDeepCourseDeepcourseIdRouteChildren {
+  AuthedDeepCourseDeepcourseIdChapterIdRoute: typeof AuthedDeepCourseDeepcourseIdChapterIdRoute
 }
 
-const AuthedChatRouteChildren: AuthedChatRouteChildren = {
-  AuthedChatChatIdRoute: AuthedChatChatIdRoute,
-}
-
-const AuthedChatRouteWithChildren = AuthedChatRoute._addFileChildren(
-  AuthedChatRouteChildren,
-)
-
-interface AuthedDeepCoursesCourseIdRouteChildren {
-  AuthedDeepCoursesCourseIdChapterIdRoute: typeof AuthedDeepCoursesCourseIdChapterIdRoute
-  AuthedDeepCoursesCourseIdIndexRoute: typeof AuthedDeepCoursesCourseIdIndexRoute
-}
-
-const AuthedDeepCoursesCourseIdRouteChildren: AuthedDeepCoursesCourseIdRouteChildren =
+const AuthedDeepCourseDeepcourseIdRouteChildren: AuthedDeepCourseDeepcourseIdRouteChildren =
   {
-    AuthedDeepCoursesCourseIdChapterIdRoute:
-      AuthedDeepCoursesCourseIdChapterIdRoute,
-    AuthedDeepCoursesCourseIdIndexRoute: AuthedDeepCoursesCourseIdIndexRoute,
+    AuthedDeepCourseDeepcourseIdChapterIdRoute:
+      AuthedDeepCourseDeepcourseIdChapterIdRoute,
   }
 
-const AuthedDeepCoursesCourseIdRouteWithChildren =
-  AuthedDeepCoursesCourseIdRoute._addFileChildren(
-    AuthedDeepCoursesCourseIdRouteChildren,
+const AuthedDeepCourseDeepcourseIdRouteWithChildren =
+  AuthedDeepCourseDeepcourseIdRoute._addFileChildren(
+    AuthedDeepCourseDeepcourseIdRouteChildren,
   )
 
-interface AuthedDeepCoursesRouteChildren {
-  AuthedDeepCoursesCourseIdRoute: typeof AuthedDeepCoursesCourseIdRouteWithChildren
-  AuthedDeepCoursesIndexRoute: typeof AuthedDeepCoursesIndexRoute
+interface AuthedDeepCourseRouteChildren {
+  AuthedDeepCourseDeepcourseIdRoute: typeof AuthedDeepCourseDeepcourseIdRouteWithChildren
+  AuthedDeepCourseIndexRoute: typeof AuthedDeepCourseIndexRoute
 }
 
-const AuthedDeepCoursesRouteChildren: AuthedDeepCoursesRouteChildren = {
-  AuthedDeepCoursesCourseIdRoute: AuthedDeepCoursesCourseIdRouteWithChildren,
-  AuthedDeepCoursesIndexRoute: AuthedDeepCoursesIndexRoute,
+const AuthedDeepCourseRouteChildren: AuthedDeepCourseRouteChildren = {
+  AuthedDeepCourseDeepcourseIdRoute:
+    AuthedDeepCourseDeepcourseIdRouteWithChildren,
+  AuthedDeepCourseIndexRoute: AuthedDeepCourseIndexRoute,
 }
 
-const AuthedDeepCoursesRouteWithChildren =
-  AuthedDeepCoursesRoute._addFileChildren(AuthedDeepCoursesRouteChildren)
+const AuthedDeepCourseRouteWithChildren =
+  AuthedDeepCourseRoute._addFileChildren(AuthedDeepCourseRouteChildren)
+
+interface AuthedLayerRouteChildren {
+  AuthedLayer_layoutRoute: typeof AuthedLayer_layoutRoute
+}
+
+const AuthedLayerRouteChildren: AuthedLayerRouteChildren = {
+  AuthedLayer_layoutRoute: AuthedLayer_layoutRoute,
+}
+
+const AuthedLayerRouteWithChildren = AuthedLayerRoute._addFileChildren(
+  AuthedLayerRouteChildren,
+)
 
 interface AuthedRouteChildren {
+  AuthedChatRouteRoute: typeof AuthedChatRouteRouteWithChildren
+  AuthedCourseRouteRoute: typeof AuthedCourseRouteRouteWithChildren
+  AuthedExerciseRouteRoute: typeof AuthedExerciseRouteRouteWithChildren
   AuthedPostsRouteRoute: typeof AuthedPostsRouteRouteWithChildren
-  AuthedChatRoute: typeof AuthedChatRouteWithChildren
-  AuthedDeepCoursesRoute: typeof AuthedDeepCoursesRouteWithChildren
+  AuthedDeepCourseRoute: typeof AuthedDeepCourseRouteWithChildren
+  AuthedLayerRoute: typeof AuthedLayerRouteWithChildren
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedChatRouteRoute: AuthedChatRouteRouteWithChildren,
+  AuthedCourseRouteRoute: AuthedCourseRouteRouteWithChildren,
+  AuthedExerciseRouteRoute: AuthedExerciseRouteRouteWithChildren,
   AuthedPostsRouteRoute: AuthedPostsRouteRouteWithChildren,
-  AuthedChatRoute: AuthedChatRouteWithChildren,
-  AuthedDeepCoursesRoute: AuthedDeepCoursesRouteWithChildren,
+  AuthedDeepCourseRoute: AuthedDeepCourseRouteWithChildren,
+  AuthedLayerRoute: AuthedLayerRouteWithChildren,
 }
 
 const AuthedRouteWithChildren =

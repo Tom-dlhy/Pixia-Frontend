@@ -1,265 +1,126 @@
 import { useRouter } from "@tanstack/react-router"
-import { useServerFn } from "@tanstack/react-start"
-import { GoogleLogin } from "@react-oauth/google"
 import { useMutation } from "../hooks/useMutation"
-import { useAppSession, SESSION_PROFILE_STORAGE_KEY } from "~/utils/session"
-import { loginFn } from "../routes/_authed"
+import { useAppSession } from "~/utils/session"
 import { Auth } from "./Auth"
-import { signupFn } from "~/routes/signup"
 import { Route as LoginRoute } from "~/routes/login"
+import { applyAuthResult } from "~/utils/auth-client"
+import { resolveRedirectTarget } from "~/utils/redirect"
+
+type LoginRequest = {
+  email: string
+  password: string
+}
+
+type LoginResponse = {
+  existing_user: boolean
+  user_id: string | null
+  email: string | null
+  given_name: string | null
+  family_name: string | null
+}
 
 export function Login() {
   const router = useRouter()
   const { redirect: redirectTarget } = LoginRoute.useSearch()
   const { setSession } = useAppSession()
-  const isClient = typeof window !== "undefined"
 
-  type StoredProfile = {
-    email?: string | null
-    userId?: string | number | null
-    givenName?: string | null
-    familyName?: string | null
-    picture?: string | null
-    locale?: string | null
-    googleSub?: string | null
-  }
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"
 
-  const persistProfile = (profile: StoredProfile) => {
-    if (typeof window === "undefined") return
-    const hasProfile = Object.values(profile).some((value) => value !== null && value !== undefined)
-    if (hasProfile) {
-      window.localStorage.setItem(SESSION_PROFILE_STORAGE_KEY, JSON.stringify(profile))
-    } else {
-      window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
-    }
-  }
+  // --- LOGIN MUTATION ---
+  const loginMutation = useMutation<LoginRequest, LoginResponse>({
+    fn: async (data) => {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
 
-  function buildGoogleAuthUrl(): string {
-    const explicit = import.meta.env.VITE_GOOGLE_AUTH_URL
-    if (explicit) return explicit
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
 
-    const base = import.meta.env.VITE_BACKEND_URL
-    if (!base) return "http://localhost:8000/api/auth/google"
+      return (await res.json()) as LoginResponse
+    },
 
-    // If base already points to the full endpoint, return as-is
-    if (/\/auth\/google\/?$/.test(base)) return base
-
-    // Otherwise, join base with /api/auth/google safely
-    const trimmed = base.replace(/\/$/, "")
-    return `${trimmed}/api/auth/google`
-  }
-
-  const loginMutation = useMutation({
-    fn: loginFn,
-    onSuccess: async (ctx) => {
-      if (!ctx.data?.error) {
-        if (ctx.data?.token) {
-          const profile: StoredProfile = {
-            email: (ctx.data as any)?.email ?? null,
-            userId: (ctx.data as any)?.user_id ?? null,
-            givenName: (ctx.data as any)?.given_name ?? null,
-            familyName: (ctx.data as any)?.family_name ?? null,
-            picture: (ctx.data as any)?.picture ?? null,
-            locale: (ctx.data as any)?.locale ?? null,
-            googleSub: (ctx.data as any)?.google_sub ?? null,
-          }
-
-          window.localStorage.setItem("access_token", ctx.data.token)
-          persistProfile(profile)
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("session:refresh"))
-          }
-          setSession((prev) => ({
-            userEmail: profile.email ?? (ctx.data as any)?.email ?? prev.userEmail ?? null,
-            userId: profile.userId ?? prev.userId ?? null,
-            givenName: profile.givenName ?? prev.givenName ?? null,
-            familyName: profile.familyName ?? prev.familyName ?? null,
-            picture: profile.picture ?? prev.picture ?? null,
-            locale: profile.locale ?? prev.locale ?? null,
-            googleSub: profile.googleSub ?? prev.googleSub ?? null,
-          }))
-        }
-
-        await router.invalidate()
-        const destination = resolveRedirectTarget(redirectTarget)
-
-        if (destination?.type === "chat-detail") {
-          router.navigate({
-            to: "/chat/$chatId",
-            params: { chatId: destination.chatId },
-          })
-        } else if (destination?.type === "chat-home") {
-          router.navigate({ to: "/chat" })
-        } else {
-          router.navigate({ to: "/chat" })
-        }
+    onSuccess: async ({ data }) => {
+      if (!data.existing_user) {
+        console.warn("Utilisateur inexistant :", data)
         return
       }
+
+      console.log("Connexion réussie :", data)
+
+      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
+      const userId = data.user_id || data.email || null
+
+      applyAuthResult(
+        {
+          success: true,
+          email: data.email ?? null,
+          user_id: userId,
+          given_name: data.given_name ?? null,
+          family_name: data.family_name ?? null,
+        },
+        setSession,
+      )
+
+      const destination = resolveRedirectTarget(redirectTarget)
+
+      if (destination?.type === "chat-detail") {
+        router.navigate({ to: "/chat/$id", params: { id: destination.chatId } })
+      } else {
+        router.navigate({ to: "/chat" })
+      }
     },
+
   })
 
-  const signupMutation = useMutation({
-    fn: useServerFn(signupFn),
-  })
+  const formStatus =
+    loginMutation.status === "pending"
+      ? "pending"
+      : loginMutation.status === "error"
+      ? "error"
+      : loginMutation.status === "success"
+      ? "success"
+      : "idle"
+
+  const loginErrorMessage =
+    loginMutation.status === "error"
+      ? "Erreur de connexion. Vérifie tes identifiants ou le serveur."
+      : null
 
   return (
     <Auth
-      actionText="Login"
-      status={loginMutation.status}
+      primaryText="Login"
+      secondaryText="Sign Up"
+      status={formStatus}
       onSubmit={(e) => {
+        e.preventDefault()
         const formData = new FormData(e.target as HTMLFormElement)
-
         loginMutation.mutate({
-          data: {
-            email: formData.get("email") as string,
-            password: formData.get("password") as string,
-          },
+          email: formData.get("email") as string,
+          password: formData.get("password") as string,
+        })
+      }}
+      onSecondaryAction={() => {
+        router.navigate({
+          to: "/signup",
+          search: { redirect: redirectTarget ?? "/chat" },
         })
       }}
       onTestUser={() => {
         loginMutation.mutate({
-          data: {
-            email: "test@me.com",
-            password: "test",
-          },
+          email: "test@me.com",
+          password: "test",
         })
       }}
-      socialSlot={isClient ? (
-        <GoogleLogin
-          onSuccess={async (credentialResponse) => {
-            try {
-              const credential = (credentialResponse as any)?.credential
-              if (!credential) throw new Error("Missing Google credential")
-
-              const url = buildGoogleAuthUrl()
-              console.info("[GoogleLogin] POST", url, {
-                payloadPreview: credential?.slice?.(0, 12) + "…",
-              })
-
-              const response = await fetch(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ credential }),
-              })
-
-              if (!response.ok) {
-                const text = await response.text().catch(() => "<no-body>")
-                console.error("[GoogleLogin] Backend error", {
-                  status: response.status,
-                  statusText: response.statusText,
-                  url,
-                  body: text,
-                })
-                throw new Error("Erreur backend : " + response.status)
-              }
-
-              const data = await response.json()
-              console.info("[GoogleLogin] Backend response", data)
-              // Persist token
-              if (data?.token) {
-                const profile: StoredProfile = {
-                  email: data.email ?? null,
-                  userId: data.user_id ?? null,
-                  givenName: data.given_name ?? null,
-                  familyName: data.family_name ?? null,
-                  picture: data.picture ?? null,
-                  locale: data.locale ?? null,
-                  googleSub: data.google_sub ?? null,
-                }
-
-                window.localStorage.setItem("access_token", data.token)
-                persistProfile(profile)
-                window.dispatchEvent(new Event("session:refresh"))
-                setSession({
-                  userEmail: profile.email ?? null,
-                  userId: profile.userId ?? null,
-                  givenName: profile.givenName ?? null,
-                  familyName: profile.familyName ?? null,
-                  picture: profile.picture ?? null,
-                  locale: profile.locale ?? null,
-                  googleSub: profile.googleSub ?? null,
-                })
-              }
-
-              // Invalidate and redirect similar to standard login
-              await router.invalidate()
-              const destination = resolveRedirectTarget(redirectTarget)
-              if (destination?.type === "chat-detail") {
-                router.navigate({
-                  to: "/chat/$chatId",
-                  params: { chatId: destination.chatId },
-                })
-              } else {
-                router.navigate({ to: "/chat" })
-              }
-            } catch (err) {
-              console.error("[GoogleLogin] Erreur de connexion Google :", err)
-            }
-          }}
-          onError={() => {
-            console.warn("[GoogleLogin] Échec de la connexion Google")
-          }}
-        />
-      ) : null}
       afterSubmit={
-        loginMutation.data ? (
-          <>
-            <div className="text-red-400 text-center drop-shadow-sm">
-              {loginMutation.data.message}
-            </div>
-            {loginMutation.data.userNotFound ? (
-              <div className="text-center">
-                <button
-                  className="text-emerald-400 hover:text-emerald-300 transition-colors"
-                  onClick={(e) => {
-                    const formData = new FormData(
-                      (e.target as HTMLButtonElement).form!,
-                    )
-
-                    signupMutation.mutate({
-                      data: {
-                        email: formData.get("email") as string,
-                        password: formData.get("password") as string,
-                      },
-                    })
-                  }}
-                  type="button"
-                >
-                  Sign up instead?
-                </button>
-              </div>
-            ) : null}
-          </>
+        loginErrorMessage ? (
+          <div className="text-red-400 text-center drop-shadow-sm">
+            {loginErrorMessage}
+          </div>
         ) : null
       }
     />
   )
-
-}
-
-type RedirectDestination =
-  | { type: "chat-home" }
-  | { type: "chat-detail"; chatId: string }
-  | null
-
-function resolveRedirectTarget(target?: string): RedirectDestination {
-  if (!target || typeof target !== "string") return null
-
-  if (!target.startsWith("/")) return null
-
-  const [pathname] = target.split("?")
-
-  if (pathname === "/chat") {
-    return { type: "chat-home" }
-  }
-
-  if (pathname.startsWith("/chat/")) {
-    const segments = pathname.split("/").filter(Boolean)
-    const chatId = segments[1]
-    if (chatId) {
-      return { type: "chat-detail", chatId }
-    }
-  }
-
-  return null
 }

@@ -36,8 +36,6 @@ interface NavUserProps {
     image?: string | null
     givenName?: string | null
     familyName?: string | null
-    picture?: string | null
-    locale?: string | null
   }
 }
 
@@ -65,9 +63,7 @@ export function NavUser({ user }: NavUserProps) {
     settings.fullName ??
     (resolvedEmail ? resolvedEmail.split("@")[0] : null)
 
-  const avatarSrc = user.image ?? user.picture ?? session.picture ?? undefined
-  const localeLabel = session.locale ?? user.locale ?? null
-  const googleId = session.googleSub ?? null
+  const avatarSrc = user.image ?? undefined
 
   useEffect(() => {
     const preferredEmail = session.userEmail ?? user.email ?? null

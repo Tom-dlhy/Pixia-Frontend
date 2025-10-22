@@ -2,6 +2,9 @@
   "servers": {
     "shadcn": {
       "url": "https://www.shadcn.io/api/mcp"
+    },
+    "deepwiki":{
+      "url": "https://mcp.deepwiki.com/mcp"
     }
   }
 }

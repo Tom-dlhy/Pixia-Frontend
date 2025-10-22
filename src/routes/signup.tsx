@@ -1,95 +1,114 @@
-import { redirect, createFileRoute } from '@tanstack/react-router'
-import { createServerFn, useServerFn } from '@tanstack/react-start'
-import { hashPassword, prismaClient } from '~/utils/prisma'
-import { useMutation } from '~/hooks/useMutation'
-import { Auth } from '~/components/Auth'
-import { useAppSession } from '~/utils/session'
+import { createFileRoute, useRouter } from "@tanstack/react-router"
+import { useMutation } from "~/hooks/useMutation"
+import { Auth, type AuthField } from "~/components/Auth"
+import { useAppSession } from "~/utils/session"
+import { signupUser } from "~/server/signup.server"
 
-export const signupFn = createServerFn({ method: 'POST' })
-  .inputValidator(
-    (d: { email: string; password: string; redirectUrl?: string }) => d,
-  )
-  .handler(async ({ data }) => {
-    // Check if the user already exists
-    const found = await prismaClient.user.findUnique({
-      where: {
-        email: data.email,
-      },
-    })
+type SignupSearch = {
+  redirect?: string
+}
 
-    // Encrypt the password using Sha256 into plaintext
-    const password = await hashPassword(data.password)
-
-    // Create a session
-    const session = await useAppSession()
-
-    if (found) {
-      if (found.password !== password) {
-        return {
-          error: true,
-          userExists: true,
-          message: 'User already exists',
-        }
-      }
-
-      // Store the user's email in the session
-      await session.update({
-        userEmail: found.email,
-      })
-
-      // Redirect to the prev page stored in the "redirect" search param
-      throw redirect({
-        href: data.redirectUrl || '/',
-      })
-    }
-
-    // Create the user
-    const user = await prismaClient.user.create({
-      data: {
-        email: data.email,
-        password,
-      },
-    })
-
-    // Store the user's email in the session
-    await session.update({
-      userEmail: user.email,
-    })
-
-    // Redirect to the prev page stored in the "redirect" search param
-    throw redirect({
-      href: data.redirectUrl || '/',
-    })
-  })
-
-export const Route = createFileRoute('/signup')({
+export const Route = createFileRoute("/signup")({
+  validateSearch: (search: Record<string, unknown>): SignupSearch => {
+    const redirect = typeof search.redirect === "string" ? search.redirect : undefined
+    return { redirect }
+  },
   component: SignupComp,
 })
 
 function SignupComp() {
+  const router = useRouter()
+  const { redirect } = Route.useSearch()
+  const { setSession } = useAppSession()
+
+  const signUpFields: AuthField[] = [
+    {
+      name: "given_name",
+      label: "Prénom",
+      placeholder: "Jean",
+      autoComplete: "given-name",
+      required: true,
+    },
+    {
+      name: "family_name",
+      label: "Nom",
+      placeholder: "Dupont",
+      autoComplete: "family-name",
+      required: true,
+    },
+    {
+      name: "email",
+      label: "Email",
+      type: "email",
+      placeholder: "jean.dupont@example.com",
+      autoComplete: "email",
+      required: true,
+    },
+    {
+      name: "password",
+      label: "Mot de passe",
+      type: "password",
+      placeholder: "********",
+      autoComplete: "new-password",
+      required: true,
+    },
+  ]
+
   const signupMutation = useMutation({
-    fn: useServerFn(signupFn),
+    fn: signupUser,
+    onSuccess: async ({ data }) => {
+      if (!data.success) {
+        throw new Error(data.error)
+      }
+
+      console.log("Inscription réussie :", data)
+
+      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
+      const userId = data.user_id || data.email || null
+
+      setSession({
+        userEmail: data.email,
+        userId: userId,
+        givenName: data.given_name,
+        familyName: data.family_name,
+      })
+
+      router.navigate({ to: redirect ?? "/chat" })
+    },
   })
+
+  const formStatus =
+    signupMutation.status === "pending"
+      ? "pending"
+      : signupMutation.status === "error"
+      ? "error"
+      : signupMutation.status === "success"
+      ? "success"
+      : "idle"
 
   return (
     <Auth
-      actionText="Sign Up"
-      status={signupMutation.status}
+      primaryText="Sign Up"
+      fields={signUpFields}
+      status={formStatus}
       onSubmit={(e) => {
+        e.preventDefault()
         const formData = new FormData(e.target as HTMLFormElement)
-
+        
         signupMutation.mutate({
           data: {
-            email: formData.get('email') as string,
-            password: formData.get('password') as string,
+            email: (formData.get("email") as string).trim(),
+            password: formData.get("password") as string,
+            given_name: (formData.get("given_name") as string).trim() || undefined,
+            family_name: (formData.get("family_name") as string).trim() || undefined,
           },
         })
       }}
       afterSubmit={
-        signupMutation.data?.error ? (
-          <>
-            <div className="text-red-400">{signupMutation.data.message}</div>
-          </>
+        signupMutation.status === "error" ? (
+          <div className="text-red-400 text-center drop-shadow-sm">
+            Une erreur est survenue lors de l'inscription.
+          </div>
         ) : null
       }
     />

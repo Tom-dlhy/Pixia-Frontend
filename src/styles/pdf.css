@@ -1,0 +1,125 @@
+/* Styles pour l'export PDF */
+@media print {
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+    color: #000 !important;
+  }
+
+  body {
+    background: white;
+    color: black;
+  }
+
+  /* Section et cartes */
+  section,
+  div[class*="rounded"] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Titres */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    page-break-after: avoid;
+    color: #000;
+    font-weight: bold;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-top: 20px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  /* Paragraphes et texte */
+  p {
+    page-break-inside: avoid;
+    color: #000;
+  }
+
+  /* Listes */
+  ul,
+  ol {
+    page-break-inside: avoid;
+    color: #000;
+  }
+
+  li {
+    page-break-inside: avoid;
+    color: #000;
+  }
+
+  /* Liens */
+  a {
+    color: #0066cc;
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: "";
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Bordures */
+  .border {
+    border-color: #ccc !important;
+  }
+
+  .border-white,
+  .border-gray-300 {
+    border-color: #ccc !important;
+  }
+
+  /* Arrière-plans */
+  .bg-muted {
+    background: #f5f5f5 !important;
+  }
+
+  .bg-white,
+  .bg-light {
+    background: #fafafa !important;
+  }
+
+  /* Transparence */
+  .bg-opacity-50,
+  .backdrop-blur {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  /* ScrollArea */
+  [role="region"] {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Boutons et contrôles */
+  button,
+  input,
+  textarea {
+    display: none;
+  }
+
+  /* Exclure du PDF */
+  .exclude-from-pdf,
+  [class*="exclude"] {
+    display: none !important;
+  }
+}

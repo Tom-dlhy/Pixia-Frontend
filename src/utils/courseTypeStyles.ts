@@ -41,10 +41,10 @@ const ACCENTS: Record<CourseType, CourseAccent> = {
 	},
 	deep: {
 		gradient:
-			"linear-gradient(135deg, rgba(244,114,182,0.95) 0%, rgba(192,38,211,0.9) 35%, rgba(56,189,248,0.9) 70%, rgba(244,114,182,0.95) 100%)",
-		glow: "0 0 50px rgba(244,114,182,0.25)",
-		accent: "#ec4899",
-		accentMuted: "rgba(236,72,153,0.16)",
+			"linear-gradient(135deg, rgba(253,164,175,0.95) 0%, rgba(251,113,133,0.9) 25%, rgba(244,63,94,0.92) 60%, rgba(185,28,28,0.95) 100%)",
+		glow: "0 0 50px rgba(244,63,94,0.3)",
+		accent: "#f43f5e",
+		accentMuted: "rgba(244,63,94,0.16)",
 	},
 }
 

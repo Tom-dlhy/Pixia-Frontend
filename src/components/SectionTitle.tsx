@@ -1,10 +1,12 @@
 import { cn } from "~/lib/utils"
+import React from "react"
 
 interface SectionTitleProps {
   title: string
   subtitle?: string
   align?: "left" | "center" | "right"
   size?: "sm" | "md" | "lg"
+  icon?: React.ReactNode
   className?: string
 }
 
@@ -13,6 +15,7 @@ export default function SectionTitle({
   subtitle,
   align = "center",
   size = "lg",
+  icon,
   className,
 }: SectionTitleProps) {
   const sizes = {
@@ -30,7 +33,8 @@ export default function SectionTitle({
   return (
     <div className={cn(alignment, className)}>
       {/* Titre principal — blanc en dark, noir en light */}
-      <h1 className={cn(sizes, "text-zinc-900 dark:text-white")}>
+      <h1 className={cn(sizes, "text-zinc-900 dark:text-white flex items-center justify-center gap-3")}>
+        {icon && <span className="flex-shrink-0">{icon}</span>}
         {title}
       </h1>
 

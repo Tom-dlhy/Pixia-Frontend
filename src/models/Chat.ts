@@ -1,6 +1,8 @@
 import { BaseEntity, ID, Timestamp, hydrateByIds } from "./GlobalType"
 import type { Attachment } from "./Attachment"
 
+// Note: userId should be obtained from session when needed, not globally
+
 // ----------------------------------------------
 // Enum-like types
 // ----------------------------------------------
