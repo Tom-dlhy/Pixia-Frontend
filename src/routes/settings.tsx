@@ -4,6 +4,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSettings } from '~/context/SettingsProvider';
+import { useAppSession } from '~/utils/session';
 
 import { Button } from '~/components/ui/button';
 import { Card } from '~/components/ui/card';
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/settings')({
 
 function SettingsPage() {
   const { settings, updateSettings } = useSettings();
+  const { session } = useAppSession();
   const [status, setStatus] = useState<'idle' | 'error'>('idle');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -69,32 +71,27 @@ function SettingsPage() {
             "shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all duration-300 p-8"
           )}
         >
+          {/* --- Email (lecture seule) --- */}
+          {session.userEmail && (
+            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-[rgba(255,255,255,0.08)] dark:bg-[rgba(24,24,27,0.3)] p-4">
+              <Label className="text-xs text-muted-foreground">Email</Label>
+              <p className="text-sm font-medium mt-2">{session.userEmail}</p>
+            </div>
+          )}
+
           <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
             <div className="flex flex-col gap-4">
               <SettingsField
-                label="Nom / Prénom"
+                label="Nom complet"
                 placeholder="Alex Dupont"
                 value={settings.fullName}
                 onChange={(val) => setField('fullName', val)}
               />
               <SettingsField
-                label="Compte Notion"
-                placeholder="https://notion.so/votre-espace"
+                label="Token Notion"
+                placeholder="https://notion.so/votre-espace ou votre token"
                 value={settings.notion}
                 onChange={(val) => setField('notion', val)}
-              />
-              <SettingsField
-                label="Compte Gmail"
-                placeholder="prenom.nom@gmail.com"
-                type="email"
-                value={settings.gmail}
-                onChange={(val) => setField('gmail', val)}
-              />
-              <SettingsField
-                label="Compte Drive"
-                placeholder="https://drive.google.com/drive/u/0/folders/..."
-                value={settings.drive}
-                onChange={(val) => setField('drive', val)}
               />
             </div>
 
@@ -110,7 +107,7 @@ function SettingsPage() {
               )}
             >
               <div className="space-y-2">
-                <Label htmlFor="niveau">Niveau d'étude / Étude</Label>
+                <Label htmlFor="niveau">Niveau d'étude</Label>
                 <Textarea
                   id="niveau"
                   placeholder="Licence Informatique, Master Design, etc."

@@ -21,13 +21,16 @@ import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 import { useSessionCache } from "~/hooks/useSessionCache"
+import { getChat } from "~/server/chat.server"
 
 interface CopiloteContainerProps {
   className?: string
   sessionId?: string | null
   userId?: string | null
+  courseType?: import("~/context/CourseTypeContext").CourseType
   isCopiloteModal?: boolean
   forceDeepMode?: boolean
+  deepCourseId?: string | null
 }
 
 /**
@@ -37,13 +40,17 @@ function CopiloteContainerContent({
   className = "",
   sessionId,
   userId,
+  courseType, // optional explicit prop
   isCopiloteModal = false,
+  deepCourseId,
 }: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
   const [isNewMessage, setIsNewMessage] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { courseType } = useCourseType()
+  // Prefer explicit prop `courseType` when provided (avoids race with context)
+  const { courseType: contextCourseType } = useCourseType()
+  const effectiveCourseType = courseType || contextCourseType
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
   
@@ -64,11 +71,11 @@ function CopiloteContainerContent({
   
   // 🚀 Déterminer le docType basé sur le courseType
   const docType = useMemo(() => {
-    if (courseType === "exercice") return "exercise"
-    if (courseType === "cours") return "course"
-    if (courseType === "deep") return "course" // Deep courses are courses
+    if (effectiveCourseType === "exercice") return "exercise"
+    if (effectiveCourseType === "cours") return "course"
+    if (effectiveCourseType === "deep") return "course" // Deep courses are courses
     return undefined // Fallback à auto-detect si vraiment on sait pas
-  }, [courseType])
+  }, [effectiveCourseType])
 
   // 🚀 Utiliser le cache React Query avec le bon docType
   const { data, isLoading: chatLoading } = useSessionCache(
@@ -79,7 +86,7 @@ function CopiloteContainerContent({
   )
   
   // Use courseType directly, will be forced to "deep" by provider if in modal
-  const accent = useMemo(() => getCourseAccent(courseType), [courseType])
+  const accent = useMemo(() => getCourseAccent(effectiveCourseType), [effectiveCourseType])
 
   // 🔄 Mettre à jour les messages quand le cache se charge
   useEffect(() => {
@@ -96,13 +103,39 @@ function CopiloteContainerContent({
     }
   }, [data?.messages])
 
+  // 🔁 Fallback direct: si useSessionCache ne fournit rien, appeler getChat directement
+  useEffect(() => {
+    let mounted = true
+    const tryFetch = async () => {
+      if (!sessionId || !effectiveUserId) return
+      try {
+        console.log(`🔄 [CopiloteContainer] Fallback getChat fetch pour session=${sessionId} user=${effectiveUserId}`)
+        const res = await getChat({ data: { user_id: effectiveUserId, session_id: sessionId } })
+        if (!mounted) return
+        if (res && Array.isArray(res)) {
+          const texts = res.map((m) => m.text).filter(Boolean) as string[]
+          setMessages(texts)
+          setIsNewMessage(false)
+          console.log(`✅ [CopiloteContainer] ${texts.length} messages chargés via getChat`) 
+        }
+      } catch (err) {
+        console.error("❌ [CopiloteContainer] Erreur getChat fallback:", err)
+      }
+    }
+
+    tryFetch()
+    return () => {
+      mounted = false
+    }
+  }, [sessionId, effectiveUserId])
+
   // 📜 Auto-scroll vers le bas quand les messages changent
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
   const contentText = useMemo(() => {
-    switch (courseType) {
+    switch (effectiveCourseType) {
       case "exercice":
         return "les exercices"
       case "cours":
@@ -114,7 +147,7 @@ function CopiloteContainerContent({
       default:
         return "votre contenu"
     }
-  }, [courseType])
+  }, [effectiveCourseType])
 
   // Animated gradient title
   const headingStyle = useMemo(
@@ -141,11 +174,19 @@ function CopiloteContainerContent({
     try {
       console.info("Copilote prompt:", prompt)
       console.log(`📤 [CopiloteContainer] Envoi avec userId: ${effectiveUserId}`)
+      console.log(`📤 [CopiloteContainer] sessionId: ${sessionId || "AUCUN"}`)
       
       const res = await sendChatMessage({
         data: {
           user_id: effectiveUserId,
           message: prompt,
+          sessionId: sessionId || undefined, // 🔴 IMPORTANT: Passer le sessionId!
+          // 🎯 Ajouter le contexte du Copilote basé sur courseType
+          messageContext: {
+            currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
+            deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
+            userFullName: session.nom || undefined,
+          },
         },
       })
 
@@ -167,7 +208,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }
-  }, [prompt, effectiveUserId, handleRedirect])
+  }, [prompt, effectiveUserId, handleRedirect, courseType, session, deepCourseId])
 
   return (
     <aside
@@ -296,6 +337,7 @@ export default function CopiloteContainer({
   userId,
   isCopiloteModal = false,
   forceDeepMode = false,
+  deepCourseId,
 }: CopiloteContainerProps) {
   // If forceDeepMode is true, wrap content with provider forcing "deep"
   if (forceDeepMode) {
@@ -306,6 +348,7 @@ export default function CopiloteContainer({
           sessionId={sessionId}
           userId={userId}
           isCopiloteModal={isCopiloteModal}
+          deepCourseId={deepCourseId}
         />
       </ForcedDeepModeProvider>
     )
@@ -318,6 +361,7 @@ export default function CopiloteContainer({
       sessionId={sessionId}
       userId={userId}
       isCopiloteModal={isCopiloteModal}
+      deepCourseId={deepCourseId}
     />
   )
 }

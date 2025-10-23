@@ -4,14 +4,14 @@ import ContentContainer from "~/layouts/ContentContainer"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
 import { useDeepCourseParams } from "~/hooks/useDeepCourseNavigation"
 import { useAppSession } from "~/utils/session"
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 
 interface DeepCourseMainContentProps {
   isEvaluating: boolean
 }
 
 export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentProps) {
-  const { depth, chapterId } = useDeepCourseParams()
+  const { depth, chapterId, deepcourseId } = useDeepCourseParams()
   const { session } = useAppSession()
   
   // 🔹 Récupération du userId depuis la session
@@ -22,7 +22,10 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
     return null
   }, [session.userId])
 
-  console.log(`🔍 [DeepCourseMainContent] depth=${depth}, chapterId=${chapterId}`)
+  // 🔍 Log seulement quand les params changent (une fois par changement, pas à chaque rendu)
+  useEffect(() => {
+    console.log(`🔍 [DeepCourseMainContent] depth=${depth}, chapterId=${chapterId}`)
+  }, [depth, chapterId])
 
   // À depth === 3 : affiche le contenu du chapitre avec le copilote
   if (depth === 3) {
@@ -47,7 +50,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
               : "opacity-100 translate-x-0"
           )}
         >
-          {!isEvaluating && <CopiloteContainer className="h-full" sessionId={chapterId} userId={userId} />}
+          {!isEvaluating && <CopiloteContainer className="h-full" sessionId={chapterId} userId={userId} courseType="deep" deepCourseId={deepcourseId} />}
         </div>
       </div>
     )

@@ -21,6 +21,15 @@ const ChatMessageSchema = z.object({
       })
     )
     .optional(),
+  // 🎯 Contexte pour enrichissement du message
+  messageContext: z
+    .object({
+      selectedCardType: z.enum(["cours", "exercice"]).optional(),
+      currentRoute: z.enum(["chat", "deep-course", "course", "exercice"]).optional(),
+      deepCourseId: z.string().optional(),
+      userFullName: z.string().optional(),
+    })
+    .optional(),
 })
 
 // -------------------------
@@ -29,11 +38,76 @@ const ChatMessageSchema = z.object({
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
-    const { user_id, message, sessionId, files = [] } = data
+    const { user_id, message, sessionId, files = [], messageContext } = data
+
+    console.group("%c📨 [sendChatMessage] Input Reçu", "color: #3b82f6; font-weight: bold; font-size: 13px;")
+    console.log("user_id:", user_id)
+    console.log("message:", message)
+    console.log("sessionId:", sessionId)
+    console.log("messageContext:", messageContext)
+    console.groupEnd()
+
+    // 🎯 Enrichir le message avec le contexte
+    let enrichedMessage = message
+    if (messageContext) {
+      const contextParts: string[] = []
+
+      // ==================== NIVEAU MACRO ====================
+      if (messageContext.userFullName) {
+        contextParts.push(`[Utilisateur: ${messageContext.userFullName}]`)
+      }
+
+      // ==================== NIVEAU MICRO ====================
+      const route = messageContext.currentRoute || "chat"
+      const selectedCard = messageContext.selectedCardType
+
+      switch (route) {
+        case "chat":
+          if (selectedCard === "cours") {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours"
+            )
+          } else if (selectedCard === "exercice") {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouvel exercice"
+            )
+          }
+          break
+
+        case "deep-course":
+          if (messageContext.deepCourseId) {
+            contextParts.push(
+              `tu es un copilote deep course, l'utilisateur souhaite ajouter un chapitre au deep cours ${messageContext.deepCourseId}`
+            )
+          } else {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours approfondi"
+            )
+          }
+          break
+
+        case "course":
+          contextParts.push("tu es un copilote cours")
+          break
+
+        case "exercice":
+          contextParts.push("tu es un copilote exercice")
+          break
+      }
+
+      if (contextParts.length > 0) {
+        enrichedMessage = `${contextParts.join("\n")}\n\nMessage de l'utilisateur: ${message}`
+        console.log(
+          "%c🎯 [sendChatMessage] Message enrichi",
+          "color: #8b5cf6; font-weight: bold; font-size: 12px;",
+          enrichedMessage
+        )
+      }
+    }
 
     const formData = new FormData()
     formData.append("user_id", user_id)
-    formData.append("message", message)
+    formData.append("message", enrichedMessage)
     if (sessionId) formData.append("session_id", sessionId)
 
     for (const f of files) {
@@ -232,7 +306,6 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
           hasChapters: 'chapters' in document,
           chaptersCount: (document as any).chapters?.length || 0,
         })
-        console.log(`📄 Full Course:`, document)
       } else if (!document) {
         console.log(`❌ Course not found or invalid`)
         if (courseRes.status === "fulfilled") {

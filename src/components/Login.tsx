@@ -15,8 +15,9 @@ type LoginResponse = {
   existing_user: boolean
   user_id: string | null
   email: string | null
-  given_name: string | null
-  family_name: string | null
+  nom: string | null
+  notion_token: string | null
+  study: string | null
 }
 
 export function Login() {
@@ -58,8 +59,9 @@ export function Login() {
           success: true,
           email: data.email ?? null,
           user_id: userId,
-          given_name: data.given_name ?? null,
-          family_name: data.family_name ?? null,
+          nom: data.nom ?? null,
+          notion_token: data.notion_token ?? null,
+          study: data.study ?? null,
         },
         setSession,
       )

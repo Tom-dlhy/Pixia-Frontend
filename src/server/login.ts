@@ -6,8 +6,9 @@ export type SendLoginResponse = {
   existing_user: boolean
   email?: string
   user_id?: string
-  given_name?: string
-  family_name?: string
+  nom?: string
+  notion_token?: string
+  study?: string
 }
 
 async function handle<T = any>(r: Response): Promise<T> {

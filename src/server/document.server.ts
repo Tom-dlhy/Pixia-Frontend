@@ -100,7 +100,6 @@ export async function getCourse(payload: {
     console.log(`📦 Response type: ${typeof course}`)
     console.log(`📦 Keys: ${course ? Object.keys(course) : 'null'}`)
     console.log(`📦 isCourseOutput check: ${isCourseOutput(course)}`)
-    console.log(`📄 Full response:`, course)
     console.groupEnd()
 
     if (!isCourseOutput(course)) {

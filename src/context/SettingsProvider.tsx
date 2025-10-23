@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
+import { useAppSession } from '~/utils/session'
 
 export type SettingsFormState = {
   fullName: string
@@ -33,6 +34,7 @@ const SettingsContext = React.createContext<SettingsContextValue | undefined>(un
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = React.useState<SettingsFormState>(defaultSettings)
   const [isLoaded, setIsLoaded] = React.useState(false)
+  const { session } = useAppSession()
 
   // Load from localStorage once on mount (client-side only)
   React.useEffect(() => {
@@ -49,6 +51,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setIsLoaded(true)
     }
   }, [])
+
+  // Pré-remplir avec les données de session au login
+  React.useEffect(() => {
+    if (!isLoaded || !session.isLoggedIn) return
+    
+    setSettings((prev) => ({
+      ...prev,
+      fullName: session.nom || prev.fullName,
+      notion: session.notionToken || prev.notion,
+      studyLevel: session.study || prev.studyLevel,
+    }))
+  }, [session.isLoggedIn, session.nom, session.notionToken, session.study, isLoaded])
 
   // Persist whenever settings change (after initial load)
   React.useEffect(() => {

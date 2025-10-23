@@ -134,6 +134,7 @@ export function DeepCoursesLayout() {
           isOpen={isCopiloteModalOpen}
           onClose={handleCloseCopiloteModal}
           sessionId={chapterId}
+          deepCourseId={deepcourseId}
         />
       </main>
     </DeepCoursesLayoutContext.Provider>

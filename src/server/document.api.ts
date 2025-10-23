@@ -58,7 +58,6 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
     console.group(`%c✅ [API] fetchExercise Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
     console.log(`📦 Type: ${typeof data}`)
     console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.log(`📄 Data:`, data)
     console.groupEnd()
     
     return data as ExerciseOutput
@@ -117,7 +116,6 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
     console.group(`%c✅ [API] fetchCourse Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
     console.log(`📦 Type: ${typeof data}`)
     console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.log(`📄 Data:`, data)
     console.groupEnd()
     
     return data as CourseOutput

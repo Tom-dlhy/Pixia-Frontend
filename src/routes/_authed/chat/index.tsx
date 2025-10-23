@@ -15,6 +15,7 @@ import { useSidebar } from "~/components/ui/sidebar"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { useChatSessions } from "~/context/ChatSessionsContext"
 import { useAllChatSessions } from "~/hooks/useListCache"
+import { useCourseType } from "~/context/CourseTypeContext"
 
 export const Route = createFileRoute("/_authed/chat/")({
   component: ChatPage,
@@ -27,6 +28,7 @@ function ChatPage() {
   const { setOpen } = useSidebar()
   const { handleRedirect } = useApiRedirect()
   const { setSessions: setGlobalSessions } = useChatSessions()
+  const { courseType } = useCourseType()
 
   const [showCards, setShowCards] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -108,10 +110,21 @@ function ChatPage() {
           sessionId: sessionId ?? undefined,
           message: input,
           files: encodedFiles.length ? encodedFiles : undefined,
+      // 🎯 Ajouter le contexte de /chat avec le type de carte sélectionnée
+          messageContext: {
+            selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
+            currentRoute: "chat",
+            userFullName: session.nom || undefined,
+          },
         },
       })
 
-      console.log("📥 Response from API:", res)
+      console.log("� DEBUG - Session context:", {
+        "session.nom": session.nom,
+        "session.userId": session.userId,
+        "session.userEmail": session.userEmail,
+        "session.isLoggedIn": session.isLoggedIn,
+      })
       console.log("📥 Agent:", res.agent)
       console.log("📥 Redirect ID:", res.redirect_id)
       console.log("📥 Full response keys:", Object.keys(res))

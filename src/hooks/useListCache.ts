@@ -59,13 +59,17 @@ export function useAllChatSessions(options = {}) {
     retry: 1,
   })
 
-  return {
-    sessions: data,
-    isLoading,
-    isFetching,
-    isRefetching,
-    error: error instanceof Error ? error : null,
-  }
+  // 🔑 Memoize the returned object to prevent dependency array churn in downstream useMemo calls
+  return useMemo(
+    () => ({
+      sessions: data,
+      isLoading,
+      isFetching,
+      isRefetching,
+      error: error instanceof Error ? error : null,
+    }),
+    [data, isLoading, isFetching, isRefetching, error]
+  )
 }
 
 /**
@@ -124,11 +128,15 @@ export function useAllDeepCourses(options = {}) {
     retry: 1,
   })
 
-  return {
-    deepCourses: data,
-    isLoading,
-    isFetching,
-    isRefetching,
-    error: error instanceof Error ? error : null,
-  }
+  // 🔑 Memoize the returned object to prevent dependency array churn in downstream useMemo calls
+  return useMemo(
+    () => ({
+      deepCourses: data,
+      isLoading,
+      isFetching,
+      isRefetching,
+      error: error instanceof Error ? error : null,
+    }),
+    [data, isLoading, isFetching, isRefetching, error]
+  )
 }
