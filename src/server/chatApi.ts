@@ -242,7 +242,7 @@ export async function fetchChat(
 // -------------------------
 // 🔹 Récupérer les chapitres d'un deep-course
 // -------------------------
-export async function fetchChapters(
+export async function   fetchChapters(
   deepcourseId: string
 ): Promise<FetchChaptersResponse> {
   console.log(`📡 [fetchChapters] Appel API pour deepcourse_id: ${deepcourseId}`)
