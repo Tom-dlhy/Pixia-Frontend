@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -350,6 +350,48 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
       console.log(`Error message:`, error instanceof Error ? error.message : String(error))
       console.log(`Full error:`, error)
       console.groupEnd()
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Chapters: Récupérer les chapitres d'un deep-course
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour getChapters
+// -------------------------
+const FetchChaptersSchema = z.object({
+  deepcourse_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Récupérer les chapitres d'un deep-course
+// -------------------------
+export const getChapters = createServerFn({ method: "POST" })
+  .inputValidator(FetchChaptersSchema)
+  .handler(async ({ data }) => {
+    const { deepcourse_id } = data
+
+    try {
+      console.log(`📡 [getChapters] Récupération des chapitres pour deepcourse_id: ${deepcourse_id}`)
+      const res = await fetchChapters(deepcourse_id)
+
+      // Vérifier que res et res.chapters existent
+      if (!res) {
+        console.warn(`⚠️ [getChapters] fetchChapters retourné null/undefined`)
+        return []
+      }
+
+      if (!Array.isArray(res.chapters)) {
+        console.warn(`⚠️ [getChapters] res.chapters n'est pas un array:`, typeof res.chapters, res.chapters)
+        return []
+      }
+
+      console.log(`✅ [getChapters] ${res.chapters.length} chapitres récupérés pour deepcourse: ${deepcourse_id}`)
+      return res.chapters
+    } catch (error) {
+      console.error(`❌ [getChapters] Erreur:`, error)
       throw error
     }
   })

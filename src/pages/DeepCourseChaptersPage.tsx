@@ -15,6 +15,7 @@ import {
   EmptyTitle,
 } from "~/components/ui/empty"
 import { MessageSquare } from "lucide-react"
+import { getChapters } from "~/server/chat.server"
 
 // Chapitres mock - à remplacer par l'API
 const defaultChapters = [
@@ -61,14 +62,26 @@ export default function DeepCourseChaptersPage() {
     }
   }, [deepcourseId])
 
-  // 📋 Charger les chapitres (pour maintenant, utilisons les mock)
+  // 📋 Charger les chapitres depuis l'API
   useEffect(() => {
-    setIsLoading(true)
-    // Simuler un délai réseau
-    setTimeout(() => {
-      setChapters(defaultChapters)
-      setIsLoading(false)
-    }, 300)
+    const loadChapters = async () => {
+      setIsLoading(true)
+      try {
+        console.log(`📡 [DeepCourseChaptersPage] Appel de getChapters pour deepcourse_id: ${deepcourseId}`)
+        const fetchedChapters = await getChapters({ data: { deepcourse_id: deepcourseId } })
+        console.log(`✅ [DeepCourseChaptersPage] ${fetchedChapters.length} chapitres reçus:`, fetchedChapters)
+        setChapters(fetchedChapters)
+      } catch (error) {
+        console.error(`❌ [DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)
+        setChapters([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (deepcourseId) {
+      loadChapters()
+    }
   }, [deepcourseId])
 
   if (isLoading) {
@@ -111,17 +124,17 @@ export default function DeepCourseChaptersPage() {
       <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {chapters.map((chapter, index) => (
           <motion.div
-            key={chapter.id}
+            key={chapter.chapter_id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            onClick={() => navigate({ to: `/deep-course/${deepcourseId}/${chapter.id}` })}
+            onClick={() => navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })}
             className="cursor-pointer"
           >
             <ChapterCard
-              title={chapter.title}
-              description={chapter.description}
-              icon={chapter.icon}
+              title={chapter.title || "Sans titre"}
+              description={chapter.is_complete ? "✅ Complété" : "⏳ En cours"}
+              icon={chapter.is_complete ? Book : Zap}
               badge={`#${index + 1}`}
             />
           </motion.div>

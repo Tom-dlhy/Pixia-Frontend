@@ -26,6 +26,16 @@ export type FetchAllDeepCoursesResponse = {
   sessions: DeepCourse[]
 }
 
+export type Chapter = {
+  chapter_id: string
+  title: string | null
+  is_complete: boolean
+}
+
+export type FetchChaptersResponse = {
+  chapters: Chapter[]
+}
+
 // -------------------------
 // 🔹 Message de chat
 // -------------------------
@@ -227,4 +237,33 @@ export async function fetchChat(
     user_id: result.user_id || userId, 
     messages: normalizedMessages 
   }
+}
+
+// -------------------------
+// 🔹 Récupérer les chapitres d'un deep-course
+// -------------------------
+export async function fetchChapters(
+  deepcourseId: string
+): Promise<FetchChaptersResponse> {
+  console.log(`📡 [fetchChapters] Appel API pour deepcourse_id: ${deepcourseId}`)
+  
+  const formData = new FormData()
+  formData.append("deepcourse_id", deepcourseId)
+  
+  const r = await fetch(`${API_BASE}/fetchallchapters`, {
+    method: "POST",
+    body: formData,
+  })
+  
+  const result = await handle<FetchChaptersResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || !Array.isArray(result.chapters)) {
+    console.warn(`⚠️ [fetchChapters] Réponse invalide du backend:`, result)
+    return { chapters: [] }
+  }
+  
+  console.log(`📡 [fetchChapters] ${result.chapters.length} chapitres récupérés`)
+  
+  return result
 }
