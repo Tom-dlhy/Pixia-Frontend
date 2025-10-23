@@ -50,6 +50,37 @@ async function handle<T = any>(r: Response): Promise<T> {
   return r.json() as Promise<T>
 }
 
+/**
+ * Extrait le contenu du message après la balise [ENDCONTEXT]
+ * 
+ * Format attendu:
+ * [Indications pour le bot]
+ * [ENDCONTEXT]
+ * [Contenu du message à afficher]
+ * 
+ * Si la balise est présente, retourne UNIQUEMENT ce qui vient après
+ * Si la balise n'est pas présente, retourne le texte entier
+ */
+function extractMessageContent(text: string | null | undefined): string {
+  if (!text) return ""
+  
+  // Regex pour extraire tout ce qui vient après [ENDCONTEXT]
+  // Cherche [ENDCONTEXT] (case-insensitive) et capture tout après
+  const match = text.match(/\[ENDCONTEXT\]([\s\S]*)/i)
+  
+  if (match && match[1]) {
+    // On prend le groupe capturé (tout après la balise) et on trim
+    const content = match[1].trim()
+    // Ne retourner que si y'a du contenu après la balise
+    if (content) {
+      return content
+    }
+  }
+  
+  // Si pas de balise trouvée OU si rien après la balise, retourner le texte entier
+  return text.trim()
+}
+
 export async function sendChat(
   data: FormData | { user_id: string; message: string; sessionId?: string }
 ): Promise<SendChatResponse> {
@@ -168,19 +199,26 @@ export async function fetchChat(
   }
   
   // Convertir les events en EventMessage si nécessaire
-  const normalizedMessages: EventMessage[] = messages.map((m: any) => {
-    if (typeof m === 'string') {
-      return { type: 'unknown', text: m, timestamp: null }
-    }
-    if (m && typeof m === 'object') {
-      return {
-        type: m.type || 'unknown',
-        text: m.text || null,
-        timestamp: m.timestamp || null
+  const normalizedMessages = messages
+    .map((m: any) => {
+      let text: string | null = null
+      
+      if (typeof m === 'string') {
+        text = extractMessageContent(m)
+      } else if (m && typeof m === 'object') {
+        text = extractMessageContent(m.text)
       }
-    }
-    return { type: 'unknown', text: null, timestamp: null }
-  }).filter((m: EventMessage) => m.text !== null && m.text !== '')
+      
+      const type = (m && typeof m === 'object' ? m.type : undefined) || 'unknown'
+      const timestamp = (m && typeof m === 'object' ? m.timestamp : undefined) || null
+      
+      return {
+        type: type as 'user' | 'bot' | 'system' | 'unknown',
+        text,
+        timestamp
+      }
+    })
+    .filter((m): m is EventMessage => m.text !== null && m.text !== '')
   
   console.log(`📡 [fetchChat] ${normalizedMessages.length} messages récupérés`)
   

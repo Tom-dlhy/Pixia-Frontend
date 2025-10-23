@@ -96,7 +96,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       }
 
       if (contextParts.length > 0) {
-        enrichedMessage = `${contextParts.join("\n")}\n\nMessage de l'utilisateur: ${message}`
+        enrichedMessage = `${contextParts.join("\n")}\n\n[ENDCONTEXT]\n\n${message}`
         console.log(
           "%c🎯 [sendChatMessage] Message enrichi",
           "color: #8b5cf6; font-weight: bold; font-size: 12px;",
