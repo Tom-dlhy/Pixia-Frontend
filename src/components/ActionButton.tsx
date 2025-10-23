@@ -249,14 +249,22 @@ export default function ActionButton({
                     return
                   }
                   
+                  // Déterminer la nouvelle valeur
+                  const newCompleteState = !isChapterComplete
+                  
                   if (isChapterComplete) {
-                    console.log(`📡 [ActionButton] Marquage comme terminé du chapitre ${chapterId}`)
+                    console.log(`📡 [ActionButton] Marquage comme complet du chapitre ${chapterId}`)
                     await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
                   } else {
-                    console.log(`📡 [ActionButton] Reprise du chapitre ${chapterId}`)
+                    console.log(`📡 [ActionButton] Marquage comme incomplet du chapitre ${chapterId}`)
                     await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
                   }
                   
+                  // Mettre à jour le cache IMMÉDIATEMENT après le succès serveur
+                  localStorage.setItem(`chapter-complete-${chapterId}`, String(newCompleteState))
+                  console.log(`✅ [ActionButton] État du chapitre sauvegardé en cache: ${newCompleteState}`)
+                  
+                  // Appeler le callback pour trigger la mise à jour du state du hook
                   if (onMarkDone) {
                     onMarkDone()
                   }

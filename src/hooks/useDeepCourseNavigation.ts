@@ -120,6 +120,23 @@ export function useHeaderIcon() {
  */
 export function useRightAction() {
   const { depth, deepcourseId, chapterId } = useDeepCourseParams()
+  const [isChapterComplete, setIsChapterComplete] = useState<boolean>(false)
+  const [trigger, setTrigger] = useState(0) // Trigger pour forcer les re-renders
+
+  // Récupérer et surveiller l'état de complétion du chapitre
+  useEffect(() => {
+    if (chapterId) {
+      const cached = localStorage.getItem(`chapter-complete-${chapterId}`)
+      if (cached) {
+        console.log(`✅ [useRightAction] État de complétion du chapitre trouvé en cache: ${cached}`)
+        setIsChapterComplete(cached === 'true')
+      } else {
+        // Si pas en cache, initialiser à false
+        console.log(`✅ [useRightAction] Pas d'état en cache, initialisation à false`)
+        setIsChapterComplete(false)
+      }
+    }
+  }, [chapterId, trigger]) // Ajouter trigger comme dépendance
 
   return useMemo(() => {
     // Retourner les props pour ActionButton basées sur le depth
@@ -133,8 +150,12 @@ export function useRightAction() {
       chapter: {
         viewLevel: "chapter" as const,
         chapterId: chapterId,
-        isChapterComplete: false, // TODO: récupérer depuis le backend
-        onMarkDone: () => console.info("Chapitre terminé :", chapterId),
+        isChapterComplete: isChapterComplete,
+        onMarkDone: () => {
+          console.info("Chapitre marqué/repris :", chapterId)
+          // Déclencher une nouvelle lecture du localStorage en changeant le trigger
+          setTrigger((prev) => prev + 1)
+        },
         onDeleteChapter: () => console.info("Chapitre supprimé :", chapterId),
       },
     }
@@ -143,5 +164,5 @@ export function useRightAction() {
     if (depth === 2 && deepcourseId) return actionConfigs.course
     if (depth === 3 && deepcourseId && chapterId) return actionConfigs.chapter
     return null
-  }, [depth, deepcourseId, chapterId])
+  }, [depth, deepcourseId, chapterId, isChapterComplete])
 }
