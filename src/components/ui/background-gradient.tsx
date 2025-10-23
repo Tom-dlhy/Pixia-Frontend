@@ -42,7 +42,7 @@ export const BackgroundGradient = ({
             : undefined
         }
         style={{
-          background: gradient,
+          backgroundImage: gradient,
           backgroundSize: animate ? "400% 400%" : undefined,
           opacity: 0.45,
           filter: "blur(8px)",
@@ -61,7 +61,7 @@ export const BackgroundGradient = ({
             : undefined
         }
         style={{
-          background: gradient,
+          backgroundImage: gradient,
           backgroundSize: animate ? "400% 400%" : undefined,
         }}
         className="absolute inset-0 rounded-3xl z-[2]"
