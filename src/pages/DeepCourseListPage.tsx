@@ -52,14 +52,17 @@ export default function DeepCourseListPage() {
     
     return deepCourses
       .map((course, index) => {
-        // Utiliser la structure du backend: deepcourse_id, title
+        // Utiliser la structure du backend: deepcourse_id, title, completion
         const id = course.deepcourse_id || `course-${index}`
         const title = course.title || `Course ${index + 1}`
+        // Backend envoie completion normalisé (0-1), conversion en pourcentage (0-100)
+        const completionNormalized = typeof course.completion === 'number' ? course.completion : 0
+        const completion = Math.round(completionNormalized * 100)
         
         return {
           id: String(id),
           title: String(title),
-          completion: 0, // Pas de completion pour l'instant
+          completion: completion,
           gradient: courseGradients[gradientKeys[index % gradientKeys.length]],
           icon: [Brain, Code2, Binary, Sparkles][index % 4],
         }

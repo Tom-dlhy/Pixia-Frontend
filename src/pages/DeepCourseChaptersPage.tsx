@@ -135,6 +135,7 @@ export default function DeepCourseChaptersPage() {
               title={chapter.title || "Sans titre"}
               description={chapter.is_complete ? "✅ Complété" : "⏳ En cours"}
               icon={chapter.is_complete ? Book : Zap}
+              isComplete={chapter.is_complete}
               badge={`#${index + 1}`}
             />
           </motion.div>

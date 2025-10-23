@@ -119,6 +119,8 @@ export function useRightAction() {
       },
       chapter: {
         viewLevel: "chapter" as const,
+        chapterId: chapterId,
+        isChapterComplete: false, // TODO: récupérer depuis le backend
         onMarkDone: () => console.info("Chapitre terminé :", chapterId),
         onDeleteChapter: () => console.info("Chapitre supprimé :", chapterId),
       },

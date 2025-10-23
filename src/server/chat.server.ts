@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -392,6 +392,78 @@ export const getChapters = createServerFn({ method: "POST" })
       return res.chapters
     } catch (error) {
       console.error(`❌ [getChapters] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Mark Chapter Complete
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour markChapterComplete
+// -------------------------
+const MarkChapterCompleteSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Marquer un chapitre comme complet
+// -------------------------
+export const markChapterCompleteServerFn = createServerFn({ method: "POST" })
+  .inputValidator(MarkChapterCompleteSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [markChapterCompleteServerFn] Marquage du chapitre: ${chapter_id}`)
+      const res = await markChapterComplete(chapter_id)
+
+      if (!res || typeof res !== 'object' || typeof res.is_complete !== 'boolean') {
+        console.warn(`⚠️ [markChapterCompleteServerFn] Réponse invalide du backend:`, res)
+        return { is_complete: false }
+      }
+
+      console.log(`✅ [markChapterCompleteServerFn] Chapitre ${chapter_id} marqué comme complet`)
+      return res
+    } catch (error) {
+      console.error(`❌ [markChapterCompleteServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Mark Chapter Uncomplete
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour markChapterUncomplete
+// -------------------------
+const MarkChapterUncompleteSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Marquer un chapitre comme incomplet
+// -------------------------
+export const markChapterUncompleteServerFn = createServerFn({ method: "POST" })
+  .inputValidator(MarkChapterUncompleteSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [markChapterUncompleteServerFn] Marquage du chapitre: ${chapter_id}`)
+      const res = await markChapterUncomplete(chapter_id)
+
+      if (!res || typeof res !== 'object' || typeof res.is_complete !== 'boolean') {
+        console.warn(`⚠️ [markChapterUncompleteServerFn] Réponse invalide du backend:`, res)
+        return { is_complete: true }
+      }
+
+      console.log(`✅ [markChapterUncompleteServerFn] Chapitre ${chapter_id} marqué comme incomplet`)
+      return res
+    } catch (error) {
+      console.error(`❌ [markChapterUncompleteServerFn] Erreur:`, error)
       throw error
     }
   })

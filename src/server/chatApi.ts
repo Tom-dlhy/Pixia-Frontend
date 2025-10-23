@@ -20,6 +20,7 @@ export type FetchAllChatResponse = {
 export type DeepCourse = {
   deepcourse_id: string
   title: string
+  completion: number
 }
 
 export type FetchAllDeepCoursesResponse = {
@@ -264,6 +265,68 @@ export async function   fetchChapters(
   }
   
   console.log(`📡 [fetchChapters] ${result.chapters.length} chapitres récupérés`)
+  
+  return result
+}
+
+// -------------------------
+// 🔹 Marquer un chapitre comme complet
+// -------------------------
+export type MarkChapterCompleteResponse = {
+  is_complete: boolean
+}
+
+export async function markChapterComplete(
+  chapterId: string
+): Promise<MarkChapterCompleteResponse> {
+  console.log(`📡 [markChapterComplete] Marquage du chapitre comme complet: ${chapterId}`)
+  
+  const formData = new FormData()
+  formData.append("chapter_id", chapterId)
+  
+  const r = await fetch(`${API_BASE}/markchaptercomplete`, {
+    method: "PUT",
+    body: formData,
+  })
+  
+  const result = await handle<MarkChapterCompleteResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
+    console.warn(`⚠️ [markChapterComplete] Réponse invalide du backend:`, result)
+    return { is_complete: false }
+  }
+  
+  console.log(`✅ [markChapterComplete] Chapitre ${chapterId} marqué comme complet`)
+  
+  return result
+}
+
+// -------------------------
+// 🔹 Marquer un chapitre comme incomplet
+// -------------------------
+export async function markChapterUncomplete(
+  chapterId: string
+): Promise<MarkChapterCompleteResponse> {
+  console.log(`📡 [markChapterUncomplete] Marquage du chapitre comme incomplet: ${chapterId}`)
+  
+  const formData = new FormData()
+  formData.append("chapter_id", chapterId)
+  
+  const r = await fetch(`${API_BASE}/markchapteruncomplete`, {
+    method: "PUT",
+    body: formData,
+  })
+  
+  const result = await handle<MarkChapterCompleteResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
+    console.warn(`⚠️ [markChapterUncomplete] Réponse invalide du backend:`, result)
+    return { is_complete: true }
+  }
+  
+  console.log(`✅ [markChapterUncomplete] Chapitre ${chapterId} marqué comme incomplet`)
   
   return result
 }
