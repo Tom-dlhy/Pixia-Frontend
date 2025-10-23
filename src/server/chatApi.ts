@@ -330,3 +330,43 @@ export async function markChapterUncomplete(
   
   return result
 }
+
+// -------------------------
+// 🔹 Changer les paramètres utilisateur
+// -------------------------
+export type ChangeSettingsResponse = {
+  user_id: string
+  is_changed: boolean
+}
+
+export async function changeSettings(
+  userId: string,
+  newGivenName?: string,
+  newNotionToken?: string,
+  newNiveauEtude?: string
+): Promise<ChangeSettingsResponse> {
+  console.log(`📡 [changeSettings] Mise à jour des paramètres pour user_id: ${userId}`)
+  
+  const formData = new FormData()
+  formData.append("user_id", userId)
+  if (newGivenName) formData.append("new_given_name", newGivenName)
+  if (newNotionToken) formData.append("new_notion_token", newNotionToken)
+  if (newNiveauEtude) formData.append("new_niveau_etude", newNiveauEtude)
+  
+  const r = await fetch(`${API_BASE}/changesettings`, {
+    method: "PUT",
+    body: formData,
+  })
+  
+  const result = await handle<ChangeSettingsResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || typeof result.is_changed !== 'boolean') {
+    console.warn(`⚠️ [changeSettings] Réponse invalide du backend:`, result)
+    return { user_id: userId, is_changed: false }
+  }
+  
+  console.log(`✅ [changeSettings] Paramètres mis à jour pour user_id: ${userId}`)
+  
+  return result
+}

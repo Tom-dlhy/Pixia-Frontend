@@ -72,9 +72,9 @@ export function useSessionCache(
       })
     },
     enabled: options.enabled !== false && !!sessionId,
-    staleTime: options.staleTime ?? 5 * 60 * 1000, // 5 minutes par défaut
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
+    // Use defaults from QueryProvider (staleTime: 0, gcTime: 30s)
+    // Can be overridden via options.staleTime if needed
+    staleTime: options.staleTime ?? undefined,
     retry: 1,
   })
 

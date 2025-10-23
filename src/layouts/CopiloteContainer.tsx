@@ -16,12 +16,12 @@ import { ChatInput } from "~/components/ChatInput"
 import { useCourseType, CourseTypeProvider } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
-import { sendChatMessage } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 import { useSessionCache } from "~/hooks/useSessionCache"
 import { getChat } from "~/server/chat.server"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 interface CopiloteContainerProps {
   className?: string
@@ -53,6 +53,7 @@ function CopiloteContainerContent({
   const effectiveCourseType = courseType || contextCourseType
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
   
   // ⏳ Utiliser le userId passé en props EN PRIORITÉ, sinon récupérer de la session
   const effectiveUserId = useMemo(() => {
@@ -193,17 +194,15 @@ function CopiloteContainerContent({
       console.log(`📤 [CopiloteContainer] Envoi avec userId: ${effectiveUserId}`)
       console.log(`📤 [CopiloteContainer] sessionId: ${sessionId || "AUCUN"}`)
       
-      const res = await sendChatMessage({
-        data: {
-          user_id: effectiveUserId,
-          message: prompt,
-          sessionId: sessionId || undefined, // 🔴 IMPORTANT: Passer le sessionId!
-          // 🎯 Ajouter le contexte du Copilote basé sur courseType
-          messageContext: {
-            currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
-            deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
-            userFullName: session.name || undefined,
-          },
+      const res = await sendChatWithRefresh({
+        user_id: effectiveUserId,
+        message: prompt,
+        sessionId: sessionId || undefined, // 🔴 IMPORTANT: Passer le sessionId!
+        // 🎯 Ajouter le contexte du Copilote basé sur courseType
+        messageContext: {
+          currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
+          deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
+          userFullName: session.name || undefined,
         },
       })
 
@@ -225,7 +224,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }
-  }, [prompt, effectiveUserId, handleRedirect, courseType, session, deepCourseId])
+  }, [prompt, effectiveUserId, handleRedirect, courseType, session, deepCourseId, sendChatWithRefresh])
 
   return (
     <aside

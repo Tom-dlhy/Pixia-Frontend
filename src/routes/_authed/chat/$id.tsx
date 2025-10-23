@@ -10,6 +10,7 @@ import { useSidebar } from "~/components/ui/sidebar"
 import { Button } from "~/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 export const Route = createFileRoute("/_authed/chat/$id")({
   component: ChatSessionPage,
@@ -21,6 +22,7 @@ function ChatSessionPage() {
   const { session } = useAppSession()
   const { setOpen } = useSidebar()
   const { handleRedirect } = useApiRedirect()
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -75,13 +77,11 @@ function ChatSessionPage() {
         )
       )
 
-      const res = await sendChatMessage({
-        data: {
-          user_id: userId,
-          sessionId: id,
-          message: userInput,
-          files: encodedFiles, // ✅ correspond au schéma attendu
-        },
+      const res = await sendChatWithRefresh({
+        user_id: userId,
+        sessionId: id,
+        message: userInput,
+        files: encodedFiles, // ✅ correspond au schéma attendu
       })
 
       console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {

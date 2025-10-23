@@ -59,9 +59,9 @@ export function Login() {
           success: true,
           email: data.email ?? null,
           user_id: userId,
-          nom: data.nom ?? null,
-          notion_token: data.notion_token ?? null,
-          study: data.study ?? null,
+          name: data.nom ?? null,              // ✅ NOM
+          notion_token: data.notion_token ?? null,  // ✅ NOTION TOKEN
+          study: data.study ?? null,           // ✅ STUDY
         },
         setSession,
       )

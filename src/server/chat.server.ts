@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -464,6 +464,45 @@ export const markChapterUncompleteServerFn = createServerFn({ method: "POST" })
       return res
     } catch (error) {
       console.error(`❌ [markChapterUncompleteServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Change Settings
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour changeSettings
+// -------------------------
+const ChangeSettingsSchema = z.object({
+  user_id: z.string().min(1),
+  new_given_name: z.string().optional(),
+  new_notion_token: z.string().optional(),
+  new_niveau_etude: z.string().optional(),
+})
+
+// -------------------------
+// 🔹 Server Function: Changer les paramètres utilisateur
+// -------------------------
+export const updateSettingsServerFn = createServerFn({ method: "POST" })
+  .inputValidator(ChangeSettingsSchema)
+  .handler(async ({ data }) => {
+    const { user_id, new_given_name, new_notion_token, new_niveau_etude } = data
+
+    try {
+      console.log(`📡 [updateSettingsServerFn] Mise à jour des paramètres pour user_id: ${user_id}`)
+      const res = await changeSettings(user_id, new_given_name, new_notion_token, new_niveau_etude)
+
+      if (!res || typeof res !== 'object' || typeof res.is_changed !== 'boolean') {
+        console.warn(`⚠️ [updateSettingsServerFn] Réponse invalide du backend:`, res)
+        return { user_id, is_changed: false }
+      }
+
+      console.log(`✅ [updateSettingsServerFn] Paramètres mis à jour pour user_id: ${user_id}`)
+      return res
+    } catch (error) {
+      console.error(`❌ [updateSettingsServerFn] Erreur:`, error)
       throw error
     }
   })

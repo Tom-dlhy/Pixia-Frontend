@@ -51,11 +51,7 @@ export function useAllChatSessions(options = {}) {
       })
     },
     enabled: !!userId && userId !== "anonymous-user",
-    staleTime: 5 * 60 * 1000, // 5 minutes par défaut
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // ← NOUVEAU: Ne pas refetch au montage si cache existe
-    refetchOnReconnect: false, // ← NOUVEAU: Ne pas refetch si reconnexion réseau
+    // Use defaults from QueryProvider (staleTime: 0, gcTime: 30s, refetchOnMount: true)
     retry: 1,
   })
 
@@ -120,11 +116,7 @@ export function useAllDeepCourses(options = {}) {
       })
     },
     enabled: !!userId && userId !== "anonymous-user",
-    staleTime: 5 * 60 * 1000, // 5 minutes par défaut
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false, // ← NOUVEAU: Ne pas refetch au montage si cache existe
-    refetchOnReconnect: false, // ← NOUVEAU: Ne pas refetch si reconnexion réseau
+    // Use defaults from QueryProvider (staleTime: 0, gcTime: 30s, refetchOnMount: true)
     retry: 1,
   })
 

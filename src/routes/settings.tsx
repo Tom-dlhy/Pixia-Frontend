@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSettings } from '~/context/SettingsProvider';
 import { useAppSession } from '~/utils/session';
+import { updateSettingsServerFn } from '~/server/chat.server';
 
 import { Button } from '~/components/ui/button';
 import { Card } from '~/components/ui/card';
@@ -35,22 +36,53 @@ function SettingsPage() {
     if (typeof window === 'undefined') return;
     setIsSaving(true);
     try {
-      setStatus('idle');
-      toast.success('Modifications enregistrées.', {
-        className:
-          'border border-emerald-400 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-100',
-      });
-      setTimeout(() => {
-        window.history.back();
-      }, 200);
+      // Vérifier que l'utilisateur est authentifié
+      if (!session.userId) {
+        console.error('❌ [Settings] Utilisateur non authentifié');
+        setStatus('error');
+        toast.error('Vous devez être connecté pour enregistrer vos paramètres.');
+        setIsSaving(false);
+        return;
+      }
+
+      // Appeler la server function pour mettre à jour les paramètres
+      const updateSettings = async () => {
+        try {
+          const result = await updateSettingsServerFn({
+            data: {
+              user_id: String(session.userId),
+              new_given_name: settings.fullName,
+              new_notion_token: settings.notionToken,
+              new_niveau_etude: settings.study,
+            },
+          });
+
+          console.log('✅ [Settings] Paramètres mis à jour:', result);
+          setStatus('idle');
+          toast.success('Modifications enregistrées.', {
+            className:
+              'border border-emerald-400 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-100',
+          });
+          setTimeout(() => {
+            window.history.back();
+          }, 200);
+        } catch (error) {
+          console.error('❌ [Settings] Erreur lors de la sauvegarde:', error);
+          setStatus('error');
+          toast.error("Impossible d'enregistrer vos modifications.");
+        } finally {
+          setIsSaving(false);
+        }
+      };
+
+      updateSettings();
     } catch (error) {
       console.error('Unable to save settings', error);
       setStatus('error');
       toast.error("Impossible d'enregistrer vos modifications.");
-    } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [settings, session.userId]);
 
   return (
     <div className="flex w-full flex-1 justify-center bg-background text-foreground">

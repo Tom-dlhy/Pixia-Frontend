@@ -133,7 +133,7 @@ export default function DeepCourseChaptersPage() {
           >
             <ChapterCard
               title={chapter.title || "Sans titre"}
-              description={chapter.is_complete ? "✅ Complété" : "⏳ En cours"}
+              description={chapter.is_complete ? "" : "⏳ En cours"}
               icon={chapter.is_complete ? Book : Zap}
               isComplete={chapter.is_complete}
               badge={`#${index + 1}`}

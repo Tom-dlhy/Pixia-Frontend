@@ -16,6 +16,7 @@ import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { useChatSessions } from "~/context/ChatSessionsContext"
 import { useAllChatSessions } from "~/hooks/useListCache"
 import { useCourseType } from "~/context/CourseTypeContext"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 export const Route = createFileRoute("/_authed/chat/")({
   component: ChatPage,
@@ -29,6 +30,7 @@ function ChatPage() {
   const { handleRedirect } = useApiRedirect()
   const { setSessions: setGlobalSessions } = useChatSessions()
   const { courseType } = useCourseType()
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
 
   const [showCards, setShowCards] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -104,18 +106,16 @@ function ChatPage() {
 
       console.log("📤 Sending to API:", { userId, sessionId, message: input, encodedFiles })
 
-      const res = await sendChatMessage({
-        data: {
-          user_id: userId,
-          sessionId: sessionId ?? undefined,
-          message: input,
-          files: encodedFiles.length ? encodedFiles : undefined,
+      const res = await sendChatWithRefresh({
+        user_id: userId,
+        sessionId: sessionId ?? undefined,
+        message: input,
+        files: encodedFiles.length ? encodedFiles : undefined,
       // 🎯 Ajouter le contexte de /chat avec le type de carte sélectionnée
-          messageContext: {
-            selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
-            currentRoute: "chat",
-            userFullName: session.name || undefined,
-          },
+        messageContext: {
+          selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
+          currentRoute: "chat",
+          userFullName: session.name || undefined,
         },
       })
 

@@ -29,5 +29,7 @@ export async function login(email: string, password: string) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, password }),
   })
+
+  console.log()
   return handle<SendLoginResponse>(r)
 }
