@@ -5,16 +5,16 @@ import { signup, type SignupPayload, type SignupResponse } from "./signup"
 const SignUpSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
-  given_name: z.string().trim().min(1, "First name is required").max(50).optional(),
-  family_name: z.string().trim().min(1, "Last name is required").max(50).optional(),
+  name: z.string().trim().min(1, "Name is required").max(100).optional(),
 })
 
 type SignupSuccess = {
   success: true
   user_id: string
-  email: string
-  given_name: string | null | undefined
-  family_name: string | null | undefined
+  email?: string | null
+  name?: string | null
+  notion_token?: string | null
+  study?: string | null
 }
 
 type SignupError = {
@@ -30,10 +30,11 @@ export const signupUser = createServerFn({ method: "POST" })
       
       return {
         success: true,
-        user_id: response.user_id,
-        email: response.email,
-        given_name: response.given_name ?? null,
-        family_name: response.family_name ?? null,
+        user_id: response.google_sub,
+        email: response.email ?? null,
+        name: response.name ?? null,
+        notion_token: response.notion_token ?? null,
+        study: response.study ?? null,
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Signup failed"

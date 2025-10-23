@@ -4,7 +4,7 @@ import { SESSION_PROFILE_STORAGE_KEY, type UserSession } from "./session"
 export type StoredProfile = {
   email?: string | null
   userId?: string | number | null
-  nom?: string | null
+  name?: string | null
   notionToken?: string | null
   study?: string | null
 }
@@ -13,7 +13,7 @@ export type AuthLikeResult = {
   success: boolean
   email?: string | null
   user_id?: string | number | null
-  nom?: string | null
+  name?: string | null
   notion_token?: string | null
   study?: string | null
 }
@@ -39,7 +39,7 @@ export const applyAuthResult = <T extends AuthLikeResult>(
   const profile: StoredProfile = {
     email: result.email ?? null,
     userId: result.user_id ?? null,
-    nom: result.nom ?? null,
+    name: result.name ?? null,
     notionToken: result.notion_token ?? null,
     study: result.study ?? null,
   }
@@ -54,7 +54,7 @@ export const applyAuthResult = <T extends AuthLikeResult>(
   setSession((prev) => ({
     userEmail: profile.email ?? prev.userEmail ?? null,
     userId: profile.userId ?? prev.userId ?? null,
-    nom: profile.nom ?? prev.nom ?? null,
+    name: profile.name ?? prev.name ?? null,
     notionToken: profile.notionToken ?? prev.notionToken ?? null,
     study: profile.study ?? prev.study ?? null,
     isLoggedIn: true,

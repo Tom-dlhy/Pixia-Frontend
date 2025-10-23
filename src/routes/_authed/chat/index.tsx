@@ -114,13 +114,13 @@ function ChatPage() {
           messageContext: {
             selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
             currentRoute: "chat",
-            userFullName: session.nom || undefined,
+            userFullName: session.name || undefined,
           },
         },
       })
 
-      console.log("� DEBUG - Session context:", {
-        "session.nom": session.nom,
+      console.log("🔍 DEBUG - Session context:", {
+        "session.name": session.name,
         "session.userId": session.userId,
         "session.userEmail": session.userEmail,
         "session.isLoggedIn": session.isLoggedIn,

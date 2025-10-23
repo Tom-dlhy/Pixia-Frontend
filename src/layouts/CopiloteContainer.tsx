@@ -202,7 +202,7 @@ function CopiloteContainerContent({
           messageContext: {
             currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
             deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
-            userFullName: session.nom || undefined,
+            userFullName: session.name || undefined,
           },
         },
       })

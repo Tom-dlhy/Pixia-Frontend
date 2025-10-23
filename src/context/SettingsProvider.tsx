@@ -6,20 +6,20 @@ import { useAppSession } from '~/utils/session'
 
 export type SettingsFormState = {
   fullName: string
-  notion: string
+  notionToken: string
   gmail: string
   drive: string
-  studyLevel: string
+  study: string
 }
 
 const STORAGE_KEY = 'app-settings'
 
 const defaultSettings: SettingsFormState = {
   fullName: '',
-  notion: '',
+  notionToken: '',
   gmail: '',
   drive: '',
-  studyLevel: '',
+  study: '',
 }
 
 interface SettingsContextValue {
@@ -58,11 +58,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     
     setSettings((prev) => ({
       ...prev,
-      fullName: session.nom || prev.fullName,
-      notion: session.notionToken || prev.notion,
-      studyLevel: session.study || prev.studyLevel,
+      fullName: session.name || prev.fullName,
+      notionToken: session.notionToken || prev.notionToken,
+      study: session.study || prev.study,
     }))
-  }, [session.isLoggedIn, session.nom, session.notionToken, session.study, isLoaded])
+  }, [session.isLoggedIn, session.name, session.notionToken, session.study, isLoaded])
 
   // Persist whenever settings change (after initial load)
   React.useEffect(() => {

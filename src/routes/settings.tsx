@@ -90,8 +90,8 @@ function SettingsPage() {
               <SettingsField
                 label="Token Notion"
                 placeholder="https://notion.so/votre-espace ou votre token"
-                value={settings.notion}
-                onChange={(val) => setField('notion', val)}
+                value={settings.notionToken}
+                onChange={(val) => setField('notionToken', val)}
               />
             </div>
 
@@ -112,8 +112,8 @@ function SettingsPage() {
                   id="niveau"
                   placeholder="Licence Informatique, Master Design, etc."
                   className="min-h-[120px] resize-none"
-                  value={settings.studyLevel}
-                  onChange={(e) => setField('studyLevel', e.target.value)}
+                  value={settings.study}
+                  onChange={(e) => setField('study', e.target.value)}
                 />
               </div>
             </Card>

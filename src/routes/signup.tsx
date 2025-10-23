@@ -23,17 +23,10 @@ function SignupComp() {
 
   const signUpFields: AuthField[] = [
     {
-      name: "given_name",
-      label: "Prénom",
-      placeholder: "Jean",
-      autoComplete: "given-name",
-      required: true,
-    },
-    {
-      name: "family_name",
-      label: "Nom",
-      placeholder: "Dupont",
-      autoComplete: "family-name",
+      name: "name",
+      label: "Nom complet",
+      placeholder: "Jean Dupont",
+      autoComplete: "name",
       required: true,
     },
     {
@@ -63,14 +56,12 @@ function SignupComp() {
 
       console.log("Inscription réussie :", data)
 
-      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
-      const userId = data.user_id || data.email || null
-
       setSession({
         userEmail: data.email,
-        userId: userId,
-        givenName: data.given_name,
-        familyName: data.family_name,
+        userId: data.user_id,
+        name: data.name,
+        notionToken: data.notion_token,
+        study: data.study,
       })
 
       router.navigate({ to: redirect ?? "/chat" })
@@ -99,8 +90,7 @@ function SignupComp() {
           data: {
             email: (formData.get("email") as string).trim(),
             password: formData.get("password") as string,
-            given_name: (formData.get("given_name") as string).trim() || undefined,
-            family_name: (formData.get("family_name") as string).trim() || undefined,
+            name: (formData.get("name") as string).trim() || undefined,
           },
         })
       }}

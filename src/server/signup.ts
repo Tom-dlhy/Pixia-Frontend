@@ -5,15 +5,15 @@ const API_BASE = process.env.API_BASE
 export type SignupPayload = {
   email: string
   password: string
-  given_name?: string
-  family_name?: string
+  name?: string
 }
 
 export type SignupResponse = {
-  user_id: string
-  email: string
-  given_name?: string | null
-  family_name?: string | null
+  google_sub: string
+  email?: string | null
+  name?: string | null
+  notion_token?: string | null
+  study?: string | null
 }
 
 async function handle<T>(r: Response): Promise<T> {
