@@ -97,17 +97,15 @@ export function DeepCoursesLayout() {
     <DeepCoursesLayoutContext.Provider value={contextValue}>
       <main
         className={cn(
-          "min-h-screen w-full flex flex-col overflow-hidden transition-colors duration-500",
+          "h-dvh w-full flex flex-col overflow-hidden transition-colors duration-500",
           gradientClass
         )}
       >
-        <div
-          className={cn(
-            "flex flex-1 flex-col gap-14 px-6 py-10 sm:px-10 transition-all duration-500",
-            (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
-          )}
-        >
-          {/* Header */}
+        {/* HEADER */}
+        <div className={cn(
+          "flex-shrink-0 px-6 py-10 sm:px-10 transition-all duration-500",
+          (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
+        )}>
           <DeepCourseHeader
             title={headerTitle}
             leftAction={<BackButton onClick={handleNavigateBack} />}
@@ -124,8 +122,13 @@ export function DeepCoursesLayout() {
               />
             )}
           </DeepCourseHeader>
+        </div>
 
-          {/* Main Content */}
+        {/* MAIN CONTENT */}
+        <div className={cn(
+          "flex flex-1 overflow-hidden px-6 pb-10 pt-6 sm:px-10 min-h-0 transition-all duration-500",
+          (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
+        )}>
           <DeepCourseMainContent isEvaluating={isEvaluating} />
         </div>
 

@@ -21,11 +21,6 @@ export function useDeepCourseParams() {
       chapterId: depth >= 3 ? segments[deepCourseIndex + 2] : undefined,
     }
 
-    console.log(`🔍 [useDeepCourseParams] pathname="${location.pathname}"`)
-    console.log(`  - segments: [${segments.join(", ")}]`)
-    console.log(`  - deepCourseIndex: ${deepCourseIndex}`)
-    console.log(`  - result:`, result)
-
     return result
   }, [location.pathname])
 }
@@ -164,5 +159,5 @@ export function useRightAction() {
     if (depth === 2 && deepcourseId) return actionConfigs.course
     if (depth === 3 && deepcourseId && chapterId) return actionConfigs.chapter
     return null
-  }, [depth, deepcourseId, chapterId, isChapterComplete])
+  }, [depth, deepcourseId, chapterId, isChapterComplete, trigger])
 }

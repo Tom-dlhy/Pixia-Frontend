@@ -32,20 +32,37 @@ export function ChapterDocumentContainer() {
   // 📌 Étape 1: Récupérer les IDs des documents du chapitre
   const { data: chapterDocs, isLoading: docsLoading } = useChapterDocuments(chapterId)
 
+  console.log(`🔍 [ChapterDocumentContainer] chapterDocs loaded:`, {
+    chapter_id: chapterDocs?.chapter_id,
+    course_session_id: chapterDocs?.course_session_id,
+    exercice_session_id: chapterDocs?.exercice_session_id,
+    evaluation_session_id: chapterDocs?.evaluation_session_id,
+  })
+
   // 📌 Déterminer quel ID de session utiliser selon l'onglet actif
   const sessionId = useMemo(() => {
-    if (!chapterDocs) return null
+    if (!chapterDocs) {
+      console.warn(`⚠️ [ChapterDocumentContainer] chapterDocs not available yet`)
+      return null
+    }
     
+    let selectedId: string | null = null
     switch (activeTab) {
       case "cours":
-        return chapterDocs.course_session_id || null
+        selectedId = chapterDocs.course_session_id || null
+        break
       case "exercice":
-        return chapterDocs.exercice_session_id || null
+        selectedId = chapterDocs.exercice_session_id || null
+        break
       case "evaluation":
-        return chapterDocs.evaluation_session_id || null
+        selectedId = chapterDocs.evaluation_session_id || null
+        break
       default:
-        return null
+        selectedId = null
     }
+    
+    console.log(`📍 [ChapterDocumentContainer] activeTab="${activeTab}", selectedSessionId="${selectedId}", chapterId="${chapterId}"`)
+    return selectedId
   }, [chapterDocs, activeTab])
 
   // 📌 Mapper le nom de l'onglet français au type de document en anglais

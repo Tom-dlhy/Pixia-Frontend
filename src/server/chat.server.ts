@@ -222,7 +222,7 @@ export const getChat = createServerFn({ method: "POST" })
   })
 
 // ========================================================================================
-// 🔹 COMBINÉ: Chat + Document (car doc_id === session_id dans la DB)
+// 🔹 OPTIMISÉ: Chat + Document avec logique ciblée
 // ========================================================================================
 
 // -------------------------
@@ -241,7 +241,7 @@ export interface ChatWithDocumentResponse {
 }
 
 // -------------------------
-// 🔹 Server Function: Récupérer chat ET document combinés
+// 🔹 Server Function: Récupérer chat ET document combinés (OPTIMISÉ)
 // -------------------------
 export const getChatWithDocument = createServerFn({ method: "POST" })
   .inputValidator(FetchChatWithDocumentSchema)
@@ -249,107 +249,65 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
     const { user_id, session_id, doc_type } = data
 
     try {
-      console.group(`%c� [SERVER] getChatWithDocument Input`, 'color: #3b82f6; font-weight: bold; font-size: 13px;')
-      console.log(`👤 user_id: ${user_id}`)
-      console.log(`📍 session_id: ${session_id}`)
-      console.log(`🏷️ doc_type: ${doc_type || 'auto-detect'}`)
-      console.groupEnd()
+      console.log(`📡 [getChatWithDocument] user_id: ${user_id}, session_id: ${session_id}, doc_type: ${doc_type || "auto"}`)
 
-      // Récupérer le chat en parallèle avec les document(s)
-      console.group(`%c🚀 [SERVER] Making parallel API calls`, 'color: #8b5cf6; font-weight: bold; font-size: 13px;')
-      console.log(`👤 user_id VALUE CHECK: ${user_id} (type: ${typeof user_id})`)
-      console.log(`1️⃣ fetchChat(user_id=${user_id}, session_id=${session_id})`)
-      console.log(`2️⃣ getExercise(session_id=${session_id}) - ${doc_type !== "course" ? "YES" : "NO"}`)
-      console.log(`3️⃣ getCourse(session_id=${session_id}) - ${doc_type !== "exercise" ? "YES" : "NO"}`)
-      console.groupEnd()
-
-      const [chatRes, exerciseRes, courseRes] = await Promise.allSettled([
-        fetchChat(user_id, session_id),
-        doc_type !== "course" ? getExercise({ data: { session_id } }) : Promise.resolve(null),
-        doc_type !== "exercise" ? getCourse({ data: { session_id } }) : Promise.resolve(null),
-      ])
-
-      // Extraire les messages du chat
-      let messages: ChatWithDocumentResponse["messages"] = []
-      if (chatRes.status === "fulfilled") {
-        messages = chatRes.value.messages as any
-        console.group(`%c✅ [SERVER] Chat Response`, 'color: #10b981; font-weight: bold; font-size: 13px;')
-        console.log(`📨 ${messages.length} messages`)
-        console.log(`📋 Messages:`, messages)
-        console.groupEnd()
-      } else {
-        console.group(`%c⚠️ [SERVER] Chat Error`, 'color: #f59e0b; font-weight: bold; font-size: 13px;')
-        console.log(`Error:`, chatRes.reason)
-        console.groupEnd()
-      }
-
-      // Extraire le document (priorité: exercise → course → null)
+      // 🎯 Charger SEULEMENT ce qu'on a besoin
       let document: ExerciseOutput | CourseOutput | null = null
       let documentType: "exercise" | "course" | null = null
 
-      console.group(`%c🔍 [SERVER] Document Resolution`, 'color: #ec4899; font-weight: bold; font-size: 13px;')
-      
-      if (exerciseRes.status === "fulfilled" && exerciseRes.value && isExerciseOutput(exerciseRes.value)) {
-        document = exerciseRes.value
+      if (doc_type === "exercise") {
+        console.log(`📡 [getChatWithDocument] Chargement exercise + chat`)
+        const [exercise, history] = await Promise.all([
+          getExercise({ data: { session_id } }),
+          fetchChat(user_id, session_id),
+        ])
+        document = exercise
         documentType = "exercise"
-        console.log(`✅ Exercise found and valid!`)
-        console.log(`📦 Exercise structure:`, {
-          hasExercises: 'exercises' in document,
-          exercisesCount: (document as any).exercises?.length || 0,
-        })
-        console.log(`📄 Full Exercise:`, document)
-      } else {
-        console.log(`❌ Exercise not found or invalid`)
-        console.log(`exerciseRes.status: ${exerciseRes.status}`)
-        if (exerciseRes.status === "fulfilled") {
-          console.log(`exerciseRes.value:`, exerciseRes.value)
-          console.log(`isExerciseOutput check:`, isExerciseOutput(exerciseRes.value))
-        } else {
-          console.log(`exerciseRes.reason:`, exerciseRes.reason)
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
         }
-      }
-
-      if (!document && courseRes.status === "fulfilled" && courseRes.value && isCourseOutput(courseRes.value)) {
-        document = courseRes.value
+      } 
+      else if (doc_type === "course") {
+        console.log(`📡 [getChatWithDocument] Chargement course + chat`)
+        const [course, history] = await Promise.all([
+          getCourse({ data: { session_id } }),
+          fetchChat(user_id, session_id),
+        ])
+        document = course
         documentType = "course"
-        console.log(`✅ Course found and valid!`)
-        console.log(`📦 Course structure:`, {
-          hasTitle: 'title' in document,
-          hasChapters: 'chapters' in document,
-          chaptersCount: (document as any).chapters?.length || 0,
-        })
-      } else if (!document) {
-        console.log(`❌ Course not found or invalid`)
-        if (courseRes.status === "fulfilled") {
-          console.log(`courseRes.value:`, courseRes.value)
-          console.log(`isCourseOutput check:`, isCourseOutput(courseRes.value))
-        } else {
-          console.log(`courseRes.reason:`, courseRes.reason)
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
         }
       }
+      else {
+        // Auto-detect: essayer exercise d'abord, puis course
+        console.log(`📡 [getChatWithDocument] Auto-detect: chargement exercise + course + chat`)
+        const [exercise, course, history] = await Promise.all([
+          getExercise({ data: { session_id } }).catch(() => null),
+          getCourse({ data: { session_id } }).catch(() => null),
+          fetchChat(user_id, session_id),
+        ])
 
-      if (!document) {
-        console.log(`⚠️ NO VALID DOCUMENT FOUND`)
-      }
-      
-      console.groupEnd()
+        if (exercise && isExerciseOutput(exercise)) {
+          document = exercise
+          documentType = "exercise"
+        } else if (course && isCourseOutput(course)) {
+          document = course
+          documentType = "course"
+        }
 
-      console.group(`%c📤 [SERVER] getChatWithDocument Output`, 'color: #06b6d4; font-weight: bold; font-size: 13px;')
-      console.log(`💬 messages: ${messages.length}`)
-      console.log(`📦 documentType: ${documentType}`)
-      console.log(`📊 Full response:`, { messages, documentType, document })
-      console.groupEnd()
-
-      return {
-        messages,
-        document,
-        documentType,
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
+        }
       }
     } catch (error) {
-      console.group(`%c❌ [SERVER] getChatWithDocument Error`, 'color: #ef4444; font-weight: bold; font-size: 13px;')
-      console.log(`Error message:`, error instanceof Error ? error.message : String(error))
-      console.log(`Full error:`, error)
-      console.groupEnd()
+      console.error(`❌ [getChatWithDocument] Erreur:`, error)
       throw error
     }
   })

@@ -55,7 +55,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
               : "opacity-100"
           )}
         >
-          {!isEvaluating && <CopiloteContainer className="h-full overflow-hidden" sessionId={chapterId} userId={userId} courseType="deep" deepCourseId={deepcourseId} />}
+          {!isEvaluating && <CopiloteContainer className="h-full overflow-hidden" chapterId={chapterId} userId={userId} courseType="deep" deepCourseId={deepcourseId} />}
         </div>
       </div>
     )
