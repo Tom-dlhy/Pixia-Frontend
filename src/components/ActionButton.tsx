@@ -250,11 +250,11 @@ export default function ActionButton({
                   }
                   
                   if (isChapterComplete) {
-                    console.log(`📡 [ActionButton] Reprise du chapitre ${chapterId}`)
-                    await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
-                  } else {
                     console.log(`📡 [ActionButton] Marquage comme terminé du chapitre ${chapterId}`)
                     await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
+                  } else {
+                    console.log(`📡 [ActionButton] Reprise du chapitre ${chapterId}`)
+                    await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
                   }
                   
                   if (onMarkDone) {
@@ -265,26 +265,28 @@ export default function ActionButton({
                 }
               }}
               className={cn(
-                "w-full justify-start gap-2 rounded-md transition-all duration-300 text-green-600 dark:text-green-400",
+                "w-full justify-start gap-2 rounded-md transition-all duration-300",
+                isChapterComplete
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-blue-600 dark:text-blue-400",
                 "hover:scale-[1.02]"
               )}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `linear-gradient(135deg, ${
-                  document.documentElement.classList.contains("dark")
-                    ? "rgba(34,197,94,0.25)"
-                    : "rgba(110,231,183,0.25)"
-                }, ${
-                  document.documentElement.classList.contains("dark")
-                    ? "rgba(5,150,105,0.25)"
-                    : "rgba(74,222,128,0.25)"
-                })`
+                const isDark = document.documentElement.classList.contains("dark")
+                const gradientFrom = isChapterComplete
+                  ? isDark ? "rgba(34,197,94,0.25)" : "rgba(110,231,183,0.25)"
+                  : isDark ? "rgba(59,130,246,0.25)" : "rgba(147,197,253,0.25)"
+                const gradientTo = isChapterComplete
+                  ? isDark ? "rgba(5,150,105,0.25)" : "rgba(74,222,128,0.25)"
+                  : isDark ? "rgba(37,99,235,0.25)" : "rgba(96,165,250,0.25)"
+                e.currentTarget.style.background = `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent"
               }}
             >
               <FaCheckCircle className="h-4 w-4 opacity-80" />
-              {isChapterComplete ? "Reprendre" : "Marquer comme terminé"}
+              {isChapterComplete ? "Marquer comme complété" : "Reprendre le cours"}
             </Button>
           )}
 

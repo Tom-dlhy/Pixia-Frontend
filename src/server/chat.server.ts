@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -503,6 +503,40 @@ export const updateSettingsServerFn = createServerFn({ method: "POST" })
       return res
     } catch (error) {
       console.error(`❌ [updateSettingsServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// -------------------------
+// 🔹 Récupérer les documents d'un chapitre
+// -------------------------
+const FetchChapterDocumentsSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+export const getChapterDocuments = createServerFn({ method: "POST" })
+  .inputValidator(FetchChapterDocumentsSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [getChapterDocuments] Récupération des documents pour chapter_id: ${chapter_id}`)
+      const res = await fetchChapterDocuments(chapter_id)
+
+      if (!res || typeof res !== 'object' || !res.chapter_id) {
+        console.warn(`⚠️ [getChapterDocuments] Réponse invalide du backend:`, res)
+        return {
+          chapter_id,
+          exercice_session_id: "",
+          course_session_id: "",
+          evaluation_session_id: ""
+        }
+      }
+
+      console.log(`✅ [getChapterDocuments] Documents récupérés pour chapter_id: ${chapter_id}`)
+      return res
+    } catch (error) {
+      console.error(`❌ [getChapterDocuments] Erreur:`, error)
       throw error
     }
   })

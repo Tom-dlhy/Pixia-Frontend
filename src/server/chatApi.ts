@@ -370,3 +370,48 @@ export async function changeSettings(
   
   return result
 }
+
+// -------------------------
+// 🔹 Récupérer les documents d'un chapitre
+// -------------------------
+export type FetchChapterDocumentsResponse = {
+  chapter_id: string
+  exercice_session_id: string
+  course_session_id: string
+  evaluation_session_id: string
+}
+
+export async function fetchChapterDocuments(
+  chapterId: string
+): Promise<FetchChapterDocumentsResponse> {
+  console.log(`📡 [fetchChapterDocuments] Appel API pour chapter_id: ${chapterId}`)
+  
+  const formData = new FormData()
+  formData.append("chapter_id", chapterId)
+  
+  const r = await fetch(`${API_BASE}/fetchchapterdocument`, {
+    method: "POST",
+    body: formData,
+  })
+  
+  const result = await handle<FetchChapterDocumentsResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || !result.chapter_id) {
+    console.warn(`⚠️ [fetchChapterDocuments] Réponse invalide du backend:`, result)
+    return {
+      chapter_id: chapterId,
+      exercice_session_id: "",
+      course_session_id: "",
+      evaluation_session_id: ""
+    }
+  }
+  
+  console.log(`✅ [fetchChapterDocuments] Documents récupérés pour chapitre ${chapterId}:`, {
+    course_session_id: result.course_session_id,
+    exercice_session_id: result.exercice_session_id,
+    evaluation_session_id: result.evaluation_session_id
+  })
+  
+  return result
+}

@@ -128,7 +128,11 @@ export default function DeepCourseChaptersPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            onClick={() => navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })}
+            onClick={() => {
+              // 💾 Sauvegarder le titre du chapitre
+              localStorage.setItem(`chapter-title-${chapter.chapter_id}`, chapter.title || "Sans titre")
+              navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })
+            }}
             className="cursor-pointer"
           >
             <ChapterCard

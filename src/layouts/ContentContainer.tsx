@@ -21,7 +21,7 @@ export default function ContentContainer({
     <section
       data-content-container
       className={cn(
-        "flex flex-1 min-h-full",
+        "flex flex-1 min-h-0",
         "rounded-[28px] border border-white/20 dark:border-white/10",
         "bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]",
         "backdrop-blur-xl backdrop-saturate-150",
@@ -31,7 +31,7 @@ export default function ContentContainer({
         className
       )}
     >
-      <div className="flex flex-1 min-h-full overflow-y-auto overflow-x-hidden">
+      <div className="flex flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <div className="flex flex-1 p-6 w-full">
           {children ?? <Outlet />}
         </div>

@@ -91,7 +91,7 @@ function CopiloteContainerContent({
 
   // 🔄 Mettre à jour les messages quand le cache se charge
   useEffect(() => {
-    if (data?.messages) {
+    if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
       const displayMessages: string[] = []
       for (const msg of data.messages) {
         if (msg.text) {
@@ -102,7 +102,7 @@ function CopiloteContainerContent({
       setIsNewMessage(false)
       console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés du cache`)
     }
-  }, [data?.messages])
+  }, [sessionId, effectiveUserId])
 
   // 🔁 Fallback direct: si useSessionCache ne fournit rien, appeler getChat directement
   useEffect(() => {
