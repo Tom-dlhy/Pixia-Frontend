@@ -283,7 +283,7 @@ function CopiloteContainerContent({
     <aside
       className={cn(
         `
-        flex flex-col min-h-0 max-h-full
+        flex flex-col h-full
         rounded-[28px] border border-white/20 dark:border-white/10
         backdrop-blur-xl backdrop-saturate-150
         bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]
