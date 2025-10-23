@@ -38,7 +38,8 @@ export type EventMessage = {
 export type FetchChatResponse = {
   session_id: string | null
   user_id: string
-  messages: EventMessage[]
+  messages?: EventMessage[]
+  events?: Array<{ type?: string; text?: string | null; timestamp?: string | null }>
 }
 
 async function handle<T = any>(r: Response): Promise<T> {
@@ -91,6 +92,13 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
   })
   
   const result = await handle<FetchAllChatResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
+    console.warn(`⚠️ [fetchAllChat] Réponse invalide du backend:`, result)
+    return { sessions: [] }
+  }
+  
   console.log(`📡 [fetchAllChat] ${result.sessions.length} sessions récupérées`)
   
   return result
@@ -111,6 +119,13 @@ export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepC
   })
   
   const result = await handle<FetchAllDeepCoursesResponse>(r)
+  
+  // Vérification défensive
+  if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
+    console.warn(`⚠️ [fetchAllDeepCourses] Réponse invalide du backend:`, result)
+    return { sessions: [] }
+  }
+  
   console.log(`📡 [fetchAllDeepCourses] ${result.sessions.length} deep-courses récupérés`)
   
   return result
@@ -137,7 +152,41 @@ export async function fetchChat(
   })
   
   const result = await handle<FetchChatResponse>(r)
-  console.log(`📡 [fetchChat] ${result.messages.length} messages récupérés`)
   
-  return result
+  // Vérification défensive: s'assurer que result a les bonnes propriétés
+  if (!result || typeof result !== 'object') {
+    console.warn(`⚠️ [fetchChat] Réponse invalide du backend:`, result)
+    return { session_id: sessionId, user_id: userId, messages: [] }
+  }
+  
+  // Le backend retourne soit 'messages' soit 'events' - les normaliser en 'messages'
+  let messages = result.messages || result.events || []
+  
+  if (!Array.isArray(messages)) {
+    console.warn(`⚠️ [fetchChat] messages/events n'est pas un array:`, typeof messages, messages)
+    messages = []
+  }
+  
+  // Convertir les events en EventMessage si nécessaire
+  const normalizedMessages: EventMessage[] = messages.map((m: any) => {
+    if (typeof m === 'string') {
+      return { type: 'unknown', text: m, timestamp: null }
+    }
+    if (m && typeof m === 'object') {
+      return {
+        type: m.type || 'unknown',
+        text: m.text || null,
+        timestamp: m.timestamp || null
+      }
+    }
+    return { type: 'unknown', text: null, timestamp: null }
+  }).filter((m: EventMessage) => m.text !== null && m.text !== '')
+  
+  console.log(`📡 [fetchChat] ${normalizedMessages.length} messages récupérés`)
+  
+  return { 
+    session_id: result.session_id || sessionId, 
+    user_id: result.user_id || userId, 
+    messages: normalizedMessages 
+  }
 }

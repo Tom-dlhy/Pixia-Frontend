@@ -201,6 +201,18 @@ export const getChat = createServerFn({ method: "POST" })
 
     try {
       const res = await fetchChat(user_id, session_id)
+      
+      // Vérifier que res et res.messages existent
+      if (!res) {
+        console.warn(`⚠️ [getChat] fetchChat retourné null/undefined`)
+        return []
+      }
+      
+      if (!Array.isArray(res.messages)) {
+        console.warn(`⚠️ [getChat] res.messages n'est pas un array:`, typeof res.messages, res.messages)
+        return []
+      }
+      
       console.log(`✅ [getChat] ${res.messages.length} messages récupérés pour session: ${session_id}`)
       return res.messages
     } catch (error) {

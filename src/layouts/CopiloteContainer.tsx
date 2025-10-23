@@ -112,12 +112,29 @@ function CopiloteContainerContent({
         console.log(`🔄 [CopiloteContainer] Fallback getChat fetch pour session=${sessionId} user=${effectiveUserId}`)
         const res = await getChat({ data: { user_id: effectiveUserId, session_id: sessionId } })
         if (!mounted) return
-        if (res && Array.isArray(res)) {
-          const texts = res.map((m) => m.text).filter(Boolean) as string[]
-          setMessages(texts)
-          setIsNewMessage(false)
-          console.log(`✅ [CopiloteContainer] ${texts.length} messages chargés via getChat`) 
+        
+        // Vérifier que res est un array valide
+        if (!res) {
+          console.warn(`⚠️ [CopiloteContainer] getChat returned null/undefined`)
+          return
         }
+        
+        if (!Array.isArray(res)) {
+          console.warn(`⚠️ [CopiloteContainer] getChat returned non-array:`, typeof res, res)
+          return
+        }
+        
+        const texts = res
+          .map((m: any) => {
+            if (typeof m === 'string') return m
+            if (m && typeof m === 'object' && m.text) return m.text
+            return null
+          })
+          .filter(Boolean) as string[]
+        
+        setMessages(texts)
+        setIsNewMessage(false)
+        console.log(`✅ [CopiloteContainer] ${texts.length} messages chargés via getChat`) 
       } catch (err) {
         console.error("❌ [CopiloteContainer] Erreur getChat fallback:", err)
       }
