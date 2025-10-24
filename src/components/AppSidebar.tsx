@@ -37,17 +37,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const { prefetch } = useSessionCache(null, undefined, undefined, { enabled: false })
 
   const resolvedEmail = user?.email ?? session.userEmail ?? null
-  const sessionFullName = session.givenName || session.familyName
-    ? [session.givenName, session.familyName].filter(Boolean).join(" ")
-    : null
-  const displayName = session.givenName ?? sessionFullName ?? user?.name ?? null
+  const displayName = session.name ?? user?.name ?? null
   const enhancedUser = resolvedEmail
     ? {
         email: resolvedEmail,
-        name: user?.name ?? sessionFullName ?? null,
+        name: user?.name ?? session.name ?? null,
         image: user?.image ?? null,
-        givenName: user?.givenName ?? session.givenName ?? null,
-        familyName: user?.familyName ?? session.familyName ?? null,
+        givenName: user?.givenName ?? null,
+        familyName: user?.familyName ?? null,
       }
     : null
 
