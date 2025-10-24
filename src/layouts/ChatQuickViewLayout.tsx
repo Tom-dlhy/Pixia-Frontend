@@ -20,7 +20,7 @@ interface ChatQuickViewLayoutProps {
 
 export function ChatQuickViewLayout({ 
   children, 
-  title = "Session Conversationnelle",
+  title = "", // Titres réels viennent de DocumentTitleContext (ExerciseViewer/CourseViewer)
   backTo = "/chat",
   courseType: overrideCourseType
 }: ChatQuickViewLayoutProps) {
@@ -104,6 +104,8 @@ export function ChatQuickViewLayout({
 
   // Use document title if available, otherwise use passed title
   const displayTitle = documentTitle || title
+
+  console.log('📄 [ChatQuickViewLayout] Title source:', documentTitle ? '✅ From DocumentTitleContext' : title ? '⚠️ From props' : '❌ None')
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">

@@ -1,7 +1,0 @@
-export * from "./exercise.mock"
-export * from "./deep.mock"
-export * from "./utils"
-export * from "./chapterFaker"
-export * from "./exerciseFaker"
-export * from "./evaluationFaker"
-export * from "./deepFaker"

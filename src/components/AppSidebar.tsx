@@ -113,7 +113,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
                 
                 // 🧊 Glassmorphism styles matching global theme
-                const baseClass = "w-full justify-start text-left h-auto py-2 px-3 rounded-[16px] border transition-all duration-300 ease-out cursor-pointer relative"
+                const baseClass = "w-full justify-start text-left h-auto py-2 px-4 rounded-lg border transition-all duration-300 ease-out cursor-pointer relative"
                 const glassBg = "backdrop-blur-xl backdrop-saturate-150 border-white/20 dark:border-white/10"
                 const glassGlow = "shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.1)]"
                 const glassHover = "hover:scale-[1.02] hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.15)]"
@@ -148,9 +148,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   >
                     <div className="flex flex-col gap-0.5 w-full truncate">
                       <span className="font-medium truncate text-sm">{session.title || "Sans titre"}</span>
-                      <span className="text-xs opacity-70">
-                        {isExercise ? "🔵 Exercice" : "🟢 Cours"}
-                      </span>
                     </div>
                   </Button>
                 )

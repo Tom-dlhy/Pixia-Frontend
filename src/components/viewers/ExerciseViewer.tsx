@@ -30,9 +30,9 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
   
   // Set the document title in context when component mounts
   useEffect(() => {
-    setTitle('Exercices')
+    setTitle(exercise.title || null)
     return () => setTitle(null)
-  }, [setTitle])
+  }, [exercise.title, setTitle])
   
   if (!exercise.exercises || exercise.exercises.length === 0) {
     return (
