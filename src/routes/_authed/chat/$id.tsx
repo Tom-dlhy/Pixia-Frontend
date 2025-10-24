@@ -82,11 +82,6 @@ function ChatSessionPage() {
         sessionId: id,
         message: userInput,
         files: encodedFiles, // ✅ correspond au schéma attendu
-        messageContext: {
-          currentRoute: "chat",
-          userFullName: session.name || undefined,
-          userStudyLevel: session.study || "Non défini",  // Fallback si undefined
-        },
       })
 
       console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {

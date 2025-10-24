@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { CourseOutput } from '~/models/Document'
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { MarkdownRenderer } from '~/components/MarkdownRenderer'
-import { PngDiagramRenderer } from '~/components/PngDiagramRenderer'
+import { SvgDiagramRenderer } from '~/components/SvgDiagramRenderer'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
 
 interface CourseViewerProps {
@@ -56,7 +56,7 @@ export function CourseViewer({ course }: CourseViewerProps) {
                     {/* Diagram/Schema if available */}
                     {chapter.img_base64 && (
                       <div className="mt-8 pt-6 border-t border-white/10">
-                        <PngDiagramRenderer
+                        <SvgDiagramRenderer
                           imgBase64={chapter.img_base64}
                           schemaDescription={chapter.schema_description}
                           diagramType={chapter.diagram_type}

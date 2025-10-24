@@ -15,10 +15,8 @@ interface SendChatParams {
   messageContext?: {
     selectedCardType?: "cours" | "exercice"
     currentRoute?: "chat" | "deep-course" | "course" | "exercice"
-    deepCourseTitle?: string
     deepCourseId?: string
     userFullName?: string
-    userStudyLevel?: string
   }
 }
 

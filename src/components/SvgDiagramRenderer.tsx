@@ -3,9 +3,9 @@
 import React, { useMemo } from 'react'
 import { cn } from '~/lib/utils'
 
-interface PngDiagramRendererProps {
+interface SvgDiagramRendererProps {
   /**
-   * PNG encodé en base64
+   * SVG encodé en base64
    */
   imgBase64?: string
   /**
@@ -23,15 +23,15 @@ interface PngDiagramRendererProps {
 }
 
 /**
- * Composant pour afficher des PNG encodés en base64
+ * Composant pour afficher des SVG encodés en base64
  * Supporte les images générées par Kroki ou d'autres services
  */
-export function PngDiagramRenderer({
+export function SvgDiagramRenderer({
   imgBase64,
   schemaDescription,
   diagramType = 'diagram',
   className,
-}: PngDiagramRendererProps) {
+}: SvgDiagramRendererProps) {
   // Valider et convertir le base64 en URL de données
   const dataUrl = useMemo(() => {
     if (!imgBase64) return null
@@ -43,11 +43,11 @@ export function PngDiagramRenderer({
         return imgBase64
       }
       
-      // Sinon, construire l'URL de données PNG
-      // On suppose que c'est du PNG en base64
-      return `data:image/png;base64,${imgBase64}`
+      // Sinon, construire l'URL de données SVG
+      // On suppose que c'est du SVG en base64
+      return `data:image/svg+xml;base64,${imgBase64}`
     } catch (error) {
-      console.error('Erreur lors du traitement du PNG base64:', error)
+      console.error('Erreur lors du traitement du SVG base64:', error)
       return null
     }
   }, [imgBase64])

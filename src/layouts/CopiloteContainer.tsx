@@ -33,7 +33,6 @@ interface CopiloteContainerProps {
   isCopiloteModal?: boolean
   forceDeepMode?: boolean
   deepCourseId?: string | null
-  deepCourseTitle?: string | null
   chapterId?: string | null
 }
 
@@ -47,7 +46,6 @@ function CopiloteContainerContent({
   courseType, // optional explicit prop
   isCopiloteModal = false,
   deepCourseId,
-  deepCourseTitle,
   chapterId,
 }: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
@@ -248,16 +246,6 @@ function CopiloteContainerContent({
       console.info("Copilote prompt:", prompt)
       console.log(`📤 [CopiloteContainer] Envoi avec userId: ${effectiveUserId}`)
       console.log(`📤 [CopiloteContainer] sessionId: ${effectiveSessionId || "AUCUN"}`)
-      console.log(`🔍 [CopiloteContainer] Session data:`, {
-        "session.name": session.name,
-        "session.study": session.study,
-        "session.userEmail": session.userEmail,
-      })
-      console.log(`📚 [CopiloteContainer] Deep Course data:`, {
-        "deepCourseId": deepCourseId,
-        "deepCourseTitle": deepCourseTitle,
-        "effectiveCourseType": effectiveCourseType,
-      })
       
       const res = await sendChatWithRefresh({
         user_id: effectiveUserId,
@@ -267,9 +255,7 @@ function CopiloteContainerContent({
         messageContext: {
           currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
           deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
-          deepCourseTitle: effectiveCourseType === "deep" ? (deepCourseTitle || undefined) : undefined,
           userFullName: session.name || undefined,
-          userStudyLevel: session.study || "Non défini",  // Fallback si undefined
         },
       })
 
@@ -291,7 +277,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }
-  }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, deepCourseTitle, sendChatWithRefresh])
+  }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh])
 
   return (
     <aside

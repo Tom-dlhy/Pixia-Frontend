@@ -10,7 +10,7 @@ export type CourseType = "none" | "cours" | "exercice" | "discuss" | "deep"
 // ----------------------------------------------
 export interface Schema extends BaseEntity {
   name: string
-  pngBase64: string
+  svgBase64: string
 }
 
 export interface Chapter extends BaseEntity {

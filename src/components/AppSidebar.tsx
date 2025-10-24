@@ -108,26 +108,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
             </h3>
             <div className="space-y-2 overflow-y-auto overflow-x-hidden flex-1 pr-4">
               {filteredSessions.map((session) => {
-                // DEBUG: Afficher les infos de la session
-                console.log(`📋 [AppSidebar] Session:`, {
-                  session_id: session.session_id,
-                  title: session.title,
-                  document_type: session.document_type,
-                  raw_data: session,
-                })
-
                 // Déterminer si c'est un exercice (anglais ou français)
                 const courseTypeLower = session.document_type?.toLowerCase() || ""
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
                 
-                console.log(`🔍 [AppSidebar] Type Check:`, {
-                  document_type: session.document_type,
-                  courseTypeLower,
-                  isExercise,
-                })
-                
                 // 🧊 Glassmorphism styles matching global theme
-                const baseClass = "w-full justify-start text-left h-12 py-3 px-3 rounded-lg border transition-all duration-300 ease-out cursor-pointer relative"
+                const baseClass = "w-full justify-start text-left h-auto py-2 px-3 rounded-[16px] border transition-all duration-300 ease-out cursor-pointer relative"
                 const glassBg = "backdrop-blur-xl backdrop-saturate-150 border-white/20 dark:border-white/10"
                 const glassGlow = "shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.1)]"
                 const glassHover = "hover:scale-[1.02] hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.15)]"
@@ -146,19 +132,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   textColor = "text-[#0b5e4d] dark:text-[#5ef1c2]"
                 }
 
-                // Extraire le nom du cours/exercice du titre
-                // Format attendu: "NOM_DU_COURS - TITRE_SESSION" ou juste le titre
-                const titleParts = session.title?.split(" - ") || []
-                const courseName = titleParts.length > 1 ? titleParts[0].trim() : session.title
-                const sessionName = titleParts.length > 1 ? titleParts.slice(1).join(" - ").trim() : ""
-
-                console.log(`📝 [AppSidebar] Title Parsing:`, {
-                  title: session.title,
-                  titleParts,
-                  courseName,
-                  sessionName,
-                })
-
                 return (
                   <Button
                     key={session.session_id}
@@ -174,7 +147,10 @@ export function AppSidebar({ user }: AppSidebarProps) {
                     )}
                   >
                     <div className="flex flex-col gap-0.5 w-full truncate">
-                      <span className="font-medium truncate text-sm">{courseName || "Sans titre"}</span>
+                      <span className="font-medium truncate text-sm">{session.title || "Sans titre"}</span>
+                      <span className="text-xs opacity-70">
+                        {isExercise ? "🔵 Exercice" : "🟢 Cours"}
+                      </span>
                     </div>
                   </Button>
                 )

@@ -116,13 +116,11 @@ function ChatPage() {
           selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
           currentRoute: "chat",
           userFullName: session.name || undefined,
-          userStudyLevel: session.study || "Non défini",  // Fallback si undefined
         },
       })
 
       console.log("🔍 DEBUG - Session context:", {
         "session.name": session.name,
-        "session.study": session.study,
         "session.userId": session.userId,
         "session.userEmail": session.userEmail,
         "session.isLoggedIn": session.isLoggedIn,

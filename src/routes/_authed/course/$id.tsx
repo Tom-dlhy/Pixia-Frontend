@@ -50,8 +50,6 @@ function RouteComponent() {
           id: ch.id_chapter || Math.random().toString(),
           title: ch.title || "",
           content: ch.content || "",
-          img_base64: ch.img_base64 || undefined,
-          schema_description: ch.schema_description || undefined,
         })),
         type: "cours",
       }
@@ -60,7 +58,6 @@ function RouteComponent() {
       setTitle(courseData.title)
       
       console.log("✅ [course.$id] Course data set in context:", courseData)
-      console.log("📊 [course.$id] Chapters with images:", courseData.chapters.map(c => ({ title: c.title, hasImage: !!c.img_base64 })))
     }
   }, [document, id, setCourse, setTitle])
 

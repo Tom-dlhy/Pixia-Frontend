@@ -14,10 +14,9 @@ interface CopiloteModalProps {
   onClose: () => void
   sessionId?: string
   deepCourseId?: string
-  deepCourseTitle?: string
 }
 
-export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId, deepCourseTitle }: CopiloteModalProps) {
+export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: CopiloteModalProps) {
   const { courseType } = useCourseType()
   const { session } = useAppSession()
   // Force "deep" mode pour le modal
@@ -71,7 +70,6 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId, deepCo
             isCopiloteModal={true}
             forceDeepMode={true}
             deepCourseId={deepCourseId}
-            deepCourseTitle={deepCourseTitle}
           />
         </div>
       </div>

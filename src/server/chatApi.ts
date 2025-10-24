@@ -142,12 +142,6 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
   }
   
   console.log(`📡 [fetchAllChat] ${result.sessions.length} sessions récupérées`)
-  console.log(`📊 [fetchAllChat] RAW BACKEND RESPONSE:`, JSON.stringify(result, null, 2))
-  console.table(result.sessions.map(s => ({
-    session_id: s.session_id,
-    title: s.title,
-    document_type: s.document_type,
-  })))
   
   return result
 }

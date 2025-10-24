@@ -34,9 +34,6 @@ function HomeLayoutContent({ user, children }: { user?: any; children: React.Rea
     return () => observer.disconnect()
   }, [])
 
-  // DEBUG: Log user info
-  console.log(`👤 [HomeLayout] User:`, user)
-
     // 💬 États du chat
   const gradientClass = getGradientClasses(isDark)
 

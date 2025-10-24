@@ -81,18 +81,6 @@ function MarkdownElement({ element }: { element: any }) {
         </pre>
       )
 
-    case 'image':
-      return (
-        <div className="flex justify-center my-6">
-          <img
-            src={element.src}
-            alt={element.alt}
-            className="max-w-full rounded-lg shadow-md border border-muted-foreground/20"
-            style={{ maxWidth: '800px', width: '100%' }}
-          />
-        </div>
-      )
-
     case 'list':
       const listItems = element.content.split('\n').filter((line: string) => line.trim())
       return (
@@ -153,22 +141,20 @@ function InlineFormattedText({ text }: { text: string }) {
 // --- Fonctions utilitaires (mêmes que dans generatePdfFromCourseData.ts) ---
 
 /**
- * Détecte si le contenu est du Markdown ou du HTML avec images
+ * Détecte si le contenu est du Markdown
  */
 function isMarkdown(text: string): boolean {
-  return /^#+\s|^\*\*|^__|\n#+\s|\n\*\*|\n__|`|^\*\s|^\d+\.|<img/m.test(text)
+  return /^#+\s|^\*\*|^__|\n#+\s|\n\*\*|\n__|`|^\*\s|^\d+\./m.test(text)
 }
 
 /**
  * Parse le Markdown et retourne un tableau d'éléments structurés
  */
 function parseMarkdown(markdown: string): Array<{
-  type: 'heading' | 'paragraph' | 'bold' | 'italic' | 'code' | 'list' | 'blockquote' | 'image'
+  type: 'heading' | 'paragraph' | 'bold' | 'italic' | 'code' | 'list' | 'blockquote'
   level?: number
   content: string
   raw: string
-  src?: string
-  alt?: string
 }> {
   const elements: Array<any> = []
   const lines = markdown.split('\n')
@@ -185,31 +171,6 @@ function parseMarkdown(markdown: string): Array<{
           type: 'heading',
           level: match[1].length,
           content: match[2],
-          raw: line,
-        })
-      }
-      i++
-      continue
-    }
-
-    // HTML Image tag (base64 support)
-    if (line.includes('<img')) {
-      // Match <img> avec src et alt dans n'importe quel ordre
-      let src = ''
-      let alt = ''
-      
-      const srcMatch = line.match(/src="([^"]+)"/i)
-      const altMatch = line.match(/alt="([^"]*)"/i)
-      
-      if (srcMatch) src = srcMatch[1]
-      if (altMatch) alt = altMatch[1]
-      
-      if (src) {
-        elements.push({
-          type: 'image',
-          src: src,
-          alt: alt || 'Image',
-          content: alt || 'Image',
           raw: line,
         })
       }

@@ -70,7 +70,7 @@ export async function generatePdfFromCourseData(
       // Contenu du chapitre - gérer Markdown et HTML
       if (isMarkdown(chapter.content)) {
         // Si c'est du Markdown, utiliser le parser
-        yPos = applyMarkdownFormatting(pdf, chapter.content, margin, yPos, contentWidth, pageHeight)
+        yPos = applyMarkdownFormatting(pdf, chapter.content, margin, yPos, contentWidth)
       } else {
         // Sinon, nettoyer le HTML simplement
         const contentLines = pdf.splitTextToSize(chapter.content, contentWidth)
@@ -88,62 +88,6 @@ export async function generatePdfFromCourseData(
           pdf.text(line, margin, yPos)
           yPos += 6 // Espacement entre les lignes
         })
-      }
-
-      // Inclure le schéma PNG s'il existe
-      if (chapter.img_base64) {
-        // Vérifier si on a besoin d'une nouvelle page pour le schéma
-        if (yPos > pageHeight - margin - 60) {
-          pdf.addPage()
-          yPos = margin
-        }
-
-        yPos += 8 // Espacement avant le schéma
-
-        try {
-          // Extraire juste le base64, sans le préfixe data:
-          let base64Data = chapter.img_base64
-          if (base64Data.startsWith('data:image/png;base64,')) {
-            base64Data = base64Data.substring('data:image/png;base64,'.length)
-          } else if (base64Data.startsWith('data:')) {
-            // Extraire après le préfixe data:...;base64,
-            const match = base64Data.match(/^data:[^;]*;base64,(.*)$/)
-            if (match) {
-              base64Data = match[1]
-            }
-          }
-
-          // Dimensions de l'image
-          const imgWidth = contentWidth
-          const imgHeight = imgWidth * 0.6 // Ratio aspect par défaut
-          
-          // Ajouter l'image au PDF avec la syntaxe correcte jsPDF
-          pdf.addImage(base64Data, 'PNG', margin, yPos, imgWidth, imgHeight)
-          yPos += imgHeight + 4
-
-          // Ajouter la description si elle existe
-          if (chapter.schema_description) {
-            pdf.setFontSize(9)
-            pdf.setFont('Helvetica', 'italic')
-            pdf.setTextColor(100, 100, 100)
-            
-            const descLines = pdf.splitTextToSize(chapter.schema_description, contentWidth)
-            descLines.forEach((line: string) => {
-              if (yPos > pageHeight - margin - 10) {
-                pdf.addPage()
-                yPos = margin
-              }
-              pdf.text(line, margin, yPos)
-              yPos += 4
-            })
-            
-            pdf.setTextColor(0, 0, 0)
-          }
-
-          yPos += 4 // Espacement après le schéma
-        } catch (error) {
-          console.error('Erreur lors de l\'ajout de l\'image PNG au PDF:', error)
-        }
       }
 
       yPos += 12 // Espacement entre les chapitres
@@ -271,8 +215,8 @@ function parseMarkdown(markdown: string): Array<{
 /**
  * Applique la mise en forme Markdown au PDF
  */
-function applyMarkdownFormatting(pdf: any, text: string, xPos: number, yPos: number, maxWidth: number, pageHeight?: number) {
-  const finalPageHeight = pageHeight || pdf.internal.pageSize.getHeight()
+function applyMarkdownFormatting(pdf: any, text: string, xPos: number, yPos: number, maxWidth: number) {
+  const pageHeight = pdf.internal.pageSize.getHeight()
   const margin = 15
   let currentY = yPos
   
@@ -280,7 +224,7 @@ function applyMarkdownFormatting(pdf: any, text: string, xPos: number, yPos: num
   
   elements.forEach((elem) => {
     // Vérifier si on a besoin d'une nouvelle page
-    if (currentY > finalPageHeight - margin - 10) {
+    if (currentY > pageHeight - margin - 10) {
       pdf.addPage()
       currentY = margin
     }
@@ -297,7 +241,7 @@ function applyMarkdownFormatting(pdf: any, text: string, xPos: number, yPos: num
         
       case 'paragraph':
         // Rendre le paragraphe avec mise en forme inline
-        currentY = renderParagraphWithFormatting(pdf, elem.content, xPos, currentY, maxWidth, finalPageHeight, margin)
+        currentY = renderParagraphWithFormatting(pdf, elem.content, xPos, currentY, maxWidth, pageHeight, margin)
         currentY += 6
         break
         
@@ -345,7 +289,7 @@ function applyMarkdownFormatting(pdf: any, text: string, xPos: number, yPos: num
         listItems.forEach((item) => {
           const cleanItem = item.replace(/^\s*[-*+]\s/, '• ').replace(/^\s*\d+\.\s/, '→ ')
           // Utiliser renderParagraphWithFormatting pour les styles inline
-          currentY = renderParagraphWithFormatting(pdf, cleanItem, xPos + 4, currentY, maxWidth - 8, finalPageHeight, margin)
+          currentY = renderParagraphWithFormatting(pdf, cleanItem, xPos + 4, currentY, maxWidth - 8, pageHeight, margin)
         })
         currentY += 4
         break

@@ -112,8 +112,8 @@ export function Login() {
       }}
       onTestUser={() => {
         loginMutation.mutate({
-          email: "tomy.delahaye@gmail.com",
-          password: "mdp_test_hackathon",
+          email: "test@me.com",
+          password: "test",
         })
       }}
       afterSubmit={
