@@ -106,8 +106,8 @@ export default function DeepCourseListPage() {
 
   return (
     <ScrollArea className="w-full h-full">
-      <div className="mt-16 flex flex-col gap-8 pr-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mt-16 flex flex-col gap-8 pr-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
           {coursesWithGradients.map((course, index) => (
             <motion.div
               key={course.id}
@@ -120,11 +120,11 @@ export default function DeepCourseListPage() {
                 console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
                 navigate({ to: `/deep-course/${course.id}` })
               }}
-              className="cursor-pointer"
+              className="cursor-pointer h-full"
             >
               <CourseCard
                 title={course.title}
-                description={`${course.title} - Explorez ce cours`}
+                description={`Explorez ce cours`}
                 icon={course.icon}
                 gradient={course.gradient}
                 completion={course.completion}
