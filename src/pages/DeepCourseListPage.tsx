@@ -8,6 +8,7 @@ import { Brain, Code2, Binary, Sparkles } from "lucide-react"
 import { useAppSession } from "~/utils/session"
 import { useAllDeepCourses } from "~/hooks/useListCache"
 import { CourseCard } from "~/components/CourseCard"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import {
   Empty,
   EmptyContent,
@@ -104,33 +105,34 @@ export default function DeepCourseListPage() {
   }
 
   return (
-    <div className="mt-16 flex flex-col gap-8">
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {coursesWithGradients.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => {
-              // 💾 Sauvegarder le titre avant de naviguer
-              localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
-              console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
-              navigate({ to: `/deep-course/${course.id}` })
-            }}
-            className="cursor-pointer"
-          >
-            <CourseCard
-              title={course.title}
-              description={`${course.title} - Explorez ce cours`}
-              icon={course.icon}
-              gradient={course.gradient}
-              completion={course.completion}
-            />
-          </motion.div>
-        ))}
+    <ScrollArea className="w-full h-full">
+      <div className="mt-16 flex flex-col gap-8 pr-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {coursesWithGradients.map((course, index) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => {
+                // 💾 Sauvegarder le titre avant de naviguer
+                localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
+                console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
+                navigate({ to: `/deep-course/${course.id}` })
+              }}
+              className="cursor-pointer"
+            >
+              <CourseCard
+                title={course.title}
+                description={`${course.title} - Explorez ce cours`}
+                icon={course.icon}
+                gradient={course.gradient}
+                completion={course.completion}
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }

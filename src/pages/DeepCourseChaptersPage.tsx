@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Book, Zap, BarChart3, Users } from "lucide-react"
 
 import { ChapterCard } from "~/components/ChapterCard"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import {
   Empty,
   EmptyContent,
@@ -119,32 +120,33 @@ export default function DeepCourseChaptersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-
-      <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {chapters.map((chapter, index) => (
-          <motion.div
-            key={chapter.chapter_id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => {
-              // 💾 Sauvegarder le titre du chapitre
-              localStorage.setItem(`chapter-title-${chapter.chapter_id}`, chapter.title || "Sans titre")
-              navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })
-            }}
-            className="cursor-pointer"
-          >
-            <ChapterCard
-              title={chapter.title || "Sans titre"}
-              description={chapter.is_complete ? "" : "⏳ En cours"}
-              icon={chapter.is_complete ? Book : Zap}
-              isComplete={chapter.is_complete}
-              badge={`#${index + 1}`}
-            />
-          </motion.div>
-        ))}
+    <ScrollArea className="w-full h-full">
+      <div className="flex flex-col gap-8 pr-4">
+        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {chapters.map((chapter, index) => (
+            <motion.div
+              key={chapter.chapter_id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => {
+                // 💾 Sauvegarder le titre du chapitre
+                localStorage.setItem(`chapter-title-${chapter.chapter_id}`, chapter.title || "Sans titre")
+                navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })
+              }}
+              className="cursor-pointer"
+            >
+              <ChapterCard
+                title={chapter.title || "Sans titre"}
+                description={chapter.is_complete ? "" : "⏳ En cours"}
+                icon={chapter.is_complete ? Book : Zap}
+                isComplete={chapter.is_complete}
+                badge={`#${index + 1}`}
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }

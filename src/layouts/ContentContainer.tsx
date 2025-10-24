@@ -3,6 +3,7 @@
 import { Outlet } from "@tanstack/react-router"
 import { ReactNode } from "react"
 import { cn } from "~/lib/utils"
+import { ScrollArea } from "~/components/ui/scroll-area"
 
 interface ContentContainerProps {
   children?: ReactNode
@@ -31,11 +32,11 @@ export default function ContentContainer({
         className
       )}
     >
-      <div className="flex flex-1 min-h-0 max-h-full overflow-y-auto overflow-x-hidden">
+      <ScrollArea className="flex flex-1 min-h-0 max-h-full w-full">
         <div className="flex flex-1 min-h-0 max-h-full p-6 w-full">
           {children ?? <Outlet />}
         </div>
-      </div>
+      </ScrollArea>
     </section>
   )
 }
