@@ -20,7 +20,7 @@ interface ChatQuickViewLayoutProps {
 
 export function ChatQuickViewLayout({ 
   children, 
-  title = "Session Conversationnelle",
+  title = "",
   backTo = "/chat",
   courseType: overrideCourseType
 }: ChatQuickViewLayoutProps) {

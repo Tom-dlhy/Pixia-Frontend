@@ -19,8 +19,20 @@ export function ChatSessionsProvider({ children }: { children: ReactNode }) {
   const [sessions, setSessions] = useState<ChatSessionType[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
+  const setSessionsDebug = (newSessions: ChatSessionType[]) => {
+    console.log(`📊 [ChatSessionsContext] Setting sessions:`, {
+      count: newSessions.length,
+      sessions: newSessions.map(s => ({
+        session_id: s.session_id,
+        title: s.title,
+        document_type: s.document_type,
+      })),
+    })
+    setSessions(newSessions)
+  }
+
   return (
-    <ChatSessionsContext.Provider value={{ sessions, setSessions, isLoading, setIsLoading }}>
+    <ChatSessionsContext.Provider value={{ sessions, setSessions: setSessionsDebug, isLoading, setIsLoading }}>
       {children}
     </ChatSessionsContext.Provider>
   )

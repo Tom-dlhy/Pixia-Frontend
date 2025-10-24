@@ -159,6 +159,10 @@ export const getAllChatSessions = createServerFn({ method: "POST" })
     try {
       const res = await fetchAllChat(user_id)
       console.log(`✅ [getAllChatSessions] ${res.sessions.length} sessions récupérées`)
+      
+      // DEBUG: Log le raw avant de retourner
+      console.log(`📊 [getAllChatSessions] RAW SESSIONS:`, JSON.stringify(res.sessions, null, 2))
+      
       return res.sessions
     } catch (error) {
       console.error(`❌ [getAllChatSessions] Erreur:`, error)

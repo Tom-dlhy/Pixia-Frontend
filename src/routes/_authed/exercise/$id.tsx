@@ -43,7 +43,7 @@ function RouteComponent() {
       // Convertir CourseOutput en CourseWithChapters
       const courseData: CourseWithChapters = {
         id: courseDoc.id || id,
-        title: courseDoc.title || "Cours",
+        title: courseDoc.title || "Exercice",
         chapters: chapters.map((ch: any): Chapter => ({
           id: ch.id_chapter || Math.random().toString(),
           title: ch.title || "",
