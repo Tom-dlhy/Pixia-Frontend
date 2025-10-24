@@ -71,6 +71,14 @@ export default function DeepCourseChaptersPage() {
         console.log(`📡 [DeepCourseChaptersPage] Appel de getChapters pour deepcourse_id: ${deepcourseId}`)
         const fetchedChapters = await getChapters({ data: { deepcourse_id: deepcourseId } })
         console.log(`✅ [DeepCourseChaptersPage] ${fetchedChapters.length} chapitres reçus:`, fetchedChapters)
+        
+        // 💾 Synchroniser l'état de complétion dans le localStorage
+        fetchedChapters.forEach((chapter: any) => {
+          const isComplete = chapter.is_complete || false
+          localStorage.setItem(`chapter-complete-${chapter.chapter_id}`, String(isComplete))
+          console.log(`💾 [DeepCourseChaptersPage] État du chapitre ${chapter.chapter_id} sauvegardé en cache: ${isComplete}`)
+        })
+        
         setChapters(fetchedChapters)
       } catch (error) {
         console.error(`❌ [DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)

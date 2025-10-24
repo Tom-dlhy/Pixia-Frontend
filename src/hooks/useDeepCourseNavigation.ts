@@ -122,16 +122,18 @@ export function useRightAction() {
   useEffect(() => {
     if (chapterId) {
       const cached = localStorage.getItem(`chapter-complete-${chapterId}`)
-      if (cached) {
-        console.log(`✅ [useRightAction] État de complétion du chapitre trouvé en cache: ${cached}`)
-        setIsChapterComplete(cached === 'true')
+      if (cached !== null) {
+        // Si on a une valeur en cache, l'utiliser
+        const isComplete = cached === 'true'
+        console.log(`✅ [useRightAction] État de complétion du chapitre trouvé en cache: ${isComplete}`)
+        setIsChapterComplete(isComplete)
       } else {
         // Si pas en cache, initialiser à false
-        console.log(`✅ [useRightAction] Pas d'état en cache, initialisation à false`)
+        console.log(`✅ [useRightAction] Pas d'état en cache pour ${chapterId}, initialisation à false`)
         setIsChapterComplete(false)
       }
     }
-  }, [chapterId, trigger]) // Ajouter trigger comme dépendance
+  }, [chapterId, trigger]) // Ajouter chapterId pour relire au changement de chapitre
 
   return useMemo(() => {
     // Retourner les props pour ActionButton basées sur le depth
