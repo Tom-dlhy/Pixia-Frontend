@@ -252,7 +252,7 @@ export default function ActionButton({
                   // Déterminer la nouvelle valeur
                   const newCompleteState = !isChapterComplete
                   
-                  if (isChapterComplete) {
+                  if (!isChapterComplete) {
                     console.log(`📡 [ActionButton] Marquage comme complet du chapitre ${chapterId}`)
                     await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
                   } else {
@@ -275,18 +275,18 @@ export default function ActionButton({
               className={cn(
                 "w-full justify-start gap-2 rounded-md transition-all duration-300",
                 isChapterComplete
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-blue-600 dark:text-blue-400",
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-green-600 dark:text-green-400",
                 "hover:scale-[1.02]"
               )}
               onMouseEnter={(e) => {
                 const isDark = document.documentElement.classList.contains("dark")
                 const gradientFrom = isChapterComplete
-                  ? isDark ? "rgba(34,197,94,0.25)" : "rgba(110,231,183,0.25)"
-                  : isDark ? "rgba(59,130,246,0.25)" : "rgba(147,197,253,0.25)"
+                  ? isDark ? "rgba(59,130,246,0.25)" : "rgba(147,197,253,0.25)"
+                  : isDark ? "rgba(34,197,94,0.25)" : "rgba(110,231,183,0.25)"
                 const gradientTo = isChapterComplete
-                  ? isDark ? "rgba(5,150,105,0.25)" : "rgba(74,222,128,0.25)"
-                  : isDark ? "rgba(37,99,235,0.25)" : "rgba(96,165,250,0.25)"
+                  ? isDark ? "rgba(37,99,235,0.25)" : "rgba(96,165,250,0.25)"
+                  : isDark ? "rgba(5,150,105,0.25)" : "rgba(74,222,128,0.25)"
                 e.currentTarget.style.background = `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`
               }}
               onMouseLeave={(e) => {
@@ -294,7 +294,7 @@ export default function ActionButton({
               }}
             >
               <FaCheckCircle className="h-4 w-4 opacity-80" />
-              {isChapterComplete ? "Marquer comme complété" : "Reprendre le cours"}
+              {isChapterComplete ? "Reprendre le cours" : "Marquer comme terminé"}
             </Button>
           )}
 

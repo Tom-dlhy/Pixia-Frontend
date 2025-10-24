@@ -4,7 +4,7 @@ import { signup, type SignupPayload, type SignupResponse } from "./signup"
 
 const SignUpSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters").max(100),
+  password: z.string().min(1, "Password must be at least 6 characters").max(100),
   name: z.string().trim().min(1, "Name is required").max(100).optional(),
 })
 

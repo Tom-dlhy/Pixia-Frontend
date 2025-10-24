@@ -46,6 +46,23 @@ export function DeepCoursesLayout() {
     typeof document !== "undefined" &&
       document.documentElement.classList.contains("dark")
   )
+  const [deepCourseTitle, setDeepCourseTitle] = useState<string | undefined>(undefined)
+
+  // 🔹 Récupérer le titre du deep-course depuis localStorage au montage
+  useEffect(() => {
+    if (deepcourseId) {
+      const stored = localStorage.getItem(`deepcourse-title-${deepcourseId}`)
+      if (stored) {
+        setDeepCourseTitle(stored)
+        console.log(`💾 [DeepCoursesLayout] Titre du deep-course récupéré: ${stored}`)
+      } else {
+        // Fallback: générer depuis l'ID
+        const generated = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
+        setDeepCourseTitle(generated)
+        console.log(`💾 [DeepCoursesLayout] Titre généré: ${generated}`)
+      }
+    }
+  }, [deepcourseId])
 
   // Sync CourseType avec activeTab
   useEffect(() => {
@@ -138,6 +155,7 @@ export function DeepCoursesLayout() {
           onClose={handleCloseCopiloteModal}
           sessionId={chapterId}
           deepCourseId={deepcourseId}
+          deepCourseTitle={deepCourseTitle}
         />
       </main>
     </DeepCoursesLayoutContext.Provider>

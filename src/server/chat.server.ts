@@ -26,8 +26,10 @@ const ChatMessageSchema = z.object({
     .object({
       selectedCardType: z.enum(["cours", "exercice"]).optional(),
       currentRoute: z.enum(["chat", "deep-course", "course", "exercice"]).optional(),
+      deepCourseTitle: z.string().optional(),
       deepCourseId: z.string().optional(),
       userFullName: z.string().optional(),
+      userStudyLevel: z.string().optional(),
     })
     .optional(),
 })
@@ -57,6 +59,11 @@ export const sendChatMessage = createServerFn({ method: "POST" })
         contextParts.push(`[Utilisateur: ${messageContext.userFullName}]`)
       }
 
+      // ==================== NIVEAU D'ÉTUDE ====================
+      if (messageContext.userStudyLevel) {
+        contextParts.push(`[Niveau d'étude: ${messageContext.userStudyLevel}]`)
+      }
+
       // ==================== NIVEAU MICRO ====================
       const route = messageContext.currentRoute || "chat"
       const selectedCard = messageContext.selectedCardType
@@ -75,13 +82,13 @@ export const sendChatMessage = createServerFn({ method: "POST" })
           break
 
         case "deep-course":
-          if (messageContext.deepCourseId) {
+          if (messageContext.deepCourseTitle) {
             contextParts.push(
-              `tu es un copilote deep course, l'utilisateur souhaite ajouter un chapitre au deep cours ${messageContext.deepCourseId}`
+              `tu es un copilote deep course pour "${messageContext.deepCourseTitle}"`
             )
           } else {
             contextParts.push(
-              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours approfondi"
+              "redirige systématiquement vers l'agent CopiloteNewChapitreAgent, l'utilisateur souhaite ajouter du contenu"
             )
           }
           break
@@ -109,6 +116,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     formData.append("user_id", user_id)
     formData.append("message", enrichedMessage)
     if (sessionId) formData.append("session_id", sessionId)
+    if (messageContext?.deepCourseId) formData.append("deep_course_id", messageContext.deepCourseId)
 
     for (const f of files) {
       const buffer = Buffer.from(f.data, "base64")
