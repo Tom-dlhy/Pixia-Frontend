@@ -22,9 +22,6 @@ export interface UseDocumentOptions {
   autoFetch?: boolean
 }
 
-/**
- * Hook pour fetcher et gérer les données d'exercices
- */
 export function useExercise(
   sessionId: string | null,
   options: UseDocumentOptions = { autoFetch: true }
@@ -65,9 +62,6 @@ export function useExercise(
   return state
 }
 
-/**
- * Hook pour fetcher et gérer les données de cours
- */
 export function useCourse(
   sessionId: string | null,
   options: UseDocumentOptions = { autoFetch: true }
@@ -108,9 +102,6 @@ export function useCourse(
   return state
 }
 
-/**
- * Hook générique pour fetcher un document (exercice ou cours)
- */
 export function useDocument(
   sessionId: string | null,
   type: "exercise" | "course" | null,
@@ -148,11 +139,6 @@ export function useDocument(
   return state
 }
 
-/**
- * Hook pour fetcher et gérer les données de chat + document combinées
- * Idéal pour afficher un document à gauche et le chat à droite
- * car doc_id === session_id dans la DB
- */
 export function useChatWithDocument(
   sessionId: string | null,
   documentType: "exercise" | "course" | null,
@@ -166,16 +152,22 @@ export function useChatWithDocument(
     error: null,
   })
 
+  const { session } = useAppSession()
+
   useEffect(() => {
     if (!options.autoFetch || !sessionId) return
 
     const fetchData = async () => {
       setState(prev => ({ ...prev, loading: true, error: null }))
       try {
-        // ✅ UN SEUL APPEL: getChatWithDocument() qui fait tout
+        const userId = session.userId ? String(session.userId) : null
+        if (!userId) {
+          throw new Error("User not authenticated")
+        }
+
         const result = await getChatWithDocument({
           data: {
-            user_id: "user-id", // à adapter
+            user_id: userId,
             session_id: sessionId,
             doc_type: documentType || undefined,
           },
@@ -199,7 +191,7 @@ export function useChatWithDocument(
     }
 
     fetchData()
-  }, [sessionId, documentType, options.autoFetch])
+  }, [sessionId, documentType, options.autoFetch, session.userId])
 
   return state
 }

@@ -27,7 +27,13 @@ export function Login() {
 
   const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api"
 
-  console.log("API_BASE (VITE):", API_BASE)
+  // 🔍 DEBUG: Track renders (disable in production)
+  if (typeof window !== "undefined" && window.location.search.includes("debug-login")) {
+    console.log("%c[Login] RENDER", "color: #ff6b6b; font-weight: bold;", {
+      redirectTarget,
+      timestamp: new Date().toISOString(),
+    })
+  }
 
   // --- LOGIN MUTATION ---
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
@@ -47,13 +53,12 @@ export function Login() {
 
     onSuccess: async ({ data }) => {
       if (!data.existing_user) {
-        console.warn("Utilisateur inexistant :", data)
+        console.warn("%c[Login] User not found", "color: #f39c12;", data)
         return
       }
 
       console.log("Connexion réussie :", data)
 
-      // 🔧 Workaround: Si le backend ne retourne pas user_id, utiliser l'email comme identifiant
       const userId = data.user_id || data.email || null
 
       applyAuthResult(
@@ -61,9 +66,9 @@ export function Login() {
           success: true,
           email: data.email ?? null,
           user_id: userId,
-          name: data.nom ?? null,              // ✅ NOM
-          notion_token: data.notion_token ?? null,  // ✅ NOTION TOKEN
-          study: data.study ?? null,           // ✅ STUDY
+          name: data.nom ?? null,
+          notion_token: data.notion_token ?? null,
+          study: data.study ?? null,
         },
         setSession,
       )
