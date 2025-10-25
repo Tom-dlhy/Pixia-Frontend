@@ -1,11 +1,9 @@
 "use client"
 
-import { type CSSProperties, useCallback, useMemo } from "react"
+import { useMemo, type CSSProperties, useCallback } from "react"
 import { X } from "lucide-react"
 import { Button } from "~/components/ui/button"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
-import { useCourseType } from "~/context/CourseTypeContext"
-import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
 import { useAppSession } from "~/utils/session"
 
@@ -17,10 +15,7 @@ interface CopiloteModalProps {
 }
 
 export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: CopiloteModalProps) {
-  const { courseType } = useCourseType()
   const { session } = useAppSession()
-  // Force "deep" mode pour le modal
-  const accent = useMemo(() => getCourseAccent("none"), [])
   
   // 🔹 Récupération du userId depuis la session
   const userId = useMemo(() => {

@@ -110,7 +110,7 @@ export function ChatInput({
       case "cours":
         return ["#5ef1c2", "#34e7a6", "#1de9b6", "#00c4b4"] // vert menthe
       case "deep":
-        return ["#fda4af", "#fb7185", "#f43f5e", "#b91c1c"] // rouge corail
+        return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] // violet lavande
       case "none":
         return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"] // neutre
       default:
@@ -336,12 +336,12 @@ export function ChatInput({
   return (
     <div className={cn("w-full relative", className)}>
       {courseType === "deep" ? (
-        // Mode deep: pas de gradient, juste le fond transparent
+        // Mode deep: contour violet sans gradient intérieur
         <div
           className={cn(
             "relative z-[1] rounded-[20px] border backdrop-blur-md transition-colors duration-500",
             backgroundColor,
-            borderColor
+            "border-violet-500/60 dark:border-violet-400/50"
           )}
         >
           {formContent}

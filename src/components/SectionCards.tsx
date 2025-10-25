@@ -4,11 +4,26 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, useRouterState } from "@tanstack/react-router"
 import { GraduationCap, BookOpen, PenLine, AudioLines } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card"
+import { GradientText } from "~/components/ui/gradient-text"
 import { cn } from "~/lib/utils"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { useAppSession } from "~/utils/session"
 
+
 type CourseType = "exercice" | "cours" | "deep" | "none"
+
+/* -------------------------------------------------------------------------- */
+/* 🎨 Gradient animé adapté au thème clair/sombre                             */
+/* -------------------------------------------------------------------------- */
+
+function getTitleGradient(isDark: boolean): string {
+  if (isDark) {
+    // Mode sombre : couleurs vibrantes teal → indigo → fuchsia
+    return "linear-gradient(90deg, rgba(45,212,191,0.9) 0%, rgba(129,140,248,0.9) 25%, rgba(216,180,254,0.9) 50%, rgba(129,140,248,0.9) 75%, rgba(45,212,191,0.9) 100%)"
+  }
+  // Mode clair : couleurs douces teal → indigo → fuchsia
+  return "linear-gradient(90deg, rgba(94,234,212,0.9) 0%, rgba(165,216,255,0.9) 25%, rgba(240,171,252,0.9) 50%, rgba(165,216,255,0.9) 75%, rgba(94,234,212,0.9) 100%)"
+}
 
 type GradientMap = Record<"light" | "dark", Record<CourseType, string>>
 
@@ -23,7 +38,7 @@ const gradientMap: GradientMap = {
     cours:
       "linear-gradient(90deg, rgba(134,239,172,0.9) 0%, rgba(74,222,128,0.9) 25%, rgba(34,197,94,0.9) 50%, rgba(0,196,180,0.9) 75%, rgba(134,239,172,0.9) 100%)",
     deep:
-      "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)",
+      "linear-gradient(90deg, rgba(221,214,254,0.9) 0%, rgba(196,181,253,0.9) 25%, rgba(167,139,250,0.9) 50%, rgba(196,181,253,0.9) 75%, rgba(221,214,254,0.9) 100%)",
     none:
       "linear-gradient(90deg, rgba(147,197,253,0.9) 0%, rgba(167,243,208,0.9) 25%, rgba(110,231,183,0.9) 50%, rgba(96,165,250,0.9) 75%, rgba(147,197,253,0.9) 100%)",
   },
@@ -33,7 +48,7 @@ const gradientMap: GradientMap = {
     cours:
       "linear-gradient(90deg, rgba(74,222,128,0.8) 0%, rgba(34,197,94,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(0,196,180,0.8) 75%, rgba(74,222,128,0.8) 100%)",
     deep:
-      "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
+      "linear-gradient(90deg, rgba(196,181,253,0.8) 0%, rgba(167,139,250,0.8) 25%, rgba(139,92,246,0.8) 50%, rgba(167,139,250,0.8) 75%, rgba(196,181,253,0.8) 100%)",
     none:
       "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
   },
@@ -60,14 +75,14 @@ function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive:
 
   const styles = {
     cours: isDark
-      ? "bg-[#1de9b6]/40 dark:bg-[#00c4b4]/45 text-white"
-      : "bg-[#a7ffee]/70 text-[#0b5e4d] border-white/60 shadow-lg",
+      ? "bg-teal-500/50 dark:bg-teal-300/55 text-white"
+      : "bg-teal-300/80 text-white border-white/60 shadow-lg",
     exercice: isDark
-      ? "bg-sky-700/45 dark:bg-sky-800/50 text-white"
-      : "bg-sky-300/70 text-[#0b294a] border-white/60 shadow-lg",
+      ? "bg-blue-600/55 dark:bg-blue-700/60 text-white"
+      : "bg-blue-300/75 text-white border-white/60 shadow-lg",
     deep: isDark
-      ? "bg-rose-700/50 dark:bg-rose-800/55 text-white"
-      : "bg-rose-400/70 text-[#4a0a0a] border-white/60 shadow-lg",
+      ? "bg-violet-700/50 dark:bg-violet-500/55 text-white"
+      : "bg-violet-300/70 text-[#2e1b4e] border-white/60 shadow-lg",
   }
 
   return cn(base, innerGlow, active, styles[kind])
@@ -125,19 +140,13 @@ export function SectionCards() {
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-8">
       {/* 🌈 Titre avec gradient animé */}
-      <div className="text-center text-3xl font-bold mb-10">
-        <div
-          key={courseType}
+      <div className="text-center mb-10">
+        <GradientText
+          text={`Bienvenue sur Pixia ${firstName}`}
           className="text-4xl font-bold"
-          style={{
-            backgroundImage: activeGradient,
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-          }}
-        >
-          Bienvenue sur Pixia {firstName}
-        </div>
+          gradient={getTitleGradient(isDark)}
+          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+        />
       </div>
 
       {/* 🧊 Grille des cartes en pyramide */}

@@ -417,3 +417,46 @@ export async function fetchChapterDocuments(
   
   return result
 }
+
+// -------------------------
+// 🔹 Corriger une question plain text
+// -------------------------
+export type CorrectPlainQuestionResponse = {
+  is_correct: boolean
+  feedback?: string
+}
+
+export async function correctPlainQuestion(
+  question: string,
+  userAnswer: string,
+  expectedAnswer: string
+): Promise<CorrectPlainQuestionResponse> {
+  console.log(`📡 [correctPlainQuestion] Correction d'une question`)
+  console.log(`  Question: ${question.substring(0, 50)}...`)
+  console.log(`  Réponse utilisateur: ${userAnswer.substring(0, 50)}...`)
+  console.log(`  Réponse attendue: ${expectedAnswer.substring(0, 50)}...`)
+
+  const formData = new FormData()
+  formData.append("question", question)
+  formData.append("user_answer", userAnswer)
+  formData.append("expected_answer", expectedAnswer)
+
+  const r = await fetch(`${API_BASE}/correctplainquestion`, {
+    method: "POST",
+    body: formData,
+  })
+
+  const result = await handle<CorrectPlainQuestionResponse>(r)
+
+  // Vérification défensive
+  if (!result || typeof result !== "object" || typeof result.is_correct !== "boolean") {
+    console.warn(`⚠️ [correctPlainQuestion] Réponse invalide du backend:`, result)
+    return { is_correct: false, feedback: "Erreur lors de la correction" }
+  }
+
+  console.log(`✅ [correctPlainQuestion] Correction effectuée - is_correct: ${result.is_correct}`)
+  return {
+    is_correct: result.is_correct,
+    feedback: result.feedback || undefined,
+  }
+}

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments, correctPlainQuestion } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -495,6 +495,56 @@ export const getChapterDocuments = createServerFn({ method: "POST" })
       return res
     } catch (error) {
       console.error(`❌ [getChapterDocuments] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Corriger une question plain text
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour checkPlainQuestion
+// -------------------------
+const CheckPlainQuestionSchema = z.object({
+  question: z.string().min(1),
+  user_answer: z.string().min(1),
+  expected_answer: z.string().min(1),
+})
+
+export interface CheckPlainQuestionResponse {
+  is_correct: boolean
+  feedback?: string
+}
+
+// -------------------------
+// 🔹 Server Function: Corriger une question plain text
+// -------------------------
+export const checkPlainQuestion = createServerFn({ method: "POST" })
+  .inputValidator(CheckPlainQuestionSchema)
+  .handler(async ({ data }): Promise<CheckPlainQuestionResponse> => {
+    const { question, user_answer, expected_answer } = data
+
+    try {
+      console.log(`📡 [checkPlainQuestion] Correction d'une question`)
+      console.log(`  Question: ${question.substring(0, 50)}...`)
+      console.log(`  Réponse utilisateur: ${user_answer.substring(0, 50)}...`)
+      console.log(`  Réponse attendue: ${expected_answer.substring(0, 50)}...`)
+
+      const res = await correctPlainQuestion(question, user_answer, expected_answer)
+
+      if (!res || typeof res.is_correct !== "boolean") {
+        console.warn(`⚠️ [checkPlainQuestion] Réponse invalide du backend:`, res)
+        return { is_correct: false, feedback: "Erreur lors de la correction" }
+      }
+
+      console.log(`✅ [checkPlainQuestion] Correction effectuée - is_correct: ${res.is_correct}`)
+      return {
+        is_correct: res.is_correct,
+        feedback: res.feedback || undefined,
+      }
+    } catch (error) {
+      console.error(`❌ [checkPlainQuestion] Erreur:`, error)
       throw error
     }
   })

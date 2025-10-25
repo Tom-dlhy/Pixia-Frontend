@@ -1,5 +1,7 @@
 # Mandatory
 
+    - NE PAS OBLIGER DE REMETTRE https://hackathon-backend-356001158171.europe-west9.run.app/api PARTOUT
+
     - corriger plain_text (F)
 
     - faire en sorte que l'image soit aussi sur le pdf (F)
@@ -10,7 +12,17 @@
 
     - faire en sorte que quand on quitte l'évaluation la variable eval sorte (F)
 
+    - Couleurs plus claires dans deepcours:dark
+
+    - contour des chapitre de la meme couleur que le deepcourse
+
+    - enlever le truc bizarre dasn les coins 
+
+    - attention au padding left dans appsidebar, deepcourse et chapter
+
     - CODE CLEANING
+
+    - gérer le probleme de nombre de requetes 
 
 # Extras
 

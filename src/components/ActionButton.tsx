@@ -65,11 +65,11 @@ export default function ActionButton({
       darkHover: "rgba(14,165,233,0.35)",
     },
     deep: {
-      light: "rgba(203,213,225,0.25)",
-      dark: "rgba(71,85,105,0.25)",
-      lightHover: "rgba(148,163,184,0.35)",
-      darkHover: "rgba(51,65,85,0.35)",
-    },
+      light: "rgba(216,180,254,0.25)",
+      dark: "rgba(139,92,246,0.25)",
+      lightHover: "rgba(192,132,252,0.35)",
+      darkHover: "rgba(124,58,237,0.35)",
+    }
   }
 
   const accent = accentMap[courseType] ?? accentMap["none"]
