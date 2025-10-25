@@ -1,7 +1,8 @@
-/* Styles pour l'export PDF */
 @import './pdf.css';
 
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {

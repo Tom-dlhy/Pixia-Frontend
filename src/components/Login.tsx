@@ -25,12 +25,12 @@ export function Login() {
   const { redirect: redirectTarget } = LoginRoute.useSearch()
   const { setSession } = useAppSession()
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
 
   // --- LOGIN MUTATION ---
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
     fn: async (data) => {
-      const res = await fetch(`${API_BASE}/api/login`, {
+      const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
