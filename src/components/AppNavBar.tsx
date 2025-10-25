@@ -1,6 +1,7 @@
 "use client"
 import { Link } from "@tanstack/react-router"
 import { SidebarTrigger } from "~/components/ui/sidebar"
+import { Button } from "~/components/ui/button"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { cn } from "~/lib/utils"
 
@@ -19,9 +20,6 @@ function colorClasses(kind: 'exercice' | 'cours' | 'deep') {
 export function AppNavBar() {
   const { setCourseType } = useCourseType()
 
-  const baseBtn =
-    'px-4 py-2 rounded-md text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 ring-offset-sidebar bg-transparent text-sidebar-foreground'
-
   return (
     <header className="border-b border-sidebar-border bg-sidebar text-sidebar-foreground px-4 py-2 shadow-sm">
       <div className="flex items-center w-full">
@@ -31,40 +29,58 @@ export function AppNavBar() {
         />
         <div className="flex-1 flex justify-center">
           <div className="flex gap-3">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setCourseType('exercice')}
-              className={cn(baseBtn, colorClasses('exercice'))}
+              className={cn(
+                'text-sidebar-foreground',
+                colorClasses('exercice')
+              )}
             >
               Exercice
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setCourseType('cours')}
-              className={cn(baseBtn, colorClasses('cours'))}
+              className={cn(
+                'text-sidebar-foreground',
+                colorClasses('cours')
+              )}
             >
               Cours
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setCourseType('deep')}
-              className={cn(baseBtn, colorClasses('deep'))}
+              className={cn(
+                'text-sidebar-foreground',
+                colorClasses('deep')
+              )}
             >
               Cours Approfondis
-            </button>
-            <Link
-              to="/posts"
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
               className={cn(
-                baseBtn,
+                'text-sidebar-foreground',
                 'hover:bg-sidebar-accent/80 dark:hover:bg-sidebar-accent/40'
               )}
-              activeProps={{
-                className:
-                  'bg-sidebar-accent text-sidebar-accent-foreground',
-              }}
             >
-              Deep Courses
-            </Link>
+              <Link
+                to="/posts"
+                activeProps={{
+                  className:
+                    'bg-sidebar-accent text-sidebar-accent-foreground',
+                }}
+              >
+                Deep Courses
+              </Link>
+            </Button>
           </div>
         </div>
         <div className="w-8" />
