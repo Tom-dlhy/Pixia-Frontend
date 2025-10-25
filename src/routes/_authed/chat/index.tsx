@@ -1,5 +1,6 @@
 "use client"
 
+import '~/styles/app.css'
 import { createFileRoute } from "@tanstack/react-router"
 import { useNavigate, useLocation } from "@tanstack/react-router"
 import { useCallback, useState, useEffect } from "react"
