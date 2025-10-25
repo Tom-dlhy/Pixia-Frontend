@@ -11,9 +11,12 @@ import { Plus, Trash2, Menu } from "lucide-react"
 import { FaCheckCircle } from "react-icons/fa"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { cn } from "~/lib/utils"
+import { markChapterCompleteServerFn, markChapterUncompleteServerFn } from "~/server/chat.server"
 
 interface ActionButtonProps {
   viewLevel?: "root" | "course" | "chapter"
+  chapterId?: string
+  isChapterComplete?: boolean
   onCreateCourse?: () => void
   onAddChapter?: () => void
   onDeleteCourse?: () => void
@@ -23,6 +26,8 @@ interface ActionButtonProps {
 
 export default function ActionButton({
   viewLevel = "root",
+  chapterId,
+  isChapterComplete = false,
   onCreateCourse,
   onAddChapter,
   onDeleteCourse,
@@ -233,32 +238,65 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {/* ---------- Marquer terminé ---------- */}
+          {/* ---------- Marquer terminé / Reprendre ---------- */}
           {onMarkDone && (
             <Button
               variant="ghost"
-              onClick={onMarkDone}
+              onClick={async () => {
+                try {
+                  if (!chapterId) {
+                    console.error(`❌ [ActionButton] chapterId manquant`)
+                    return
+                  }
+                  
+                  // Déterminer la nouvelle valeur (inverser l'état actuel)
+                  const newCompleteState = !isChapterComplete
+                  
+                  if (!isChapterComplete) {
+                    // Actuellement incomplet, donc marquer comme complet
+                    console.log(`📡 [ActionButton] Marquage comme complet du chapitre ${chapterId}`)
+                    await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
+                  } else {
+                    // Actuellement complet, donc marquer comme incomplet
+                    console.log(`📡 [ActionButton] Marquage comme incomplet du chapitre ${chapterId}`)
+                    await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
+                  }
+                  
+                  // Mettre à jour le cache IMMÉDIATEMENT après le succès serveur
+                  localStorage.setItem(`chapter-complete-${chapterId}`, String(newCompleteState))
+                  console.log(`✅ [ActionButton] État du chapitre sauvegardé en cache: ${newCompleteState}`)
+                  
+                  // Appeler le callback pour trigger la mise à jour du state du hook
+                  if (onMarkDone) {
+                    onMarkDone()
+                  }
+                } catch (error) {
+                  console.error(`❌ [ActionButton] Erreur lors de l'opération:`, error)
+                }
+              }}
               className={cn(
-                "w-full justify-start gap-2 rounded-md transition-all duration-300 text-green-600 dark:text-green-400",
+                "w-full justify-start gap-2 rounded-md transition-all duration-300",
+                isChapterComplete
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-green-600 dark:text-green-400",
                 "hover:scale-[1.02]"
               )}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `linear-gradient(135deg, ${
-                  document.documentElement.classList.contains("dark")
-                    ? "rgba(34,197,94,0.25)"
-                    : "rgba(110,231,183,0.25)"
-                }, ${
-                  document.documentElement.classList.contains("dark")
-                    ? "rgba(5,150,105,0.25)"
-                    : "rgba(74,222,128,0.25)"
-                })`
+                const isDark = document.documentElement.classList.contains("dark")
+                const gradientFrom = isChapterComplete
+                  ? isDark ? "rgba(59,130,246,0.25)" : "rgba(147,197,253,0.25)"
+                  : isDark ? "rgba(34,197,94,0.25)" : "rgba(110,231,183,0.25)"
+                const gradientTo = isChapterComplete
+                  ? isDark ? "rgba(37,99,235,0.25)" : "rgba(96,165,250,0.25)"
+                  : isDark ? "rgba(5,150,105,0.25)" : "rgba(74,222,128,0.25)"
+                e.currentTarget.style.background = `linear-gradient(135deg, ${gradientFrom}, ${gradientTo})`
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = "transparent"
               }}
             >
               <FaCheckCircle className="h-4 w-4 opacity-80" />
-              Marquer comme terminé
+              {isChapterComplete ? "Reprendre le cours" : "Marquer comme terminé"}
             </Button>
           )}
 

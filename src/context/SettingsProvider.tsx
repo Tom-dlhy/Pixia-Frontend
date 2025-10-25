@@ -2,23 +2,24 @@
 
 import * as React from 'react'
 import { toast } from 'sonner'
+import { useAppSession } from '~/utils/session'
 
 export type SettingsFormState = {
   fullName: string
-  notion: string
+  notionToken: string
   gmail: string
   drive: string
-  studyLevel: string
+  study: string
 }
 
 const STORAGE_KEY = 'app-settings'
 
 const defaultSettings: SettingsFormState = {
   fullName: '',
-  notion: '',
+  notionToken: '',
   gmail: '',
   drive: '',
-  studyLevel: '',
+  study: '',
 }
 
 interface SettingsContextValue {
@@ -33,6 +34,7 @@ const SettingsContext = React.createContext<SettingsContextValue | undefined>(un
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = React.useState<SettingsFormState>(defaultSettings)
   const [isLoaded, setIsLoaded] = React.useState(false)
+  const { session } = useAppSession()
 
   // Load from localStorage once on mount (client-side only)
   React.useEffect(() => {
@@ -49,6 +51,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       setIsLoaded(true)
     }
   }, [])
+
+  // Pré-remplir avec les données de session au login
+  React.useEffect(() => {
+    if (!isLoaded || !session.isLoggedIn) return
+    
+    setSettings((prev) => ({
+      ...prev,
+      fullName: session.name || prev.fullName,
+      notionToken: session.notionToken || prev.notionToken,
+      study: session.study || prev.study,
+    }))
+  }, [session.isLoggedIn, session.name, session.notionToken, session.study, isLoaded])
 
   // Persist whenever settings change (after initial load)
   React.useEffect(() => {

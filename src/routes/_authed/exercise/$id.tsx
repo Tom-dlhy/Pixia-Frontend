@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useParams } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { useChatWithDocument } from '~/hooks/useDocument'
+import { useSessionCache } from '~/hooks/useSessionCache'
 import { useCourseContent } from '~/context/CourseContentContext'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
+import { useAppSession } from '~/utils/session'
 import { Spinner } from '~/components/ui/spinner'
 import { AlertCircle } from 'lucide-react'
 import { CourseViewer } from '~/components/viewers/CourseViewer'
@@ -17,7 +18,17 @@ export const Route = createFileRoute('/_authed/exercise/$id')({
 
 function RouteComponent() {
   const { id } = useParams({ from: '/_authed/exercise/$id' })
-  const { document, documentType, loading, error } = useChatWithDocument(id, 'exercise')
+  const { session } = useAppSession()
+  
+  // 🚀 Utiliser le cache au lieu de refaire des appels API
+  const { data, isLoading, error } = useSessionCache(
+    id,
+    'exercise',
+    session.userId ? String(session.userId) : undefined,
+    { enabled: !!id } // Activer quand on a un ID
+  )
+  
+  const { document, documentType } = data
   const { setCourse } = useCourseContent()
   const { setTitle } = useDocumentTitle()
 
@@ -48,7 +59,7 @@ function RouteComponent() {
     }
   }, [document, id, setCourse, setTitle])
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
         <Spinner className="size-8" />

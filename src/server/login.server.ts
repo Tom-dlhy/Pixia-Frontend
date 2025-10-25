@@ -30,8 +30,9 @@ export const loginUser = createServerFn({ method: "POST" })
         existing_user: Boolean(res.existing_user),
         user_id: res.user_id ?? null,
         email: res.email ?? email,
-        given_name: res.given_name ?? null,
-        family_name: res.family_name ?? null,
+        nom: res.nom ?? null,
+        notion_token: res.notion_token ?? null,
+        study: res.study ?? null,
         userNotFound: false,
       }
     } catch (error) {
@@ -44,8 +45,9 @@ export const loginUser = createServerFn({ method: "POST" })
           existing_user: false,
           user_id: null,
           email,
-          given_name: null,
-          family_name: null,
+          nom: null,
+          notion_token: null,
+          study: null,
           userNotFound: error.status === 404,
         }
       }
@@ -59,8 +61,9 @@ export const loginUser = createServerFn({ method: "POST" })
         existing_user: false,
         user_id: null,
         email,
-        given_name: null,
-        family_name: null,
+        nom: null,
+        notion_token: null,
+        study: null,
         userNotFound: false,
       }
     }

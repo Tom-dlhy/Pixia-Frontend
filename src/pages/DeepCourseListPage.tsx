@@ -6,8 +6,9 @@ import { motion } from "framer-motion"
 import { Brain, Code2, Binary, Sparkles } from "lucide-react"
 
 import { useAppSession } from "~/utils/session"
-import { getAllDeepCourses } from "~/server/chat.server"
+import { useAllDeepCourses } from "~/hooks/useListCache"
 import { CourseCard } from "~/components/CourseCard"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import {
   Empty,
   EmptyContent,
@@ -40,42 +41,9 @@ const defaultCourses = [
 export default function DeepCourseListPage() {
   const navigate = useNavigate()
   const { session } = useAppSession()
-  const [deepCourses, setDeepCourses] = useState<any[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  const userId = session.userId != null ? String(session.userId) : "anonymous-user"
-
-  // 📋 Charger les deep-courses au montage
-  useEffect(() => {
-    const loadDeepCourses = async () => {
-      if (!userId || userId === "anonymous-user") {
-        console.log("⚠️ [DeepCourseListPage] Utilisateur non authentifié, skip")
-        return
-      }
-
-      setIsLoading(true)
-      try {
-        console.log(`🔄 [DeepCourseListPage] Appel API pour user_id: ${userId}`)
-        const res = await getAllDeepCourses({
-          data: {
-            user_id: userId,
-          },
-        })
-        console.log(`✅ [DeepCourseListPage] Réponse:`, res)
-        console.log(`✅ [DeepCourseListPage] Premier élément:`, res?.[0])
-        setDeepCourses(res || [])
-        console.log(`✅ [DeepCourseListPage] ${res?.length || 0} deep-courses récupérés`)
-      } catch (err) {
-        console.error("❌ [DeepCourseListPage] Erreur lors du chargement:", err)
-        // Fallback to default courses
-        setDeepCourses(defaultCourses)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadDeepCourses()
-  }, [userId])
+  
+  // � Utiliser le hook de cache React Query
+  const { deepCourses, isLoading } = useAllDeepCourses()
 
   // Mapper les deep-courses avec des gradients
   const coursesWithGradients = useMemo(() => {
@@ -85,15 +53,17 @@ export default function DeepCourseListPage() {
     
     return deepCourses
       .map((course, index) => {
-        // Accepter la structure du backend: deepcourse_id, title, completion
-        const id = course.id || course.deepcourse_id || `course-${index}`
-        const title = course.title || course.name || `Course ${index + 1}`
-        const completion = typeof course.completion === 'number' ? course.completion : 0
+        // Utiliser la structure du backend: deepcourse_id, title, completion
+        const id = course.deepcourse_id || `course-${index}`
+        const title = course.title || `Course ${index + 1}`
+        // Backend envoie completion normalisé (0-1), conversion en pourcentage (0-100)
+        const completionNormalized = typeof course.completion === 'number' ? course.completion : 0
+        const completion = Math.round(completionNormalized * 100)
         
         return {
           id: String(id),
           title: String(title),
-          completion: Math.min(Math.max(completion, 0), 100), // Clamp 0-100
+          completion: completion,
           gradient: courseGradients[gradientKeys[index % gradientKeys.length]],
           icon: [Brain, Code2, Binary, Sparkles][index % 4],
         }
@@ -135,33 +105,34 @@ export default function DeepCourseListPage() {
   }
 
   return (
-    <div className="mt-16 flex flex-col gap-8">
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {coursesWithGradients.map((course, index) => (
-          <motion.div
-            key={course.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => {
-              // 💾 Sauvegarder le titre avant de naviguer
-              localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
-              console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
-              navigate({ to: `/deep-course/${course.id}` })
-            }}
-            className="cursor-pointer"
-          >
-            <CourseCard
-              title={course.title}
-              description={`${course.title} - Explorez ce cours`}
-              icon={course.icon}
-              gradient={course.gradient}
-              completion={course.completion}
-            />
-          </motion.div>
-        ))}
+    <ScrollArea className="w-full h-full">
+      <div className="mt-16 flex flex-col gap-8 pr-4 pb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
+          {coursesWithGradients.map((course, index) => (
+            <motion.div
+              key={course.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => {
+                // 💾 Sauvegarder le titre avant de naviguer
+                localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
+                console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
+                navigate({ to: `/deep-course/${course.id}` })
+              }}
+              className="cursor-pointer h-full"
+            >
+              <CourseCard
+                title={course.title}
+                description={`Explorez ce cours`}
+                icon={course.icon}
+                gradient={course.gradient}
+                completion={course.completion}
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }

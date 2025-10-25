@@ -4,16 +4,18 @@ import { SESSION_PROFILE_STORAGE_KEY, type UserSession } from "./session"
 export type StoredProfile = {
   email?: string | null
   userId?: string | number | null
-  givenName?: string | null
-  familyName?: string | null
+  name?: string | null
+  notionToken?: string | null
+  study?: string | null
 }
 
 export type AuthLikeResult = {
   success: boolean
   email?: string | null
   user_id?: string | number | null
-  given_name?: string | null
-  family_name?: string | null
+  name?: string | null
+  notion_token?: string | null
+  study?: string | null
 }
 
 export const persistProfile = (profile: StoredProfile) => {
@@ -37,20 +39,24 @@ export const applyAuthResult = <T extends AuthLikeResult>(
   const profile: StoredProfile = {
     email: result.email ?? null,
     userId: result.user_id ?? null,
-    givenName: result.given_name ?? null,
-    familyName: result.family_name ?? null,
+    name: result.name ?? null,
+    notionToken: result.notion_token ?? null,
+    study: result.study ?? null,
   }
 
   if (typeof window !== "undefined") {
     persistProfile(profile)
-    window.dispatchEvent(new Event("session:refresh"))
+    // Note: We don't dispatch session:refresh here because we're directly calling setSession below.
+    // This prevents the SessionProvider's storage listener from trying to re-apply the same data,
+    // which could cause an infinite update loop.
   }
 
   setSession((prev) => ({
     userEmail: profile.email ?? prev.userEmail ?? null,
     userId: profile.userId ?? prev.userId ?? null,
-    givenName: profile.givenName ?? prev.givenName ?? null,
-    familyName: profile.familyName ?? prev.familyName ?? null,
+    name: profile.name ?? prev.name ?? null,
+    notionToken: profile.notionToken ?? prev.notionToken ?? null,
+    study: profile.study ?? prev.study ?? null,
     isLoggedIn: true,
   }))
 

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -21,6 +21,15 @@ const ChatMessageSchema = z.object({
       })
     )
     .optional(),
+  // 🎯 Contexte pour enrichissement du message
+  messageContext: z
+    .object({
+      selectedCardType: z.enum(["cours", "exercice"]).optional(),
+      currentRoute: z.enum(["chat", "deep-course", "course", "exercice"]).optional(),
+      deepCourseId: z.string().optional(),
+      userFullName: z.string().optional(),
+    })
+    .optional(),
 })
 
 // -------------------------
@@ -29,11 +38,76 @@ const ChatMessageSchema = z.object({
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
-    const { user_id, message, sessionId, files = [] } = data
+    const { user_id, message, sessionId, files = [], messageContext } = data
+
+    console.group("%c📨 [sendChatMessage] Input Reçu", "color: #3b82f6; font-weight: bold; font-size: 13px;")
+    console.log("user_id:", user_id)
+    console.log("message:", message)
+    console.log("sessionId:", sessionId)
+    console.log("messageContext:", messageContext)
+    console.groupEnd()
+
+    // 🎯 Enrichir le message avec le contexte
+    let enrichedMessage = message
+    if (messageContext) {
+      const contextParts: string[] = []
+
+      // ==================== NIVEAU MACRO ====================
+      if (messageContext.userFullName) {
+        contextParts.push(`[Utilisateur: ${messageContext.userFullName}]`)
+      }
+
+      // ==================== NIVEAU MICRO ====================
+      const route = messageContext.currentRoute || "chat"
+      const selectedCard = messageContext.selectedCardType
+
+      switch (route) {
+        case "chat":
+          if (selectedCard === "cours") {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours"
+            )
+          } else if (selectedCard === "exercice") {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouvel exercice"
+            )
+          }
+          break
+
+        case "deep-course":
+          if (messageContext.deepCourseId) {
+            contextParts.push(
+              `tu es un copilote deep course, l'utilisateur souhaite ajouter un chapitre au deep cours ${messageContext.deepCourseId}`
+            )
+          } else {
+            contextParts.push(
+              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours approfondi"
+            )
+          }
+          break
+
+        case "course":
+          contextParts.push("tu es un copilote cours")
+          break
+
+        case "exercice":
+          contextParts.push("tu es un copilote exercice")
+          break
+      }
+
+      if (contextParts.length > 0) {
+        enrichedMessage = `${contextParts.join("\n")}\n\n[ENDCONTEXT]\n\n${message}`
+        console.log(
+          "%c🎯 [sendChatMessage] Message enrichi",
+          "color: #8b5cf6; font-weight: bold; font-size: 12px;",
+          enrichedMessage
+        )
+      }
+    }
 
     const formData = new FormData()
     formData.append("user_id", user_id)
-    formData.append("message", message)
+    formData.append("message", enrichedMessage)
     if (sessionId) formData.append("session_id", sessionId)
 
     for (const f of files) {
@@ -127,6 +201,18 @@ export const getChat = createServerFn({ method: "POST" })
 
     try {
       const res = await fetchChat(user_id, session_id)
+      
+      // Vérifier que res et res.messages existent
+      if (!res) {
+        console.warn(`⚠️ [getChat] fetchChat retourné null/undefined`)
+        return []
+      }
+      
+      if (!Array.isArray(res.messages)) {
+        console.warn(`⚠️ [getChat] res.messages n'est pas un array:`, typeof res.messages, res.messages)
+        return []
+      }
+      
       console.log(`✅ [getChat] ${res.messages.length} messages récupérés pour session: ${session_id}`)
       return res.messages
     } catch (error) {
@@ -136,7 +222,7 @@ export const getChat = createServerFn({ method: "POST" })
   })
 
 // ========================================================================================
-// 🔹 COMBINÉ: Chat + Document (car doc_id === session_id dans la DB)
+// 🔹 OPTIMISÉ: Chat + Document avec logique ciblée
 // ========================================================================================
 
 // -------------------------
@@ -155,7 +241,7 @@ export interface ChatWithDocumentResponse {
 }
 
 // -------------------------
-// 🔹 Server Function: Récupérer chat ET document combinés
+// 🔹 Server Function: Récupérer chat ET document combinés (OPTIMISÉ)
 // -------------------------
 export const getChatWithDocument = createServerFn({ method: "POST" })
   .inputValidator(FetchChatWithDocumentSchema)
@@ -163,107 +249,252 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
     const { user_id, session_id, doc_type } = data
 
     try {
-      console.group(`%c� [SERVER] getChatWithDocument Input`, 'color: #3b82f6; font-weight: bold; font-size: 13px;')
-      console.log(`👤 user_id: ${user_id}`)
-      console.log(`📍 session_id: ${session_id}`)
-      console.log(`🏷️ doc_type: ${doc_type || 'auto-detect'}`)
-      console.groupEnd()
+      console.log(`📡 [getChatWithDocument] user_id: ${user_id}, session_id: ${session_id}, doc_type: ${doc_type || "auto"}`)
 
-      // Récupérer le chat en parallèle avec les documents
-      console.group(`%c🚀 [SERVER] Making parallel API calls`, 'color: #8b5cf6; font-weight: bold; font-size: 13px;')
-      console.log(`1️⃣ fetchChat(user_id=${user_id}, session_id=${session_id})`)
-      console.log(`2️⃣ getExercise(session_id=${session_id}) - ${doc_type === "exercise" || !doc_type ? "YES" : "NO"}`)
-      console.log(`3️⃣ getCourse(session_id=${session_id}) - ${doc_type === "course" || !doc_type ? "YES" : "NO"}`)
-      console.groupEnd()
-
-      const [chatRes, exerciseRes, courseRes] = await Promise.allSettled([
-        fetchChat(user_id, session_id),
-        doc_type === "exercise" || !doc_type ? getExercise({ data: { session_id } }) : Promise.resolve(null),
-        doc_type === "course" || !doc_type ? getCourse({ data: { session_id } }) : Promise.resolve(null),
-      ])
-
-      // Extraire les messages du chat
-      let messages: ChatWithDocumentResponse["messages"] = []
-      if (chatRes.status === "fulfilled") {
-        messages = chatRes.value.messages as any
-        console.group(`%c✅ [SERVER] Chat Response`, 'color: #10b981; font-weight: bold; font-size: 13px;')
-        console.log(`📨 ${messages.length} messages`)
-        console.log(`📋 Messages:`, messages)
-        console.groupEnd()
-      } else {
-        console.group(`%c⚠️ [SERVER] Chat Error`, 'color: #f59e0b; font-weight: bold; font-size: 13px;')
-        console.log(`Error:`, chatRes.reason)
-        console.groupEnd()
-      }
-
-      // Extraire le document (priorité: exercise → course → null)
+      // 🎯 Charger SEULEMENT ce qu'on a besoin
       let document: ExerciseOutput | CourseOutput | null = null
       let documentType: "exercise" | "course" | null = null
 
-      console.group(`%c🔍 [SERVER] Document Resolution`, 'color: #ec4899; font-weight: bold; font-size: 13px;')
-      
-      if (exerciseRes.status === "fulfilled" && exerciseRes.value && isExerciseOutput(exerciseRes.value)) {
-        document = exerciseRes.value
+      if (doc_type === "exercise") {
+        console.log(`📡 [getChatWithDocument] Chargement exercise + chat`)
+        const [exercise, history] = await Promise.all([
+          getExercise({ data: { session_id } }),
+          fetchChat(user_id, session_id),
+        ])
+        document = exercise
         documentType = "exercise"
-        console.log(`✅ Exercise found and valid!`)
-        console.log(`📦 Exercise structure:`, {
-          hasExercises: 'exercises' in document,
-          exercisesCount: (document as any).exercises?.length || 0,
-        })
-        console.log(`📄 Full Exercise:`, document)
-      } else {
-        console.log(`❌ Exercise not found or invalid`)
-        console.log(`exerciseRes.status: ${exerciseRes.status}`)
-        if (exerciseRes.status === "fulfilled") {
-          console.log(`exerciseRes.value:`, exerciseRes.value)
-          console.log(`isExerciseOutput check:`, isExerciseOutput(exerciseRes.value))
-        } else {
-          console.log(`exerciseRes.reason:`, exerciseRes.reason)
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
         }
-      }
-
-      if (!document && courseRes.status === "fulfilled" && courseRes.value && isCourseOutput(courseRes.value)) {
-        document = courseRes.value
+      } 
+      else if (doc_type === "course") {
+        console.log(`📡 [getChatWithDocument] Chargement course + chat`)
+        const [course, history] = await Promise.all([
+          getCourse({ data: { session_id } }),
+          fetchChat(user_id, session_id),
+        ])
+        document = course
         documentType = "course"
-        console.log(`✅ Course found and valid!`)
-        console.log(`📦 Course structure:`, {
-          hasTitle: 'title' in document,
-          hasChapters: 'chapters' in document,
-          chaptersCount: (document as any).chapters?.length || 0,
-        })
-        console.log(`📄 Full Course:`, document)
-      } else if (!document) {
-        console.log(`❌ Course not found or invalid`)
-        if (courseRes.status === "fulfilled") {
-          console.log(`courseRes.value:`, courseRes.value)
-          console.log(`isCourseOutput check:`, isCourseOutput(courseRes.value))
-        } else {
-          console.log(`courseRes.reason:`, courseRes.reason)
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
         }
       }
+      else {
+        // Auto-detect: essayer exercise d'abord, puis course
+        console.log(`📡 [getChatWithDocument] Auto-detect: chargement exercise + course + chat`)
+        const [exercise, course, history] = await Promise.all([
+          getExercise({ data: { session_id } }).catch(() => null),
+          getCourse({ data: { session_id } }).catch(() => null),
+          fetchChat(user_id, session_id),
+        ])
 
-      if (!document) {
-        console.log(`⚠️ NO VALID DOCUMENT FOUND`)
-      }
-      
-      console.groupEnd()
+        if (exercise && isExerciseOutput(exercise)) {
+          document = exercise
+          documentType = "exercise"
+        } else if (course && isCourseOutput(course)) {
+          document = course
+          documentType = "course"
+        }
 
-      console.group(`%c📤 [SERVER] getChatWithDocument Output`, 'color: #06b6d4; font-weight: bold; font-size: 13px;')
-      console.log(`💬 messages: ${messages.length}`)
-      console.log(`📦 documentType: ${documentType}`)
-      console.log(`📊 Full response:`, { messages, documentType, document })
-      console.groupEnd()
-
-      return {
-        messages,
-        document,
-        documentType,
+        return {
+          messages: history?.messages || [],
+          document,
+          documentType,
+        }
       }
     } catch (error) {
-      console.group(`%c❌ [SERVER] getChatWithDocument Error`, 'color: #ef4444; font-weight: bold; font-size: 13px;')
-      console.log(`Error message:`, error instanceof Error ? error.message : String(error))
-      console.log(`Full error:`, error)
-      console.groupEnd()
+      console.error(`❌ [getChatWithDocument] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Chapters: Récupérer les chapitres d'un deep-course
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour getChapters
+// -------------------------
+const FetchChaptersSchema = z.object({
+  deepcourse_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Récupérer les chapitres d'un deep-course
+// -------------------------
+export const getChapters = createServerFn({ method: "POST" })
+  .inputValidator(FetchChaptersSchema)
+  .handler(async ({ data }) => {
+    const { deepcourse_id } = data
+
+    try {
+      console.log(`📡 [getChapters] Récupération des chapitres pour deepcourse_id: ${deepcourse_id}`)
+      const res = await fetchChapters(deepcourse_id)
+
+      // Vérifier que res et res.chapters existent
+      if (!res) {
+        console.warn(`⚠️ [getChapters] fetchChapters retourné null/undefined`)
+        return []
+      }
+
+      if (!Array.isArray(res.chapters)) {
+        console.warn(`⚠️ [getChapters] res.chapters n'est pas un array:`, typeof res.chapters, res.chapters)
+        return []
+      }
+
+      console.log(`✅ [getChapters] ${res.chapters.length} chapitres récupérés pour deepcourse: ${deepcourse_id}`)
+      return res.chapters
+    } catch (error) {
+      console.error(`❌ [getChapters] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Mark Chapter Complete
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour markChapterComplete
+// -------------------------
+const MarkChapterCompleteSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Marquer un chapitre comme complet
+// -------------------------
+export const markChapterCompleteServerFn = createServerFn({ method: "POST" })
+  .inputValidator(MarkChapterCompleteSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [markChapterCompleteServerFn] Marquage du chapitre: ${chapter_id}`)
+      const res = await markChapterComplete(chapter_id)
+
+      if (!res || typeof res !== 'object' || typeof res.is_complete !== 'boolean') {
+        console.warn(`⚠️ [markChapterCompleteServerFn] Réponse invalide du backend:`, res)
+        return { is_complete: false }
+      }
+
+      console.log(`✅ [markChapterCompleteServerFn] Chapitre ${chapter_id} marqué comme complet`)
+      return res
+    } catch (error) {
+      console.error(`❌ [markChapterCompleteServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Mark Chapter Uncomplete
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour markChapterUncomplete
+// -------------------------
+const MarkChapterUncompleteSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+// -------------------------
+// 🔹 Server Function: Marquer un chapitre comme incomplet
+// -------------------------
+export const markChapterUncompleteServerFn = createServerFn({ method: "POST" })
+  .inputValidator(MarkChapterUncompleteSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [markChapterUncompleteServerFn] Marquage du chapitre: ${chapter_id}`)
+      const res = await markChapterUncomplete(chapter_id)
+
+      if (!res || typeof res !== 'object' || typeof res.is_complete !== 'boolean') {
+        console.warn(`⚠️ [markChapterUncompleteServerFn] Réponse invalide du backend:`, res)
+        return { is_complete: true }
+      }
+
+      console.log(`✅ [markChapterUncompleteServerFn] Chapitre ${chapter_id} marqué comme incomplet`)
+      return res
+    } catch (error) {
+      console.error(`❌ [markChapterUncompleteServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// ========================================================================================
+// 🔹 Change Settings
+// ========================================================================================
+
+// -------------------------
+// 🔹 Validation pour changeSettings
+// -------------------------
+const ChangeSettingsSchema = z.object({
+  user_id: z.string().min(1),
+  new_given_name: z.string().optional(),
+  new_notion_token: z.string().optional(),
+  new_niveau_etude: z.string().optional(),
+})
+
+// -------------------------
+// 🔹 Server Function: Changer les paramètres utilisateur
+// -------------------------
+export const updateSettingsServerFn = createServerFn({ method: "POST" })
+  .inputValidator(ChangeSettingsSchema)
+  .handler(async ({ data }) => {
+    const { user_id, new_given_name, new_notion_token, new_niveau_etude } = data
+
+    try {
+      console.log(`📡 [updateSettingsServerFn] Mise à jour des paramètres pour user_id: ${user_id}`)
+      const res = await changeSettings(user_id, new_given_name, new_notion_token, new_niveau_etude)
+
+      if (!res || typeof res !== 'object' || typeof res.is_changed !== 'boolean') {
+        console.warn(`⚠️ [updateSettingsServerFn] Réponse invalide du backend:`, res)
+        return { user_id, is_changed: false }
+      }
+
+      console.log(`✅ [updateSettingsServerFn] Paramètres mis à jour pour user_id: ${user_id}`)
+      return res
+    } catch (error) {
+      console.error(`❌ [updateSettingsServerFn] Erreur:`, error)
+      throw error
+    }
+  })
+
+// -------------------------
+// 🔹 Récupérer les documents d'un chapitre
+// -------------------------
+const FetchChapterDocumentsSchema = z.object({
+  chapter_id: z.string().min(1),
+})
+
+export const getChapterDocuments = createServerFn({ method: "POST" })
+  .inputValidator(FetchChapterDocumentsSchema)
+  .handler(async ({ data }) => {
+    const { chapter_id } = data
+
+    try {
+      console.log(`📡 [getChapterDocuments] Récupération des documents pour chapter_id: ${chapter_id}`)
+      const res = await fetchChapterDocuments(chapter_id)
+
+      if (!res || typeof res !== 'object' || !res.chapter_id) {
+        console.warn(`⚠️ [getChapterDocuments] Réponse invalide du backend:`, res)
+        return {
+          chapter_id,
+          exercice_session_id: "",
+          course_session_id: "",
+          evaluation_session_id: ""
+        }
+      }
+
+      console.log(`✅ [getChapterDocuments] Documents récupérés pour chapter_id: ${chapter_id}`)
+      return res
+    } catch (error) {
+      console.error(`❌ [getChapterDocuments] Erreur:`, error)
       throw error
     }
   })

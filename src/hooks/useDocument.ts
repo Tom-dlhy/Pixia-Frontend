@@ -155,10 +155,9 @@ export function useDocument(
  */
 export function useChatWithDocument(
   sessionId: string | null,
-  docType?: "exercise" | "course",
+  documentType: "exercise" | "course" | null,
   options: UseDocumentOptions = { autoFetch: true }
 ) {
-  const { session } = useAppSession()
   const [state, setState] = useState<UseChatWithDocumentState>({
     messages: [],
     document: null,
@@ -171,48 +170,19 @@ export function useChatWithDocument(
     if (!options.autoFetch || !sessionId) return
 
     const fetchData = async () => {
-      const userId = session.userId != null ? String(session.userId) : "anonymous-user"
-      setState((prev) => ({ ...prev, loading: true, error: null }))
+      setState(prev => ({ ...prev, loading: true, error: null }))
       try {
+        // ✅ UN SEUL APPEL: getChatWithDocument() qui fait tout
         const result = await getChatWithDocument({
           data: {
-            user_id: userId,
+            user_id: "user-id", // à adapter
             session_id: sessionId,
-            doc_type: docType,
+            doc_type: documentType || undefined,
           },
         })
 
-        const docTitle = (result.document as any)?.title || 'N/A'
-        const parts = (result.document as any)?.parts || (result.document as any)?.chapters || []
-        const exercises = (result.document as any)?.exercises || []
-        
-        // For courses: show parts titles
-        if (parts.length > 0) {
-          const partTitles = parts.map((p: any) => p.title).join(' | ')
-          const hasSchemas = parts.some((p: any) => p.id_schema || p.schema_description)
-          
-          console.log(
-            `%c📚 ${docTitle}%c\n   📌 ${partTitles}${hasSchemas ? '\n   📊 Schémas: ✓' : ''}`,
-            'color: #10b981; font-weight: bold; font-size: 12px;',
-            'color: #64748b; font-size: 11px;'
-          )
-        }
-        
-        // For exercises: show exercises count and types
-        if (exercises.length > 0) {
-          const qcmCount = exercises.filter((e: any) => e.type === 'qcm').length
-          const openCount = exercises.filter((e: any) => e.type === 'open').length
-          const totalQuestions = exercises.reduce((sum: number, e: any) => sum + (e.questions?.length || 0), 0)
-          
-          console.log(
-            `%c✏️ Exercices%c\n   📊 ${qcmCount} QCM + ${openCount} Questions ouvertes = ${totalQuestions} questions`,
-            'color: #f59e0b; font-weight: bold; font-size: 12px;',
-            'color: #64748b; font-size: 11px;'
-          )
-        }
-
         setState({
-          messages: result.messages,
+          messages: result.messages || [],
           document: result.document,
           documentType: result.documentType,
           loading: false,
@@ -220,11 +190,7 @@ export function useChatWithDocument(
         })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(
-          `%c📄 [Course $${sessionId}] ❌ Error: ${error.message}`,
-          'color: #ef4444; font-weight: bold; font-size: 12px;'
-        )
-        setState((prev) => ({
+        setState(prev => ({
           ...prev,
           loading: false,
           error,
@@ -233,7 +199,7 @@ export function useChatWithDocument(
     }
 
     fetchData()
-  }, [sessionId, docType, options.autoFetch, session.userId])
+  }, [sessionId, documentType, options.autoFetch])
 
   return state
 }

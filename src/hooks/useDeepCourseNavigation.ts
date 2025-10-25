@@ -21,11 +21,6 @@ export function useDeepCourseParams() {
       chapterId: depth >= 3 ? segments[deepCourseIndex + 2] : undefined,
     }
 
-    console.log(`🔍 [useDeepCourseParams] pathname="${location.pathname}"`)
-    console.log(`  - segments: [${segments.join(", ")}]`)
-    console.log(`  - deepCourseIndex: ${deepCourseIndex}`)
-    console.log(`  - result:`, result)
-
     return result
   }, [location.pathname])
 }
@@ -61,6 +56,7 @@ export function useHeaderTitle() {
   const { depth, deepcourseId, chapterId } = useDeepCourseParams()
   const { formatTitle } = useDeepCourseNavigation()
   const [deepCourseTitle, setDeepCourseTitle] = useState<string | null>(null)
+  const [chapterTitle, setChapterTitle] = useState<string | null>(null)
 
   // Récupérer et surveiller le titre du deep course
   useEffect(() => {
@@ -68,16 +64,27 @@ export function useHeaderTitle() {
       // Essayer d'abord depuis localStorage (cache)
       const cached = localStorage.getItem(`deepcourse-title-${deepcourseId}`)
       if (cached) {
-        console.log(`📖 [useHeaderTitle] Titre trouvé en cache: ${cached}`)
+        console.log(`📖 [useHeaderTitle] Titre du cours trouvé en cache: ${cached}`)
         setDeepCourseTitle(cached)
       } else {
         // Si pas en cache, générer le titre par défaut
         const defaultTitle = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
-        console.log(`📖 [useHeaderTitle] Titre généré par défaut: ${defaultTitle}`)
+        console.log(`📖 [useHeaderTitle] Titre du cours généré par défaut: ${defaultTitle}`)
         setDeepCourseTitle(defaultTitle)
       }
     }
   }, [deepcourseId])
+
+  // Récupérer et surveiller le titre du chapitre
+  useEffect(() => {
+    if (chapterId) {
+      const cached = localStorage.getItem(`chapter-title-${chapterId}`)
+      if (cached) {
+        console.log(`📖 [useHeaderTitle] Titre du chapitre trouvé en cache: ${cached}`)
+        setChapterTitle(cached)
+      }
+    }
+  }, [chapterId])
 
   return useMemo(() => {
     if (depth <= 1) return "Vos cours approfondis"
@@ -85,8 +92,9 @@ export function useHeaderTitle() {
       // Si on a le titre mis en cache, l'utiliser, sinon fallback sur l'ID
       return deepCourseTitle || formatTitle("cours", deepcourseId)
     }
-    return formatTitle("chapitre", chapterId)
-  }, [depth, deepcourseId, chapterId, formatTitle, deepCourseTitle])
+    // À depth === 3, retourner le titre du chapitre
+    return chapterTitle || formatTitle("chapitre", chapterId)
+  }, [depth, deepcourseId, chapterId, formatTitle, deepCourseTitle, chapterTitle])
 }
 
 /**
@@ -107,6 +115,25 @@ export function useHeaderIcon() {
  */
 export function useRightAction() {
   const { depth, deepcourseId, chapterId } = useDeepCourseParams()
+  const [isChapterComplete, setIsChapterComplete] = useState<boolean>(false)
+  const [trigger, setTrigger] = useState(0) // Trigger pour forcer les re-renders
+
+  // Récupérer et surveiller l'état de complétion du chapitre
+  useEffect(() => {
+    if (chapterId) {
+      const cached = localStorage.getItem(`chapter-complete-${chapterId}`)
+      if (cached !== null) {
+        // Si on a une valeur en cache, l'utiliser
+        const isComplete = cached === 'true'
+        console.log(`✅ [useRightAction] État de complétion du chapitre trouvé en cache: ${isComplete}`)
+        setIsChapterComplete(isComplete)
+      } else {
+        // Si pas en cache, initialiser à false
+        console.log(`✅ [useRightAction] Pas d'état en cache pour ${chapterId}, initialisation à false`)
+        setIsChapterComplete(false)
+      }
+    }
+  }, [chapterId, trigger]) // Ajouter chapterId pour relire au changement de chapitre
 
   return useMemo(() => {
     // Retourner les props pour ActionButton basées sur le depth
@@ -119,7 +146,13 @@ export function useRightAction() {
       },
       chapter: {
         viewLevel: "chapter" as const,
-        onMarkDone: () => console.info("Chapitre terminé :", chapterId),
+        chapterId: chapterId,
+        isChapterComplete: isChapterComplete,
+        onMarkDone: () => {
+          console.info("Chapitre marqué/repris :", chapterId)
+          // Déclencher une nouvelle lecture du localStorage en changeant le trigger
+          setTrigger((prev) => prev + 1)
+        },
         onDeleteChapter: () => console.info("Chapitre supprimé :", chapterId),
       },
     }
@@ -128,5 +161,5 @@ export function useRightAction() {
     if (depth === 2 && deepcourseId) return actionConfigs.course
     if (depth === 3 && deepcourseId && chapterId) return actionConfigs.chapter
     return null
-  }, [depth, deepcourseId, chapterId])
+  }, [depth, deepcourseId, chapterId, isChapterComplete, trigger])
 }

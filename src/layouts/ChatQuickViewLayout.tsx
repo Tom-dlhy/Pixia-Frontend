@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "@tanstack/react-router"
+import { useNavigate, useLocation, useParams } from "@tanstack/react-router"
 import { ScrollArea } from "~/components/ui/scroll-area"
 import ChatHeader from "~/layouts/ChatHeader"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
@@ -9,6 +9,7 @@ import BackButton from "~/components/BackButton"
 import { ChatActionButton } from "~/components/ChatActionButton"
 import { useCourseType, type CourseType } from "~/context/CourseTypeContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { useAppSession } from "~/utils/session"
 
 interface ChatQuickViewLayoutProps {
   children: React.ReactNode
@@ -19,7 +20,7 @@ interface ChatQuickViewLayoutProps {
 
 export function ChatQuickViewLayout({ 
   children, 
-  title = "Session Conversationnelle",
+  title = "", // Titres réels viennent de DocumentTitleContext (ExerciseViewer/CourseViewer)
   backTo = "/chat",
   courseType: overrideCourseType
 }: ChatQuickViewLayoutProps) {
@@ -27,7 +28,31 @@ export function ChatQuickViewLayout({
   const location = useLocation()
   const { courseType: contextCourseType, setCourseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
+  const { session } = useAppSession()
   const contentRef = useRef<HTMLDivElement>(null)
+  
+  // 🔹 Essayer d'extraire l'ID des params de route directement avec useParams
+  // NOTE: useParams peut lever une erreur si on n'est pas sur la bonne route
+  let courseId: string | undefined
+  let exerciseId: string | undefined
+  
+  try {
+    const courseParams = useParams({ from: "/_authed/course/$id" })
+    courseId = courseParams.id as string | undefined
+  } catch {
+    // Pas sur la route course, c'est ok
+    courseId = undefined
+  }
+  
+  try {
+    const exerciseParams = useParams({ from: "/_authed/exercise/$id" })
+    exerciseId = exerciseParams.id as string | undefined
+  } catch {
+    // Pas sur la route exercise, c'est ok
+    exerciseId = undefined
+  }
+  
+  const routeId = courseId || exerciseId
   
   // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
   const courseType = overrideCourseType || contextCourseType
@@ -39,45 +64,48 @@ export function ChatQuickViewLayout({
     }
   }, [overrideCourseType, contextCourseType, setCourseType])
 
-  // 🔹 Récupération du sessionId depuis l'URL ou sessionStorage
+  // 🔹 Récupération du sessionId: d'abord les params de route, puis fallback URL
   const sessionId = useMemo(() => {
-    // Extraire l'ID de l'URL: /course/{id} ou /exercise/{id}
+    // ✅ Priorité 1: Utiliser l'ID extrait des params de route
+    if (routeId) {
+      console.log(`✅ [ChatQuickViewLayout] sessionId depuis useParams: ${routeId}`)
+      return routeId
+    }
+    
+    // ⚠️ Fallback: Extraire de l'URL (au cas où useParams ne fonctionne pas)
     const pathSegments = location.pathname.split("/").filter(Boolean)
     
-    // Chercher après "course" ou "exercise"
-    const courseIndex = pathSegments.indexOf("course")
-    const exerciseIndex = pathSegments.indexOf("exercise")
-    
-    if (courseIndex !== -1 && pathSegments[courseIndex + 1]) {
-      const id = pathSegments[courseIndex + 1]
-      console.log(`✅ [ChatQuickViewLayout] Utilisation du sessionId depuis URL course: ${id}`)
-      return id
+    for (let i = 0; i < pathSegments.length; i++) {
+      if ((pathSegments[i] === "course" || pathSegments[i] === "exercise") && pathSegments[i + 1]) {
+        const id = pathSegments[i + 1]
+        console.log(`⚠️ [ChatQuickViewLayout] sessionId depuis URL fallback: ${id}`)
+        return id
+      }
     }
     
-    if (exerciseIndex !== -1 && pathSegments[exerciseIndex + 1]) {
-      const id = pathSegments[exerciseIndex + 1]
-      console.log(`✅ [ChatQuickViewLayout] Utilisation du sessionId depuis URL exercise: ${id}`)
-      return id
+    console.log(`📦 [ChatQuickViewLayout] Aucun sessionId trouvé`)
+    return null
+  }, [routeId, location.pathname])
+  
+  // 🔹 Récupération du userId depuis la session
+  const userId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
     }
-    
-    if (typeof window === "undefined") {
-      console.warn(`⚠️ [ChatQuickViewLayout] Pas de sessionId et pas de window`)
-      return "Session"
-    }
-    
-    const stored = sessionStorage.getItem("chatSession")
-    console.log(`📦 [ChatQuickViewLayout] Utilisation du sessionId depuis sessionStorage: ${stored}`)
-    return stored || "Session"
-  }, [location.pathname])
+    return null
+  }, [session.userId])
 
   // 🔹 Format d'affichage convivial
   const formattedSession = useMemo(() => {
+    if (!sessionId) return "Session"
     if (sessionId.startsWith("chat-")) return `Chat ${sessionId.split("chat-")[1]}`
     return sessionId
   }, [sessionId])
 
   // Use document title if available, otherwise use passed title
   const displayTitle = documentTitle || title
+
+  console.log('📄 [ChatQuickViewLayout] Title source:', documentTitle ? '✅ From DocumentTitleContext' : title ? '⚠️ From props' : '❌ None')
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
@@ -114,7 +142,7 @@ export function ChatQuickViewLayout({
 
           {/* RIGHT PANEL — Copilote */}
           <div className="flex flex-[0.3] flex-col overflow-hidden min-h-0">
-            <CopiloteContainer sessionId={sessionId} />
+            <CopiloteContainer sessionId={sessionId} userId={userId} courseType={courseType} />
           </div>
         </div>
       </div>

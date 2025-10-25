@@ -17,6 +17,10 @@ export interface Chapter extends BaseEntity {
   title: string
   content: string
   schemas?: Schema[]
+  schema_description?: string
+  diagram_type?: string
+  diagram_code?: string
+  img_base64?: string
 }
 
 // ----------------------------------------------

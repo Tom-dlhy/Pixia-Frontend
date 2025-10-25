@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Book, Zap, BarChart3, Users } from "lucide-react"
 
 import { ChapterCard } from "~/components/ChapterCard"
+import { ScrollArea } from "~/components/ui/scroll-area"
 import {
   Empty,
   EmptyContent,
@@ -15,6 +16,7 @@ import {
   EmptyTitle,
 } from "~/components/ui/empty"
 import { MessageSquare } from "lucide-react"
+import { getChapters } from "~/server/chat.server"
 
 // Chapitres mock - à remplacer par l'API
 const defaultChapters = [
@@ -61,14 +63,34 @@ export default function DeepCourseChaptersPage() {
     }
   }, [deepcourseId])
 
-  // 📋 Charger les chapitres (pour maintenant, utilisons les mock)
+  // 📋 Charger les chapitres depuis l'API
   useEffect(() => {
-    setIsLoading(true)
-    // Simuler un délai réseau
-    setTimeout(() => {
-      setChapters(defaultChapters)
-      setIsLoading(false)
-    }, 300)
+    const loadChapters = async () => {
+      setIsLoading(true)
+      try {
+        console.log(`📡 [DeepCourseChaptersPage] Appel de getChapters pour deepcourse_id: ${deepcourseId}`)
+        const fetchedChapters = await getChapters({ data: { deepcourse_id: deepcourseId } })
+        console.log(`✅ [DeepCourseChaptersPage] ${fetchedChapters.length} chapitres reçus:`, fetchedChapters)
+        
+        // 💾 Synchroniser l'état de complétion dans le localStorage
+        fetchedChapters.forEach((chapter: any) => {
+          const isComplete = chapter.is_complete || false
+          localStorage.setItem(`chapter-complete-${chapter.chapter_id}`, String(isComplete))
+          console.log(`💾 [DeepCourseChaptersPage] État du chapitre ${chapter.chapter_id} sauvegardé en cache: ${isComplete}`)
+        })
+        
+        setChapters(fetchedChapters)
+      } catch (error) {
+        console.error(`❌ [DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)
+        setChapters([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (deepcourseId) {
+      loadChapters()
+    }
   }, [deepcourseId])
 
   if (isLoading) {
@@ -106,27 +128,33 @@ export default function DeepCourseChaptersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
-
-      <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {chapters.map((chapter, index) => (
-          <motion.div
-            key={chapter.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => navigate({ to: `/deep-course/${deepcourseId}/${chapter.id}` })}
-            className="cursor-pointer"
-          >
-            <ChapterCard
-              title={chapter.title}
-              description={chapter.description}
-              icon={chapter.icon}
-              badge={`#${index + 1}`}
-            />
-          </motion.div>
-        ))}
+    <ScrollArea className="w-full h-full">
+      <div className="flex flex-col gap-8 pr-4 pb-4">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
+          {chapters.map((chapter, index) => (
+            <motion.div
+              key={chapter.chapter_id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              onClick={() => {
+                // 💾 Sauvegarder le titre du chapitre
+                localStorage.setItem(`chapter-title-${chapter.chapter_id}`, chapter.title || "Sans titre")
+                navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })
+              }}
+              className="cursor-pointer h-full"
+            >
+              <ChapterCard
+                title={chapter.title || "Sans titre"}
+                description={chapter.is_complete ? "" : "⏳ En cours"}
+                icon={chapter.is_complete ? Book : Zap}
+                isComplete={chapter.is_complete}
+                badge={`#${index + 1}`}
+              />
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
+    </ScrollArea>
   )
 }

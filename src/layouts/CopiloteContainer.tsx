@@ -16,16 +16,24 @@ import { ChatInput } from "~/components/ChatInput"
 import { useCourseType, CourseTypeProvider } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
-import { sendChatMessage, getChat } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
+import { useSessionCache } from "~/hooks/useSessionCache"
+import { useChapterDocuments } from "~/hooks/useChapterDocuments"
+import { useDeepCoursesLayout } from "~/layouts/DeepCourseContext"
+import { getChat } from "~/server/chat.server"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 interface CopiloteContainerProps {
   className?: string
-  sessionId?: string
+  sessionId?: string | null
+  userId?: string | null
+  courseType?: import("~/context/CourseTypeContext").CourseType
   isCopiloteModal?: boolean
   forceDeepMode?: boolean
+  deepCourseId?: string | null
+  chapterId?: string | null
 }
 
 /**
@@ -34,62 +42,163 @@ interface CopiloteContainerProps {
 function CopiloteContainerContent({
   className = "",
   sessionId,
+  userId,
+  courseType, // optional explicit prop
   isCopiloteModal = false,
+  deepCourseId,
+  chapterId,
 }: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
   const [isNewMessage, setIsNewMessage] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { courseType } = useCourseType()
+  // Prefer explicit prop `courseType` when provided (avoids race with context)
+  const { courseType: contextCourseType } = useCourseType()
+  const effectiveCourseType = courseType || contextCourseType
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
-  // Use courseType directly, will be forced to "deep" by provider if in modal
-  const accent = useMemo(() => getCourseAccent(courseType), [courseType])
-
-  // 🔄 Charger les messages de la session au montage
-  useEffect(() => {
-    if (!sessionId) {
-      console.warn(`⚠️ [CopiloteContainer] Pas de sessionId reçu`)
-      return
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
+  
+  // 🔹 Essayer de récupérer l'activeTab depuis le contexte deep-course (si disponible)
+  let activeTab: "cours" | "exercice" | "evaluation" | null = null
+  try {
+    const deepContext = useDeepCoursesLayout()
+    activeTab = deepContext.activeTab
+  } catch {
+    // Pas dans un contexte deep-course, c'est ok
+    activeTab = null
+  }
+  
+  // ⏳ Utiliser le userId passé en props EN PRIORITÉ, sinon récupérer de la session
+  const effectiveUserId = useMemo(() => {
+    if (userId) {
+      console.log(`✅ [CopiloteContainer] Utilisation du userId passé en props: ${userId}`)
+      return userId
     }
+    if (session.userId != null) {
+      const sessionUserId = String(session.userId)
+      console.log(`✅ [CopiloteContainer] Utilisation du userId de la session: ${sessionUserId}`)
+      return sessionUserId
+    }
+    console.warn(`⚠️ [CopiloteContainer] Session pas encore hydratée, userId = ${session.userId}`)
+    return null
+  }, [userId, session.userId])
 
-    const loadMessages = async () => {
-      try {
-        const userId = session.userId != null ? String(session.userId) : "anonymous-user"
-        
-        console.log(`📝 [CopiloteContainer] Chargement des messages`)
-        console.log(`  - user_id: ${userId}`)
-        console.log(`  - session_id: ${sessionId}`)
+  // 🔹 Si on reçoit un chapterId (pour deep-course), récupérer les vrai session IDs
+  const { data: chapterDocs } = useChapterDocuments(chapterId || undefined)
+  
+  // 🎯 Déterminer le vrai session ID pour le copilote basé sur l'onglet actif
+  const effectiveSessionId = useMemo(() => {
+    // Si un sessionId explicite est fourni ET pas de chapterId, l'utiliser (routes non-deep)
+    if (sessionId && !chapterId) {
+      console.log(`📍 [CopiloteContainer] Utilisation du sessionId explicite: ${sessionId}`)
+      return sessionId
+    }
+    
+    // Si on a un chapterId et les docs du chapitre, utiliser le bon session_id selon l'onglet
+    if (chapterId && chapterDocs) {
+      let selectedId: string | null = null
+      
+      if (activeTab === "cours") {
+        selectedId = chapterDocs.course_session_id || null
+      } else if (activeTab === "exercice") {
+        selectedId = chapterDocs.exercice_session_id || null
+      } else if (activeTab === "evaluation") {
+        selectedId = chapterDocs.evaluation_session_id || null
+      } else {
+        // Fallback au cours par défaut
+        selectedId = chapterDocs.course_session_id || null
+      }
+      
+      console.log(`📍 [CopiloteContainer] activeTab="${activeTab}", sessionId="${selectedId}" depuis chapterDocs`)
+      return selectedId
+    }
+    
+    return null
+  }, [sessionId, chapterId, chapterDocs, activeTab])
+  
+  //  Déterminer le docType basé sur le courseType et activeTab
+  const docType = useMemo(() => {
+    if (effectiveCourseType === "exercice") return "exercise"
+    if (effectiveCourseType === "cours") return "course"
+    if (effectiveCourseType === "deep") {
+      // Pour le mode deep, déterminer selon l'activeTab
+      if (activeTab === "exercice" || activeTab === "evaluation") {
+        return "exercise" as const
+      }
+      return "course" as const
+    }
+    return undefined // Fallback à auto-detect si vraiment on sait pas
+  }, [effectiveCourseType, activeTab])
 
-        const messages = await getChat({
-          data: {
-            user_id: userId,
-            session_id: sessionId,
-          },
-        })
+  // 🚀 Utiliser le cache React Query avec le bon docType
+  const { data, isLoading: chatLoading } = useSessionCache(
+    effectiveSessionId || null,
+    docType,
+    effectiveUserId || undefined,
+    { enabled: !!effectiveSessionId && !!effectiveUserId && !!docType }
+  )
+  
+  // Use courseType directly, will be forced to "deep" by provider if in modal
+  const accent = useMemo(() => getCourseAccent(effectiveCourseType), [effectiveCourseType])
 
-        console.log(`✅ [CopiloteContainer] getChat retourné avec:`, messages)
-
-        // Convertir les EventMessages en format d'affichage (alternant user/bot)
-        const displayMessages: string[] = []
-        for (const msg of messages) {
-          if (msg.text) {
-            displayMessages.push(msg.text)
-          }
+  // 🔄 Mettre à jour les messages quand le cache se charge
+  useEffect(() => {
+    if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
+      const displayMessages: string[] = []
+      for (const msg of data.messages) {
+        if (msg.text) {
+          displayMessages.push(msg.text)
         }
+      }
+      setMessages(displayMessages)
+      setIsNewMessage(false)
+      console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés du cache`)
+    }
+  }, [effectiveSessionId, effectiveUserId, activeTab])
 
-        setMessages(displayMessages)
-        setIsNewMessage(false) // Pas de shimmering au chargement initial
-        console.log(`✅ [CopiloteContainer] ${displayMessages.length} messages chargés`)
-      } catch (err) {
-        console.error(`❌ [CopiloteContainer] Erreur lors du chargement des messages:`, err)
-        setMessages([])
+  // 🔁 Fallback direct: si useSessionCache ne fournit rien, appeler getChat directement
+  useEffect(() => {
+    let mounted = true
+    const tryFetch = async () => {
+      if (!effectiveSessionId || !effectiveUserId) return
+      try {
+        console.log(`🔄 [CopiloteContainer] Fallback getChat fetch pour session=${effectiveSessionId} user=${effectiveUserId}`)
+        const res = await getChat({ data: { user_id: effectiveUserId, session_id: effectiveSessionId } })
+        if (!mounted) return
+        
+        // Vérifier que res est un array valide
+        if (!res) {
+          console.warn(`⚠️ [CopiloteContainer] getChat returned null/undefined`)
+          return
+        }
+        
+        if (!Array.isArray(res)) {
+          console.warn(`⚠️ [CopiloteContainer] getChat returned non-array:`, typeof res, res)
+          return
+        }
+        
+        const texts = res
+          .map((m: any) => {
+            if (typeof m === 'string') return m
+            if (m && typeof m === 'object' && m.text) return m.text
+            return null
+          })
+          .filter(Boolean) as string[]
+        
+        setMessages(texts)
         setIsNewMessage(false)
+        console.log(`✅ [CopiloteContainer] ${texts.length} messages chargés via getChat`) 
+      } catch (err) {
+        console.error("❌ [CopiloteContainer] Erreur getChat fallback:", err)
       }
     }
 
-    loadMessages()
-  }, [sessionId, session.userId])
+    tryFetch()
+    return () => {
+      mounted = false
+    }
+  }, [effectiveSessionId, effectiveUserId, activeTab])
 
   // 📜 Auto-scroll vers le bas quand les messages changent
   useEffect(() => {
@@ -97,7 +206,7 @@ function CopiloteContainerContent({
   }, [messages])
 
   const contentText = useMemo(() => {
-    switch (courseType) {
+    switch (effectiveCourseType) {
       case "exercice":
         return "les exercices"
       case "cours":
@@ -109,7 +218,7 @@ function CopiloteContainerContent({
       default:
         return "votre contenu"
     }
-  }, [courseType])
+  }, [effectiveCourseType])
 
   // Animated gradient title
   const headingStyle = useMemo(
@@ -126,18 +235,27 @@ function CopiloteContainerContent({
   )
 
   const handleSubmit = useCallback(async () => {
-    if (!prompt.trim()) return
-    
-    const userId =
-      session.userId != null ? String(session.userId) : "anonymous-user"
+    if (!prompt.trim() || !effectiveUserId) {
+      if (!effectiveUserId) {
+        console.warn(`⚠️ [CopiloteContainer] Impossible d'envoyer: userId non disponible`)
+      }
+      return
+    }
     
     try {
       console.info("Copilote prompt:", prompt)
+      console.log(`📤 [CopiloteContainer] Envoi avec userId: ${effectiveUserId}`)
+      console.log(`📤 [CopiloteContainer] sessionId: ${effectiveSessionId || "AUCUN"}`)
       
-      const res = await sendChatMessage({
-        data: {
-          user_id: userId,
-          message: prompt,
+      const res = await sendChatWithRefresh({
+        user_id: effectiveUserId,
+        message: prompt,
+        sessionId: effectiveSessionId || undefined, // 🔴 IMPORTANT: Passer le sessionId!
+        // 🎯 Ajouter le contexte du Copilote basé sur courseType
+        messageContext: {
+          currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
+          deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
+          userFullName: session.name || undefined,
         },
       })
 
@@ -159,7 +277,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }
-  }, [prompt, session, handleRedirect])
+  }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh])
 
   return (
     <aside
@@ -285,8 +403,11 @@ function ForcedDeepModeWrapper({ children }: { children: React.ReactNode }) {
 export default function CopiloteContainer({
   className = "",
   sessionId,
+  userId,
   isCopiloteModal = false,
   forceDeepMode = false,
+  deepCourseId,
+  chapterId,
 }: CopiloteContainerProps) {
   // If forceDeepMode is true, wrap content with provider forcing "deep"
   if (forceDeepMode) {
@@ -295,7 +416,10 @@ export default function CopiloteContainer({
         <CopiloteContainerContent
           className={className}
           sessionId={sessionId}
+          userId={userId}
           isCopiloteModal={isCopiloteModal}
+          deepCourseId={deepCourseId}
+          chapterId={chapterId}
         />
       </ForcedDeepModeProvider>
     )
@@ -306,7 +430,10 @@ export default function CopiloteContainer({
     <CopiloteContainerContent
       className={className}
       sessionId={sessionId}
+      userId={userId}
       isCopiloteModal={isCopiloteModal}
+      deepCourseId={deepCourseId}
+      chapterId={chapterId}
     />
   )
 }

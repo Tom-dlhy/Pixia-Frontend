@@ -73,6 +73,9 @@ export interface Chapter {
   title: string
   content: string
   schema_description?: string
+  diagram_type?: string
+  diagram_code?: string
+  img_base64?: string
 }
 
 export interface CourseOutput {

@@ -100,7 +100,6 @@ export async function getCourse(payload: {
     console.log(`📦 Response type: ${typeof course}`)
     console.log(`📦 Keys: ${course ? Object.keys(course) : 'null'}`)
     console.log(`📦 isCourseOutput check: ${isCourseOutput(course)}`)
-    console.log(`📄 Full response:`, course)
     console.groupEnd()
 
     if (!isCourseOutput(course)) {
@@ -151,3 +150,12 @@ export async function getDocument(payload: {
     throw error
   }
 }
+
+// export async function markCourseAsCompleted(payload: {
+//   data: {
+//     session_id: string
+//   }
+// }): Promise<{ success: boolean }> {
+//   const { session_id } = payload.data
+
+//   console.log(`📝 [markCourseAsCompleted] Marking course as completed for session_id: ${session_id}`)

@@ -28,11 +28,11 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
 
   try {
     console.group(`%c🌐 [API] fetchExercise Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/api/testfetchexercise`)
+    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchexercise`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/api/testfetchexercise`, {
+    const response = await fetch(`${API_BASE_URL}/fetchexercise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -58,7 +58,6 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
     console.group(`%c✅ [API] fetchExercise Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
     console.log(`📦 Type: ${typeof data}`)
     console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.log(`📄 Data:`, data)
     console.groupEnd()
     
     return data as ExerciseOutput
@@ -87,11 +86,11 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
 
   try {
     console.group(`%c🌐 [API] fetchCourse Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/api/testfetchcourse`)
+    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchcourse`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/api/testfetchcourse`, {
+    const response = await fetch(`${API_BASE_URL}/fetchcourse`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -117,7 +116,6 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
     console.group(`%c✅ [API] fetchCourse Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
     console.log(`📦 Type: ${typeof data}`)
     console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.log(`📄 Data:`, data)
     console.groupEnd()
     
     return data as CourseOutput
@@ -191,3 +189,5 @@ export async function fetchDocumentWithRetry(
     lastError
   )
 }
+
+

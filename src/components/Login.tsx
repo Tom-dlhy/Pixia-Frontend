@@ -15,8 +15,9 @@ type LoginResponse = {
   existing_user: boolean
   user_id: string | null
   email: string | null
-  given_name: string | null
-  family_name: string | null
+  nom: string | null
+  notion_token: string | null
+  study: string | null
 }
 
 export function Login() {
@@ -24,12 +25,12 @@ export function Login() {
   const { redirect: redirectTarget } = LoginRoute.useSearch()
   const { setSession } = useAppSession()
 
-  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000"
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
 
   // --- LOGIN MUTATION ---
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
     fn: async (data) => {
-      const res = await fetch(`${API_BASE}/api/login`, {
+      const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -58,8 +59,9 @@ export function Login() {
           success: true,
           email: data.email ?? null,
           user_id: userId,
-          given_name: data.given_name ?? null,
-          family_name: data.family_name ?? null,
+          name: data.nom ?? null,              // ✅ NOM
+          notion_token: data.notion_token ?? null,  // ✅ NOTION TOKEN
+          study: data.study ?? null,           // ✅ STUDY
         },
         setSession,
       )
@@ -110,8 +112,8 @@ export function Login() {
       }}
       onTestUser={() => {
         loginMutation.mutate({
-          email: "test@me.com",
-          password: "test",
+          email: "tomy.delahaye@gmail.com",
+          password: "mdp_test_hackathon",
         })
       }}
       afterSubmit={

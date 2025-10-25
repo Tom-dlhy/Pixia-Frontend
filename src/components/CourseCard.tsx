@@ -94,20 +94,18 @@ export function CourseCard({
       </CardHeader>
 
       <CardFooter className="relative z-10 mt-6 flex flex-col gap-3 p-0">
-        {completion < 100 && (
-          <div className="w-full">
-            <div className="flex justify-between items-center mb-1">
-              <span className="text-xs font-medium text-sidebar-foreground/70">Progression</span>
-              <span className="text-xs font-semibold text-sidebar-foreground/80">{Math.round(completion)}%</span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden backdrop-blur-sm border border-white/20">
-              <div
-                className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 transition-all duration-500 ease-out rounded-full"
-                style={{ width: `${completion}%` }}
-              />
-            </div>
+        <div className="w-full">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium text-sidebar-foreground/70">Progression</span>
+            <span className="text-xs font-semibold text-sidebar-foreground/80">{Math.round(completion)}%</span>
           </div>
-        )}
+          <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden backdrop-blur-sm border border-white/20">
+            <div
+              className="h-full bg-gradient-to-r from-blue-400 to-cyan-400 transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${completion}%` }}
+            />
+          </div>
+        </div>
         <div className="flex items-center gap-2 text-sm font-medium text-sidebar-foreground/90 transition-all duration-300 group-hover:translate-x-1">
           <span>Accéder au cours</span>
           <span aria-hidden>→</span>

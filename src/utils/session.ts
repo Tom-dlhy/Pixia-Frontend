@@ -15,8 +15,9 @@ import { jwtDecode } from "jwt-decode"
 export type UserSession = {
   userEmail?: string | null
   userId?: string | number | null
-  givenName?: string | null
-  familyName?: string | null
+  name?: string | null
+  notionToken?: string | null
+  study?: string | null
   isLoggedIn?: boolean
 }
 
@@ -35,8 +36,9 @@ type SessionContextValue = {
 const defaultSession: UserSession = {
   userEmail: null,
   userId: null,
-  givenName: null,
-  familyName: null,
+  name: null,
+  notionToken: null,
+  study: null,
   isLoggedIn: false,
 }
 
@@ -45,8 +47,9 @@ export const SESSION_PROFILE_STORAGE_KEY = "session_user"
 type StoredProfile = {
   email?: string | null
   userId?: string | number | null
-  givenName?: string | null
-  familyName?: string | null
+  name?: string | null
+  notionToken?: string | null
+  study?: string | null
 }
 
 const SessionContext = createContext<SessionContextValue>({
@@ -81,8 +84,9 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
           setSession({
             userEmail: profile.email ?? null,
             userId: profile.userId ?? null,
-            givenName: profile.givenName ?? null,
-            familyName: profile.familyName ?? null,
+            name: profile.name ?? null,
+            notionToken: profile.notionToken ?? null,
+            study: profile.study ?? null,
             isLoggedIn: true,
           })
         } else {
@@ -103,8 +107,9 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
         setSession({
           userEmail: decoded.email ?? decoded.sub ?? profile?.email ?? null,
           userId: profile?.userId ?? decoded.user_id ?? null,
-          givenName: profile?.givenName ?? null,
-          familyName: profile?.familyName ?? null,
+          name: profile?.name ?? null,
+          notionToken: profile?.notionToken ?? null,
+          study: profile?.study ?? null,
           isLoggedIn: true,
         })
       } catch (error) {
@@ -135,12 +140,13 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
   useEffect(() => {
     if (typeof window === "undefined") return
 
-    const { userEmail, userId, givenName, familyName, isLoggedIn } = session
+    const { userEmail, userId, name, notionToken, study, isLoggedIn } = session
     const hasProfile = Boolean(
       userEmail ||
         (userId !== null && userId !== undefined) ||
-        givenName ||
-        familyName,
+        name ||
+        notionToken ||
+        study,
     )
 
     if (!hasProfile || !isLoggedIn) {
@@ -154,8 +160,9 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
       const newData = {
         email: userEmail ?? null,
         userId: userId ?? null,
-        givenName: givenName ?? null,
-        familyName: familyName ?? null,
+        name: name ?? null,
+        notionToken: notionToken ?? null,
+        study: study ?? null,
       }
       
       if (stored === JSON.stringify(newData)) {

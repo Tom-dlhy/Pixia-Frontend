@@ -10,6 +10,7 @@ import { useSidebar } from "~/components/ui/sidebar"
 import { Button } from "~/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 export const Route = createFileRoute("/_authed/chat/$id")({
   component: ChatSessionPage,
@@ -21,6 +22,7 @@ function ChatSessionPage() {
   const { session } = useAppSession()
   const { setOpen } = useSidebar()
   const { handleRedirect } = useApiRedirect()
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
 
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -43,6 +45,19 @@ function ChatSessionPage() {
     setError(null)
 
     try {
+      // 🔹 Afficher IMMÉDIATEMENT la bulle du user (avant la réponse du bot)
+      const userMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "user",
+        content: input,
+        createdAt: Date.now(),
+      }
+      
+      const messagesWithUser = [...messages, userMessage]
+      setMessages(messagesWithUser)
+      const userInput = input // Sauvegarder l'input avant de le réinitialiser
+      setInput("") // Réinitialiser l'input immédiatement
+
       // 🧩 Conversion des fichiers en base64 (si présents)
       const encodedFiles = await Promise.all(
         queuedFiles.map(
@@ -62,13 +77,11 @@ function ChatSessionPage() {
         )
       )
 
-      const res = await sendChatMessage({
-        data: {
-          user_id: "anonymous-user",
-          sessionId: id,
-          message: input,
-          files: encodedFiles, // ✅ correspond au schéma attendu
-        },
+      const res = await sendChatWithRefresh({
+        user_id: userId,
+        sessionId: id,
+        message: userInput,
+        files: encodedFiles, // ✅ correspond au schéma attendu
       })
 
       console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {
@@ -78,11 +91,15 @@ function ChatSessionPage() {
         session_id: res.session_id
       })
 
-      const newMessages: ChatMessage[] = [
-        ...messages,
-        { id: crypto.randomUUID(), role: "user", content: input, createdAt: Date.now() },
-        { id: crypto.randomUUID(), role: "assistant", content: res.reply, createdAt: Date.now() },
-      ]
+      // 🔹 Ajouter la réponse du bot avec markdown support
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: res.reply,
+        createdAt: Date.now(),
+      }
+
+      const newMessages: ChatMessage[] = [...messagesWithUser, assistantMessage]
 
       setMessages(newMessages)
       saveConversation(id, newMessages)
@@ -93,8 +110,8 @@ function ChatSessionPage() {
       console.error("Erreur lors de l’envoi :", err)
       setError("Une erreur est survenue lors de l’envoi du message.")
     } finally {
-      setInput("")
       setSending(false)
+      setQueuedFiles([]) // Réinitialiser les fichiers après envoi
     }
   }
 

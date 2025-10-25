@@ -4,6 +4,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useSettings } from '~/context/SettingsProvider';
+import { useAppSession } from '~/utils/session';
+import { updateSettingsServerFn } from '~/server/chat.server';
 
 import { Button } from '~/components/ui/button';
 import { Card } from '~/components/ui/card';
@@ -18,6 +20,7 @@ export const Route = createFileRoute('/settings')({
 
 function SettingsPage() {
   const { settings, updateSettings } = useSettings();
+  const { session } = useAppSession();
   const [status, setStatus] = useState<'idle' | 'error'>('idle');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -33,22 +36,53 @@ function SettingsPage() {
     if (typeof window === 'undefined') return;
     setIsSaving(true);
     try {
-      setStatus('idle');
-      toast.success('Modifications enregistrées.', {
-        className:
-          'border border-emerald-400 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-100',
-      });
-      setTimeout(() => {
-        window.history.back();
-      }, 200);
+      // Vérifier que l'utilisateur est authentifié
+      if (!session.userId) {
+        console.error('❌ [Settings] Utilisateur non authentifié');
+        setStatus('error');
+        toast.error('Vous devez être connecté pour enregistrer vos paramètres.');
+        setIsSaving(false);
+        return;
+      }
+
+      // Appeler la server function pour mettre à jour les paramètres
+      const updateSettings = async () => {
+        try {
+          const result = await updateSettingsServerFn({
+            data: {
+              user_id: String(session.userId),
+              new_given_name: settings.fullName,
+              new_notion_token: settings.notionToken,
+              new_niveau_etude: settings.study,
+            },
+          });
+
+          console.log('✅ [Settings] Paramètres mis à jour:', result);
+          setStatus('idle');
+          toast.success('Modifications enregistrées.', {
+            className:
+              'border border-emerald-400 bg-emerald-100 text-emerald-900 dark:border-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-100',
+          });
+          setTimeout(() => {
+            window.history.back();
+          }, 200);
+        } catch (error) {
+          console.error('❌ [Settings] Erreur lors de la sauvegarde:', error);
+          setStatus('error');
+          toast.error("Impossible d'enregistrer vos modifications.");
+        } finally {
+          setIsSaving(false);
+        }
+      };
+
+      updateSettings();
     } catch (error) {
       console.error('Unable to save settings', error);
       setStatus('error');
       toast.error("Impossible d'enregistrer vos modifications.");
-    } finally {
       setIsSaving(false);
     }
-  }, []);
+  }, [settings, session.userId]);
 
   return (
     <div className="flex w-full flex-1 justify-center bg-background text-foreground">
@@ -69,32 +103,27 @@ function SettingsPage() {
             "shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all duration-300 p-8"
           )}
         >
+          {/* --- Email (lecture seule) --- */}
+          {session.userEmail && (
+            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-[rgba(255,255,255,0.08)] dark:bg-[rgba(24,24,27,0.3)] p-4">
+              <Label className="text-xs text-muted-foreground">Email</Label>
+              <p className="text-sm font-medium mt-2">{session.userEmail}</p>
+            </div>
+          )}
+
           <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
             <div className="flex flex-col gap-4">
               <SettingsField
-                label="Nom / Prénom"
+                label="Nom complet"
                 placeholder="Alex Dupont"
                 value={settings.fullName}
                 onChange={(val) => setField('fullName', val)}
               />
               <SettingsField
-                label="Compte Notion"
-                placeholder="https://notion.so/votre-espace"
-                value={settings.notion}
-                onChange={(val) => setField('notion', val)}
-              />
-              <SettingsField
-                label="Compte Gmail"
-                placeholder="prenom.nom@gmail.com"
-                type="email"
-                value={settings.gmail}
-                onChange={(val) => setField('gmail', val)}
-              />
-              <SettingsField
-                label="Compte Drive"
-                placeholder="https://drive.google.com/drive/u/0/folders/..."
-                value={settings.drive}
-                onChange={(val) => setField('drive', val)}
+                label="Token Notion"
+                placeholder="https://notion.so/votre-espace ou votre token"
+                value={settings.notionToken}
+                onChange={(val) => setField('notionToken', val)}
               />
             </div>
 
@@ -110,13 +139,13 @@ function SettingsPage() {
               )}
             >
               <div className="space-y-2">
-                <Label htmlFor="niveau">Niveau d'étude / Étude</Label>
+                <Label htmlFor="niveau">Niveau d'étude</Label>
                 <Textarea
                   id="niveau"
                   placeholder="Licence Informatique, Master Design, etc."
                   className="min-h-[120px] resize-none"
-                  value={settings.studyLevel}
-                  onChange={(e) => setField('studyLevel', e.target.value)}
+                  value={settings.study}
+                  onChange={(e) => setField('study', e.target.value)}
                 />
               </div>
             </Card>

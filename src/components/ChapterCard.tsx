@@ -1,5 +1,6 @@
 import { type LucideIcon } from "lucide-react"
 import { type KeyboardEvent } from "react"
+import { IoCheckmarkCircle } from "react-icons/io5"
 import {
   Card,
   CardDescription,
@@ -14,6 +15,7 @@ interface ChapterCardProps {
   description?: string
   badge?: string
   icon?: LucideIcon
+  isComplete?: boolean
   onClick?: () => void
   gradient?: string // <-- ajouté pour passer "bg-gradient-to-br from-blue-400/70 to-cyan-400/70"
   className?: string
@@ -34,6 +36,7 @@ export function ChapterCard({
   description,
   badge,
   icon: Icon,
+  isComplete = false,
   onClick,
   gradient,
   className,
@@ -98,7 +101,9 @@ export function ChapterCard({
             )}
           </span>
 
-          {badge && (
+          {isComplete ? (
+            <IoCheckmarkCircle className="h-6 w-6 text-green-400 drop-shadow-sm" />
+          ) : badge ? (
             <span
               className={cn(
                 "rounded-full border border-white/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground shadow-sm backdrop-blur-sm",
@@ -108,7 +113,7 @@ export function ChapterCard({
             >
               {badge}
             </span>
-          )}
+          ) : null}
         </div>
 
         <div>

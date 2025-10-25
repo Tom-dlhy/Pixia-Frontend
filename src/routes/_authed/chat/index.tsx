@@ -1,12 +1,13 @@
 "use client"
 
+import '~/styles/app.css'
 import { createFileRoute } from "@tanstack/react-router"
 import { useNavigate, useLocation } from "@tanstack/react-router"
 import { useCallback, useState, useEffect } from "react"
 import { Chat, ChatMessage, saveConversation } from "~/components/Chat"
 import { ChatInput } from "~/components/ChatInput"
 import { SectionCards } from "~/components/SectionCards"
-import { sendChatMessage, getAllChatSessions } from "~/server/chat.server"
+import { sendChatMessage } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
 import { Button } from "~/components/ui/button"
 import { ArrowLeft } from "lucide-react"
@@ -14,6 +15,9 @@ import { cn } from "~/lib/utils"
 import { useSidebar } from "~/components/ui/sidebar"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { useChatSessions } from "~/context/ChatSessionsContext"
+import { useAllChatSessions } from "~/hooks/useListCache"
+import { useCourseType } from "~/context/CourseTypeContext"
+import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
 
 export const Route = createFileRoute("/_authed/chat/")({
   component: ChatPage,
@@ -26,6 +30,8 @@ function ChatPage() {
   const { setOpen } = useSidebar()
   const { handleRedirect } = useApiRedirect()
   const { setSessions: setGlobalSessions } = useChatSessions()
+  const { courseType } = useCourseType()
+  const { send: sendChatWithRefresh } = useSendChatWithRefresh()
 
   const [showCards, setShowCards] = useState(true)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -36,9 +42,8 @@ function ChatPage() {
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [hasInitialized, setHasInitialized] = useState(false)
 
-  // 📋 Sessions d'historique
-  const [sessions, setSessions] = useState<any[]>([])
-  const [loadingSessions, setLoadingSessions] = useState(false)
+  // � Utiliser le hook de cache React Query
+  const { sessions, isLoading: loadingSessions } = useAllChatSessions()
 
   // 🔍 Vérifier si on est sur /chat (pas /chat/$id)
   const isOnChatHome = location.pathname === "/chat" || location.pathname === "/chat/"
@@ -54,8 +59,9 @@ function ChatPage() {
   }, [userId])
 
   useEffect(() => {
-    const stored = sessionStorage.getItem("chatSession")
-    if (stored) setSessionId(stored)
+    // 🔹 Sur la page /chat (index), on commence toujours avec une nouvelle session
+    // On NE restaure PAS le sessionId depuis le sessionStorage
+    setSessionId(null)
     setHasInitialized(true)
   }, [])
 
@@ -72,50 +78,6 @@ function ChatPage() {
     setGlobalSessions(sessions)
   }, [sessions, setGlobalSessions])
 
-  // 📋 Charger les sessions à chaque arrivée sur /chat
-  useEffect(() => {
-    const loadSessions = async () => {
-      if (!userId || userId === "anonymous-user") {
-        console.log("⚠️ [fetchAllChat] Utilisateur non authentifié, skip")
-        return
-      }
-      setLoadingSessions(true)
-      try {
-        console.log(`\n🔄 [fetchAllChat] Appel API pour user_id: ${userId}`)
-        const res = await getAllChatSessions({
-          data: {
-            user_id: userId,
-          },
-        })
-        setSessions(res)
-        
-        // 📊 Logs détaillés
-        console.log(`\n� [fetchAllChat] Résultats:`)
-        console.log(`   ✅ Nombre total de sessions: ${res.length}`)
-        
-        if (res.length > 0) {
-          res.forEach((session, index) => {
-            console.log(`\n   Session #${index + 1}:`)
-            console.log(`     • ID: ${session.session_id}`)
-            console.log(`     • Title: ${session.title}`)
-            console.log(`     • Course Type: ${session.course_type}`)
-          })
-        } else {
-          console.log(`   ℹ️ Aucune session trouvée`)
-        }
-        console.log(`\n📋 Full data:`, res)
-      } catch (err) {
-        console.error("❌ [fetchAllChat] Erreur lors du chargement des sessions:", err)
-      } finally {
-        setLoadingSessions(false)
-      }
-    }
-
-    if (isOnChatHome) {
-      console.log("🚀 [fetchAllChat] Route /chat détectée, chargement des sessions...")
-      loadSessions()
-    }
-  }, [userId, isOnChatHome])
 
   // 📩 Envoi d'un message
   const handleSend = useCallback(async () => {
@@ -145,16 +107,25 @@ function ChatPage() {
 
       console.log("📤 Sending to API:", { userId, sessionId, message: input, encodedFiles })
 
-      const res = await sendChatMessage({
-        data: {
-          user_id: userId,
-          sessionId: sessionId ?? undefined,
-          message: input,
-          files: encodedFiles.length ? encodedFiles : undefined,
+      const res = await sendChatWithRefresh({
+        user_id: userId,
+        sessionId: sessionId ?? undefined,
+        message: input,
+        files: encodedFiles.length ? encodedFiles : undefined,
+      // 🎯 Ajouter le contexte de /chat avec le type de carte sélectionnée
+        messageContext: {
+          selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
+          currentRoute: "chat",
+          userFullName: session.name || undefined,
         },
       })
 
-      console.log("📥 Response from API:", res)
+      console.log("🔍 DEBUG - Session context:", {
+        "session.name": session.name,
+        "session.userId": session.userId,
+        "session.userEmail": session.userEmail,
+        "session.isLoggedIn": session.isLoggedIn,
+      })
       console.log("📥 Agent:", res.agent)
       console.log("📥 Redirect ID:", res.redirect_id)
       console.log("📥 Full response keys:", Object.keys(res))

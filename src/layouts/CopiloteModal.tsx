@@ -7,17 +7,28 @@ import CopiloteContainer from "~/layouts/CopiloteContainer"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 import { cn } from "~/lib/utils"
+import { useAppSession } from "~/utils/session"
 
 interface CopiloteModalProps {
   isOpen: boolean
   onClose: () => void
   sessionId?: string
+  deepCourseId?: string
 }
 
-export function CopiloteModal({ isOpen, onClose, sessionId }: CopiloteModalProps) {
+export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: CopiloteModalProps) {
   const { courseType } = useCourseType()
+  const { session } = useAppSession()
   // Force "deep" mode pour le modal
   const accent = useMemo(() => getCourseAccent("none"), [])
+  
+  // 🔹 Récupération du userId depuis la session
+  const userId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
 
   if (!isOpen) return null
 
@@ -55,8 +66,10 @@ export function CopiloteModal({ isOpen, onClose, sessionId }: CopiloteModalProps
           <CopiloteContainer
             className="w-full h-full"
             sessionId={sessionId}
+            userId={userId}
             isCopiloteModal={true}
             forceDeepMode={true}
+            deepCourseId={deepCourseId}
           />
         </div>
       </div>
