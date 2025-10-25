@@ -65,7 +65,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
       return courseTypeLower === "cours" || courseTypeLower === "course"
     }
     
-    // Pour 'discuss' et 'deep', on peut ajouter la logique si nécessaire
     return courseTypeLower === courseType
   })
 

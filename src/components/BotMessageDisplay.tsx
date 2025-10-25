@@ -1,6 +1,9 @@
 "use client"
 
 import ReactMarkdown from "react-markdown"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import "katex/dist/katex.min.css"
 import { cn } from "~/lib/utils"
 
 interface BotMessageDisplayProps {
@@ -12,7 +15,7 @@ interface BotMessageDisplayProps {
 
 /**
  * Composant simple pour afficher les messages du bot avec markdown
- * Plus de complications avec les animations progressives - on attend juste la réponse complète!
+ * Supporte les formules mathématiques avec KaTeX ($...$)
  */
 export function BotMessageDisplay({
   content,
@@ -23,6 +26,8 @@ export function BotMessageDisplay({
   return (
     <div className={cn("prose prose-sm dark:prose-invert max-w-none text-foreground", className)}>
       <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           p: ({ node, ...props }) => <p className="mb-2" {...props} />,
           ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,

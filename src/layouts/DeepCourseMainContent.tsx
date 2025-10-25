@@ -32,13 +32,16 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
   if (depth === 3) {
     return (
       <div className={cn(
-        "flex flex-1 gap-6 overflow-hidden min-h-0"
+        "flex flex-1 gap-6 overflow-hidden min-h-0",
+        isEvaluating && "justify-center"
       )}>
         {/* Content */}
         <div
           className={cn(
-            "flex flex-[0.7] flex-col overflow-hidden min-h-0 transition-all duration-700 ease-in-out",
-            isEvaluating ? "flex-[0.7]" : "flex-[0.7]"
+            "flex flex-col overflow-hidden min-h-0 transition-all duration-700 ease-in-out",
+            isEvaluating 
+              ? "w-[90%]" 
+              : "flex-[0.7]"
           )}
         >
           <ContentContainer className="flex-1 h-full overflow-hidden">
@@ -51,7 +54,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
           className={cn(
             "flex flex-[0.3] flex-col overflow-hidden min-h-0 transition-all duration-700 ease-in-out",
             isEvaluating
-              ? "opacity-0 pointer-events-none"
+              ? "hidden"
               : "opacity-100"
           )}
         >

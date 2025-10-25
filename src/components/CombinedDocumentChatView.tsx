@@ -5,12 +5,17 @@
  */
 
 import { useEffect } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import "katex/dist/katex.min.css"
 import { useChatWithDocument } from "~/hooks/useDocument"
 import { useCourseContent } from "~/context/CourseContentContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { MarkdownRenderer } from '~/components/MarkdownRenderer'
 import { isQCM, isOpen, CourseOutput } from "~/models/Document"
 import { CourseWithChapters, Chapter } from "~/models/Course"
+import { cn } from "~/lib/utils"
 
 interface CombinedViewProps {
   sessionId: string
@@ -22,7 +27,7 @@ export function CombinedDocumentChatView({
   documentType,
 }: CombinedViewProps) {
   const { messages, document, documentType: detectedType, loading, error } =
-    useChatWithDocument(sessionId, documentType)
+    useChatWithDocument(sessionId, documentType ?? null)
   
   const { setCourse } = useCourseContent()
   const { setTitle } = useDocumentTitle()
@@ -110,6 +115,30 @@ export function CombinedDocumentChatView({
 
 // ==================== DISPLAY COMPONENTS ====================
 
+/**
+ * Composant pour afficher du texte avec support markdown et formules mathématiques
+ */
+function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          p: ({ node, ...props }) => <p className="mb-0" {...props} />,
+          strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+          em: ({ node, ...props }) => <em className="italic" {...props} />,
+          code: ({ node, ...props }) => (
+            <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
 function ExerciseDisplay({ exercise }: any) {
   if (!exercise.exercises) {
     return <div>Pas d'exercices</div>
@@ -125,7 +154,7 @@ function ExerciseDisplay({ exercise }: any) {
               <div className="mt-4 space-y-4">
                 {block.questions.map((q: any) => (
                   <div key={q.id} className="border-l-2 pl-4">
-                    <p className="font-semibold">{q.question}</p>
+                    <MarkdownText text={q.question} className="!prose-sm" />
                     <div className="mt-2 space-y-1">
                       {q.answers.map((a: any) => (
                         <label key={a.id} className="flex items-center gap-2">
@@ -134,13 +163,13 @@ function ExerciseDisplay({ exercise }: any) {
                             disabled
                             checked={a.is_selected}
                           />
-                          <span
+                          <div
                             className={
                               a.is_correct ? "text-green-600 font-semibold" : ""
                             }
                           >
-                            {a.text}
-                          </span>
+                            <MarkdownText text={a.text} className="!prose-sm" />
+                          </div>
                         </label>
                       ))}
                     </div>
@@ -161,7 +190,7 @@ function ExerciseDisplay({ exercise }: any) {
               <div className="mt-4 space-y-4">
                 {block.questions.map((q: any) => (
                   <div key={q.id} className="border-l-2 pl-4">
-                    <p className="font-semibold">{q.question}</p>
+                    <MarkdownText text={q.question} className="!prose-sm" />
                     <textarea
                       className="w-full mt-2 p-2 border rounded"
                       placeholder="Votre réponse..."
@@ -169,9 +198,9 @@ function ExerciseDisplay({ exercise }: any) {
                       disabled
                     />
                     {q.explanation && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        💡 {q.explanation}
-                      </p>
+                      <div className="text-sm text-gray-600 mt-2">
+                        💡 <MarkdownText text={q.explanation} className="!prose-sm inline" />
+                      </div>
                     )}
                   </div>
                 ))}

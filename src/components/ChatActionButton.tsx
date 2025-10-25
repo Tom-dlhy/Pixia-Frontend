@@ -27,7 +27,7 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
   const { exportToPdf } = usePdfExport()
 
   // Ne pas afficher le bouton si ce n'est pas un cours
-  if (courseType === 'exercice' || courseType === 'discuss' || courseType === 'deep') {
+  if (courseType === 'exercice' || courseType === 'deep') {
     return null
   }
 
@@ -52,7 +52,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
     none: { light: "rgba(209,213,219,0.3)", dark: "rgba(82,82,91,0.25)" },
     cours: { light: "rgba(167,243,208,0.25)", dark: "rgba(16,185,129,0.25)" },
     exercice: { light: "rgba(147,197,253,0.25)", dark: "rgba(56,189,248,0.25)" },
-    discuss: { light: "rgba(216,180,254,0.25)", dark: "rgba(139,92,246,0.25)" },
     deep: { light: "rgba(203,213,225,0.25)", dark: "rgba(71,85,105,0.25)" },
   }
 

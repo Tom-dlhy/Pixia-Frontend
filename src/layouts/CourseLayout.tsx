@@ -41,8 +41,6 @@ export function CourseLayout({ children }: { children: React.ReactNode }) {
               ? "Session de Cours Rapide"
               : courseType === "exercice"
               ? "Session d'Exercices rapide"
-              : courseType === "discuss"
-              ? "Session Conversationnelle"
               : `Session de ${courseType}`}
           </span>
         </div>

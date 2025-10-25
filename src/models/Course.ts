@@ -3,7 +3,7 @@ import { BaseEntity, ID, hydrateByIds } from "./GlobalType"
 // ----------------------------------------------
 // Enum-like type for course categories
 // ----------------------------------------------
-export type CourseType = "none" | "cours" | "exercice" | "discuss" | "deep"
+export type CourseType = "none" | "cours" | "exercice" | "deep"
 
 // ----------------------------------------------
 // Core models

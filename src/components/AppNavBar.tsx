@@ -5,14 +5,12 @@ import { useCourseType } from "~/context/CourseTypeContext"
 import { cn } from "~/lib/utils"
 
 // Couleurs seulement au survol; palette alignée sur la sidebar.
-function colorClasses(kind: 'exercice' | 'cours' | 'discuss' | 'deep') {
+function colorClasses(kind: 'exercice' | 'cours' | 'deep') {
   switch (kind) {
     case 'exercice':
       return 'hover:bg-blue-200/70 dark:hover:bg-blue-800/40'
     case 'cours':
       return 'hover:bg-green-200/70 dark:hover:bg-green-800/40'
-    case 'discuss':
-      return 'hover:bg-amber-200/70 dark:hover:bg-amber-700/40'
     case 'deep':
       return 'hover:bg-red-200/70 dark:hover:bg-red-800/40'
   }
@@ -46,13 +44,6 @@ export function AppNavBar() {
               className={cn(baseBtn, colorClasses('cours'))}
             >
               Cours
-            </button>
-            <button
-              type="button"
-              onClick={() => setCourseType('discuss')}
-              className={cn(baseBtn, colorClasses('discuss'))}
-            >
-              Discussion
             </button>
             <button
               type="button"

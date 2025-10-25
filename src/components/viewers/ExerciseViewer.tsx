@@ -1,6 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 import { ExerciseOutput, isQCM, isOpen } from '~/models/Document'
 import { ScrollArea } from '~/components/ui/scroll-area'
 import { Checkbox } from '~/components/ui/checkbox'
@@ -9,9 +13,34 @@ import { Textarea } from '~/components/ui/textarea'
 import { Button } from '~/components/ui/button'
 import { QCMQuestion } from '~/models/Document'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
+import { cn } from '~/lib/utils'
 
 interface ExerciseViewerProps {
   exercise: ExerciseOutput
+}
+
+/**
+ * Composant pour afficher du texte avec support markdown et formules mathématiques
+ */
+function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkMath]}
+        rehypePlugins={[rehypeKatex]}
+        components={{
+          p: ({ node, ...props }) => <p className="mb-0" {...props} />,
+          strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+          em: ({ node, ...props }) => <em className="italic" {...props} />,
+          code: ({ node, ...props }) => (
+            <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  )
 }
 
 /**
@@ -98,11 +127,9 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 h-full">
-      {/* Content - no header, it's in ChatQuickViewLayout */}
-      <ScrollArea className="flex-1">
-        <div className="space-y-8 pr-4 w-full">
-          {exercise.exercises.map((block, blockIdx) => (
+    <ScrollArea className="flex-1 h-full w-full">
+      <div className="space-y-8 pr-4 w-full">
+        {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">
                 {/* QCM */}
                 {isQCM(block) && (
@@ -141,7 +168,7 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                   : 'bg-red-600/20 border-red-400'
                                 : 'bg-white/5 dark:bg-white/5 border-white/10'
                             }`}>
-                              <p className="font-semibold text-sm">{question.question}</p>
+                              <MarkdownText text={question.question} className="!prose-sm" />
                               {!isCorrected ? (
                                 <Button 
                                   variant="outline"
@@ -187,7 +214,7 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                         }
                                         disabled={isCorrected}
                                       />
-                                      <span className="text-sm flex-1">{answer.text}</span>
+                                      <div className="text-sm flex-1"><MarkdownText text={answer.text} className="!prose-sm" /></div>
                                       {isCorrected && answer.is_correct && (
                                         <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
                                           ✓ Correct
@@ -217,7 +244,7 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                     }`}
                                   >
                                     <RadioGroupItem value={String(aIdx)} disabled={isCorrected} />
-                                    <span className="text-sm flex-1">{answer.text}</span>
+                                    <div className="text-sm flex-1"><MarkdownText text={answer.text} className="!prose-sm" /></div>
                                     {isCorrected && answer.is_correct && (
                                       <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
                                         ✓ Correct
@@ -269,7 +296,7 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                           >
                             {/* Header avec titre et bouton Vérifier */}
                             <div className="flex items-center justify-between bg-white/5 dark:bg-white/5 px-4 py-3 border-b border-white/10">
-                              <p className="font-semibold text-sm">{question.question}</p>
+                              <MarkdownText text={question.question} className="!prose-sm" />
                               <Button 
                                 variant="outline"
                                 size="sm"
@@ -325,7 +352,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
             ))}
           </div>
       </ScrollArea>
-    </div>
   )
 }
 

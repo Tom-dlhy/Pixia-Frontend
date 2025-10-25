@@ -60,6 +60,11 @@ export function DeepCoursesLayout() {
     if (depth < 3) setActiveTab("cours")
   }, [depth])
 
+  // Reset isEvaluating quand le chapitre change
+  useEffect(() => {
+    setIsEvaluating(false)
+  }, [chapterId])
+
   // Callbacks pour ouvrir le modal Copilote
   const handleOpenCopiloteModal = () => {
     setIsCopiloteModalOpen(true)

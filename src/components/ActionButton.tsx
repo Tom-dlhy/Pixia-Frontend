@@ -64,12 +64,6 @@ export default function ActionButton({
       lightHover: "rgba(96,165,250,0.35)",
       darkHover: "rgba(14,165,233,0.35)",
     },
-    discuss: {
-      light: "rgba(216,180,254,0.25)",
-      dark: "rgba(139,92,246,0.25)",
-      lightHover: "rgba(192,132,252,0.35)",
-      darkHover: "rgba(124,58,237,0.35)",
-    },
     deep: {
       light: "rgba(203,213,225,0.25)",
       dark: "rgba(71,85,105,0.25)",

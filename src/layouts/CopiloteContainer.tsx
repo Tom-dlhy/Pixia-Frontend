@@ -213,8 +213,6 @@ function CopiloteContainerContent({
         return "le cours"
       case "deep":
         return "les cours approfondis"
-      case "discuss":
-        return "les discussions"
       default:
         return "votre contenu"
     }

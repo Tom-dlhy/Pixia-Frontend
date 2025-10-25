@@ -32,13 +32,6 @@ const ACCENTS: Record<CourseType, CourseAccent> = {
 		accentMuted: "rgba(0,196,180,0.15)",
 
 	},
-	discuss: {
-		gradient:
-		"linear-gradient(130deg, rgba(147,51,234,0.95) 0%, rgba(168,85,247,0.9) 40%, rgba(196,181,253,0.9) 100%)",
-		glow: "0 0 48px rgba(147,51,234,0.1)",
-		accent: "#9333ea",
-		accentMuted: "rgba(147,51,234,0.18)",
-	},
 	deep: {
 		gradient:
 			"linear-gradient(135deg, rgba(253,164,175,0.95) 0%, rgba(251,113,133,0.9) 25%, rgba(244,63,94,0.92) 60%, rgba(185,28,28,0.95) 100%)",

@@ -1,4 +1,4 @@
-const API_BASE: string = process.env.API_BASE || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
+const API_BASE: string = process.env.API_BASE || "http://localhost:8000/api"
 
 console.log("API_BASE (SERVER):", API_BASE)
 
