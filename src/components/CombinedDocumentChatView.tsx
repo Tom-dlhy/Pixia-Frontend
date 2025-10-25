@@ -1,9 +1,3 @@
-/**
- * Exemple d'utilisation du hook useChatWithDocument
- * Affiche un document à gauche et le chat à droite
- * (comme dans ChatQuickViewLayout)
- */
-
 import { useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
@@ -32,15 +26,12 @@ export function CombinedDocumentChatView({
   const { setCourse } = useCourseContent()
   const { setTitle } = useDocumentTitle()
 
-  // Quand le document est chargé, mettre à jour le contexte
   useEffect(() => {
     if (document && detectedType === "course") {
       const courseDoc = document as CourseOutput
       
-      // Utiliser 'parts' en fallback si 'chapters' n'est pas disponible
       const chapters = courseDoc.chapters || courseDoc.parts || []
       
-      // Convertir CourseOutput en CourseWithChapters
       const courseData: CourseWithChapters = {
         id: courseDoc.id || "",
         title: courseDoc.title || "Cours",
@@ -54,8 +45,6 @@ export function CombinedDocumentChatView({
       
       setCourse(courseData)
       setTitle(courseData.title)
-      
-      console.log("✅ [CombinedDocumentChatView] Course data set in context:", courseData)
     }
   }, [document, detectedType, setCourse, setTitle])
 
@@ -73,7 +62,6 @@ export function CombinedDocumentChatView({
 
   return (
     <div className="flex h-full gap-6">
-      {/* LEFT PANEL - Document */}
       <div className="flex-1 overflow-y-auto">
         {!document ? (
           <div className="text-center text-muted-foreground p-8">
@@ -86,7 +74,6 @@ export function CombinedDocumentChatView({
         )}
       </div>
 
-      {/* RIGHT PANEL - Chat Messages */}
       <div className="flex-1 overflow-y-auto border-l">
         <div className="space-y-4 p-4">
           {messages.length === 0 ? (
@@ -113,11 +100,6 @@ export function CombinedDocumentChatView({
   )
 }
 
-// ==================== DISPLAY COMPONENTS ====================
-
-/**
- * Composant pour afficher du texte avec support markdown et formules mathématiques
- */
 function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
   return (
     <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
@@ -229,7 +211,7 @@ function CourseDisplay({ course }: any) {
           </div>
           {chapter.schema_description && (
             <p className="text-sm text-gray-600 mt-4">
-              📊 Schéma: {chapter.schema_description}
+              Schéma: {chapter.schema_description}
             </p>
           )}
         </div>

@@ -14,10 +14,10 @@ interface CourseCardProps {
   title: string
   description: string
   icon: LucideIcon
-  completion?: number // 0-100
+  completion?: number
   onClick?: () => void
   className?: string
-  gradient?: string // permet d'ajouter un fond gradient (ex: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60")
+  gradient?: string 
 }
 
 export function CourseCard({
@@ -53,18 +53,14 @@ export function CourseCard({
         className
       )}
     >
-      {/* Gradient layer */}
       <div
         className={cn(
           "absolute inset-0 z-0 rounded-[inherit] opacity-70 mix-blend-overlay pointer-events-none",
           gradient
         )}
       />
-
-      {/* Highlight reflection */}
       <div className="absolute inset-0 z-0 rounded-[inherit] bg-gradient-to-t from-white/10 to-transparent mix-blend-soft-light pointer-events-none" />
 
-      {/* Content */}
       <CardHeader className="flex flex-col gap-6 p-0 relative z-10 flex-1">
         <div className="flex items-center justify-between">
           <span

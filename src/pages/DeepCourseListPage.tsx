@@ -19,7 +19,6 @@ import {
 } from "~/components/ui/empty"
 import { MessageSquare } from "lucide-react"
 
-// Gradients cohérents
 const courseGradients = {
   rose: "bg-gradient-to-br from-rose-400/60 to-pink-500/60",
   blue: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60",
@@ -27,36 +26,19 @@ const courseGradients = {
   amber: "bg-gradient-to-br from-amber-300/60 to-orange-400/60",
 } as const
 
-const defaultCourses = [
-  {
-    id: "deepcourse-123",
-    title: "Deep Course 1 Title",
-  },
-  {
-    id: "deepcourse-456",
-    title: "Deep Course 2 Title",
-  },
-]
-
 export default function DeepCourseListPage() {
   const navigate = useNavigate()
   const { session } = useAppSession()
   
-  // � Utiliser le hook de cache React Query
   const { deepCourses, isLoading } = useAllDeepCourses()
 
-  // Mapper les deep-courses avec des gradients
   const coursesWithGradients = useMemo(() => {
     const gradientKeys = Object.keys(courseGradients) as Array<keyof typeof courseGradients>
     
-    console.log(`📊 [useMemo] deepCourses avant mapping:`, deepCourses)
-    
     return deepCourses
       .map((course, index) => {
-        // Utiliser la structure du backend: deepcourse_id, title, completion
         const id = course.deepcourse_id || `course-${index}`
         const title = course.title || `Course ${index + 1}`
-        // Backend envoie completion normalisé (0-1), conversion en pourcentage (0-100)
         const completionNormalized = typeof course.completion === 'number' ? course.completion : 0
         const completion = Math.round(completionNormalized * 100)
         
@@ -115,9 +97,7 @@ export default function DeepCourseListPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => {
-                // 💾 Sauvegarder le titre avant de naviguer
                 localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
-                console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
                 navigate({ to: `/deep-course/${course.id}` })
               }}
               className="cursor-pointer h-full"

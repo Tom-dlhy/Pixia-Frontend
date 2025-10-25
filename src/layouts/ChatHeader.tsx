@@ -56,7 +56,6 @@ export default function ChatHeader({
       )}
     >
       <div className="grid grid-cols-3 items-center">
-        {/* Bouton gauche */}
         <div className="flex items-center gap-2 justify-start">
           {showBackButton && (
             <Button
@@ -72,7 +71,6 @@ export default function ChatHeader({
           {leftAction}
         </div>
 
-        {/* Titre centré */}
         <div className="text-center">
           <h1 className="text-2xl font-semibold leading-tight" style={headingStyle}>{title}</h1>
           {subtitle && (
@@ -80,7 +78,6 @@ export default function ChatHeader({
           )}
         </div>
 
-        {/* Bouton droite */}
         <div className="flex items-center gap-2 justify-end">
           {rightAction}
           {showActionsMenu && <ChatActionButton />}

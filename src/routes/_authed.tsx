@@ -28,7 +28,6 @@ function buildSearchString(search: unknown): string {
   return query ? `?${query}` : ""
 }
 
-// Route protégée
 export const Route = createFileRoute("/_authed")({
   beforeLoad: ({ context, location }) => {
     const maybeUser = (context as { user?: unknown } | undefined)?.user

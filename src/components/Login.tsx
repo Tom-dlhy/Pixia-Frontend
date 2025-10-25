@@ -57,7 +57,7 @@ export function Login() {
         return
       }
 
-      console.log("Connexion réussie :", data)
+      
 
       const userId = data.user_id || data.email || null
 

@@ -13,10 +13,6 @@ interface BotMessageDisplayProps {
   className?: string
 }
 
-/**
- * Composant simple pour afficher les messages du bot avec markdown
- * Supporte les formules mathématiques avec KaTeX ($...$)
- */
 export function BotMessageDisplay({
   content,
   isLatest = false,

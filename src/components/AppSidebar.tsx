@@ -33,7 +33,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
   const { courseType } = useCourseType()
   const navigate = useNavigate()
   
-  // 🚀 Utiliser le hook de cache - mais avec enabled=false pour ne pas fetcher automatiquement
   const { prefetch } = useSessionCache(null, undefined, undefined, { enabled: false })
 
   const resolvedEmail = user?.email ?? session.userEmail ?? null
@@ -48,9 +47,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       }
     : null
 
-  // Filtrer les sessions en fonction du courseType sélectionné
   const filteredSessions = sessions.filter((session) => {
-    // Si courseType === 'none', afficher toutes les sessions
     if (courseType === "none") {
       return true
     }
@@ -68,25 +65,19 @@ export function AppSidebar({ user }: AppSidebarProps) {
     return courseTypeLower === courseType
   })
 
-  // Handler pour prefetch la session et naviguer
   const handleSessionClick = async (sessionId: string, isExercise: boolean) => {
     try {
       const docType = isExercise ? "exercise" : "course"
       
-      console.log(`📝 [AppSidebar] Prefetching session: ${sessionId} (${docType})`)
       
-      // 🚀 Prefetch les données avant de naviguer
-      // React Query va dédupliquer les requêtes qui arrivent au même moment
+      
       prefetch(sessionId, docType)
 
-      // Navigation immédiate (les données seront prêtes quand la route se chargera)
       const route = isExercise ? `/exercise/${sessionId}` : `/course/${sessionId}`
       navigate({ to: route })
       
-      console.log(`✅ [AppSidebar] Navigating to ${route}`)
     } catch (err) {
-      console.error(`❌ [AppSidebar] Erreur lors du chargement de la session:`, err)
-      // On navigue quand même
+      console.error(`[AppSidebar] Erreur lors du chargement de la session:`, err)
       const route = isExercise ? `/exercise/${sessionId}` : `/course/${sessionId}`
       navigate({ to: route })
     }
@@ -95,7 +86,6 @@ export function AppSidebar({ user }: AppSidebarProps) {
   return (
     <Sidebar className="overflow-visible">
       <SidebarContent className="p-4 space-y-4 overflow-visible flex flex-col">
-        {/* 📋 Afficher les sessions si disponibles */}
         {filteredSessions.length > 0 ? (
           <div className="space-y-3 flex flex-col min-h-0 flex-1">
             <h3 className="text-sm font-semibold text-sidebar-foreground/70">
@@ -104,26 +94,21 @@ export function AppSidebar({ user }: AppSidebarProps) {
             </h3>
             <div className="space-y-2 overflow-y-auto overflow-x-hidden flex-1 pr-4">
               {filteredSessions.map((session) => {
-                // Déterminer si c'est un exercice (anglais ou français)
                 const courseTypeLower = session.document_type?.toLowerCase() || ""
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"
                 
-                // 🧊 Glassmorphism styles matching global theme
                 const baseClass = "w-full justify-start text-left h-auto py-2 px-4 rounded-lg border transition-all duration-300 ease-out cursor-pointer relative"
                 const glassBg = "backdrop-blur-xl backdrop-saturate-150 border-white/20 dark:border-white/10"
                 const glassGlow = "shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_2px_8px_rgba(0,0,0,0.1)]"
                 const glassHover = "hover:scale-[1.02] hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_4px_12px_rgba(0,0,0,0.15)]"
                 
-                // Couleurs par type
                 let bgColor = ""
                 let textColor = ""
                 
                 if (isExercise) {
-                  // 🔵 Exercices: Bleu #5C8DD4
                   bgColor = "bg-[rgba(92,141,212,0.25)] dark:bg-[rgba(92,141,212,0.15)]"
                   textColor = "text-[#3d5a8a] dark:text-[#8caff0]"
                 } else {
-                  // 🟢 Cours: Teinte "verre dépoli" teal/turquoise
                   bgColor = "bg-[rgba(29,233,182,0.2)] dark:bg-[rgba(0,196,180,0.12)]"
                   textColor = "text-[#0b5e4d] dark:text-[#5ef1c2]"
                 }

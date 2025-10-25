@@ -14,8 +14,6 @@ interface DeepCourseMainContentProps {
 export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentProps) {
   const { depth, chapterId, deepcourseId } = useDeepCourseParams()
   const { session } = useAppSession()
-  
-  // 🔹 Récupération du userId depuis la session
   const userId = useMemo(() => {
     if (session.userId != null) {
       return String(session.userId)
@@ -23,19 +21,16 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
     return null
   }, [session.userId])
 
-  // 🔍 Log seulement quand les params changent (une fois par changement, pas à chaque rendu)
   useEffect(() => {
-    console.log(`🔍 [DeepCourseMainContent] depth=${depth}, chapterId=${chapterId}`)
+    
   }, [depth, chapterId])
 
-  // À depth === 3 : affiche le contenu du chapitre avec le copilote
   if (depth === 3) {
     return (
       <div className={cn(
         "flex flex-1 gap-6 overflow-hidden min-h-0",
         isEvaluating && "justify-center"
       )}>
-        {/* Content */}
         <div
           className={cn(
             "flex flex-col overflow-hidden min-h-0 transition-all duration-700 ease-in-out",
@@ -49,7 +44,6 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
           </ContentContainer>
         </div>
 
-        {/* Copilote */}
         <div
           className={cn(
             "flex flex-[0.3] flex-col overflow-hidden min-h-0 transition-all duration-700 ease-in-out",
@@ -64,7 +58,6 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
     )
   }
 
-  // À depth < 3 : affiche la page Outlet (liste ou chapitres)
   return (
     <section className="flex flex-col w-full h-auto">
       <Outlet />

@@ -13,7 +13,6 @@ export function useChapterDocuments(
     queryKey: ["chapterDocuments", memoizedChapterId],
     queryFn: async () => {
       if (!memoizedChapterId) {
-        console.log(`⚠️ [useChapterDocuments] chapterId non fourni`)
         return {
           chapter_id: "",
           exercice_session_id: "",
@@ -21,10 +20,7 @@ export function useChapterDocuments(
           evaluation_session_id: "",
         }
       }
-
-      console.log(`🔍 [useChapterDocuments] Récupération des documents pour chapitre: ${memoizedChapterId}`)
       const result = await getChapterDocuments({ data: { chapter_id: memoizedChapterId } })
-      console.log(`✅ [useChapterDocuments] Documents récupérés:`, result)
       return result
     },
     enabled,

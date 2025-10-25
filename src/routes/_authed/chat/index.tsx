@@ -53,7 +53,7 @@ function ChatPage() {
   // 🐛 Debug: Afficher les infos de session au montage
   useEffect(() => {
     if (userId !== "anonymous-user") {
-      console.log("🔐 [ChatPage] Utilisateur authentifié:", { userId, email: session.userEmail })
+      
     }
   }, [userId])
 
@@ -104,7 +104,7 @@ function ChatPage() {
         )
       )
 
-      console.log("📤 Sending to API:", { userId, sessionId, message: input, encodedFiles })
+      
 
       const res = await sendChatWithRefresh({
         user_id: userId,
@@ -125,9 +125,9 @@ function ChatPage() {
         "session.userEmail": session.userEmail,
         "session.isLoggedIn": session.isLoggedIn,
       })
-      console.log("📥 Agent:", res.agent)
-      console.log("📥 Redirect ID:", res.redirect_id)
-      console.log("📥 Full response keys:", Object.keys(res))
+      
+      
+      
       console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {
         agent: res.agent,
         redirect_id: res.redirect_id,
@@ -139,7 +139,7 @@ function ChatPage() {
       // 🔹 Si on est sur /chat (accueil) et qu'on reçoit une session → c'est nouveau
       const wasNewSession = isOnChatHome && !!newSessionId
 
-      console.log("🔍 Debug:", { sessionId, newSessionId, wasNewSession, isOnChatHome })
+      
 
       if (newSessionId && newSessionId !== sessionId) {
         setSessionId(newSessionId)

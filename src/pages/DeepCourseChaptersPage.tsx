@@ -18,34 +18,6 @@ import {
 import { MessageSquare } from "lucide-react"
 import { getChapters } from "~/server/chat.server"
 
-// Chapitres mock - à remplacer par l'API
-const defaultChapters = [
-  {
-    id: "chapitre-1",
-    title: "Introduction au cours",
-    description: "Comprendre les bases",
-    icon: Book,
-  },
-  {
-    id: "chapitre-2",
-    title: "Concepts avancés",
-    description: "Explorez des concepts plus complexes",
-    icon: Zap,
-  },
-  {
-    id: "chapitre-3",
-    title: "Applications pratiques",
-    description: "Cas d'usage réels",
-    icon: BarChart3,
-  },
-  {
-    id: "chapitre-4",
-    title: "Travail d'équipe",
-    description: "Collaboration et intégration",
-    icon: Users,
-  },
-]
-
 export default function DeepCourseChaptersPage() {
   const { deepcourseId } = useParams({ from: "/_authed/deep-course/$deepcourseId" })
   const navigate = useNavigate()
@@ -53,30 +25,23 @@ export default function DeepCourseChaptersPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [deepCourseTitle, setDeepCourseTitle] = useState<string>("")
 
-  // 💾 Sauvegarder le titre du deep course au montage
   useEffect(() => {
     if (deepcourseId) {
       const title = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
       setDeepCourseTitle(title)
       localStorage.setItem(`deepcourse-title-${deepcourseId}`, title)
-      console.log(`💾 [DeepCourseChaptersPage] Titre sauvegardé: ${title}`)
     }
   }, [deepcourseId])
 
-  // 📋 Charger les chapitres depuis l'API
   useEffect(() => {
     const loadChapters = async () => {
       setIsLoading(true)
       try {
-        console.log(`📡 [DeepCourseChaptersPage] Appel de getChapters pour deepcourse_id: ${deepcourseId}`)
         const fetchedChapters = await getChapters({ data: { deepcourse_id: deepcourseId } })
-        console.log(`✅ [DeepCourseChaptersPage] ${fetchedChapters.length} chapitres reçus:`, fetchedChapters)
         
-        // 💾 Synchroniser l'état de complétion dans le localStorage
         fetchedChapters.forEach((chapter: any) => {
           const isComplete = chapter.is_complete || false
           localStorage.setItem(`chapter-complete-${chapter.chapter_id}`, String(isComplete))
-          console.log(`💾 [DeepCourseChaptersPage] État du chapitre ${chapter.chapter_id} sauvegardé en cache: ${isComplete}`)
         })
         
         setChapters(fetchedChapters)
@@ -138,7 +103,6 @@ export default function DeepCourseChaptersPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => {
-                // 💾 Sauvegarder le titre du chapitre
                 localStorage.setItem(`chapter-title-${chapter.chapter_id}`, chapter.title || "Sans titre")
                 navigate({ to: `/deep-course/${deepcourseId}/${chapter.chapter_id}` })
               }}

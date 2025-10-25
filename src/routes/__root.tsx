@@ -67,10 +67,8 @@ function RootApp() {
   )
 }
 
-// --- Shell with Layout, Theme & Global Tools ---
 function AppShell() {
   React.useEffect(() => {
-    // --- Thème clair/sombre ---
     if (typeof window === "undefined") return
     const stored = window.localStorage.getItem("theme") as "light" | "dark" | null
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches
@@ -78,7 +76,6 @@ function AppShell() {
     document.documentElement.classList.toggle("dark", nextTheme === "dark")
   }, [])
 
-  // --- Activation de React Scan en mode développement ---
   if (process.env.NODE_ENV === "development") {
     scan({
       enabled: true,
@@ -97,7 +94,6 @@ function AppShell() {
           <Outlet />
         </main>
 
-        {/* --- Global UI Components --- */}
         <Toaster />
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />

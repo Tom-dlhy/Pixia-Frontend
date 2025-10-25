@@ -74,7 +74,6 @@ export default function ActionButton({
 
   const accent = accentMap[courseType] ?? accentMap["none"]
 
-  /* -------------------- 1️⃣ Vue racine -------------------- */
   if (viewLevel === "root" && onCreateCourse) {
     return (
       <Button
@@ -96,7 +95,6 @@ export default function ActionButton({
     )
   }
 
-  /* -------------------- 2️⃣ Vue d’un cours -------------------- */
   if (viewLevel === "course") {
     return (
       <DropdownMenu>
@@ -129,7 +127,6 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {/* ---------- Ajouter un chapitre ---------- */}
           {onAddChapter && (
             <Button
               variant="ghost"
@@ -163,7 +160,6 @@ export default function ActionButton({
             </Button>
           )}
 
-          {/* ---------- Supprimer le cours ---------- */}
           {onDeleteCourse && (
             <>
               <DropdownMenuSeparator className="my-1 opacity-20" />
@@ -199,7 +195,6 @@ export default function ActionButton({
     )
   }
 
-  /* -------------------- 3️⃣ Vue d’un chapitre -------------------- */
   if (viewLevel === "chapter") {
     return (
       <DropdownMenu>
@@ -232,40 +227,31 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {/* ---------- Marquer terminé / Reprendre ---------- */}
           {onMarkDone && (
             <Button
               variant="ghost"
               onClick={async () => {
                 try {
                   if (!chapterId) {
-                    console.error(`❌ [ActionButton] chapterId manquant`)
+                    console.error(`[ActionButton] chapterId manquant`)
                     return
                   }
                   
-                  // Déterminer la nouvelle valeur (inverser l'état actuel)
                   const newCompleteState = !isChapterComplete
                   
                   if (!isChapterComplete) {
-                    // Actuellement incomplet, donc marquer comme complet
-                    console.log(`📡 [ActionButton] Marquage comme complet du chapitre ${chapterId}`)
                     await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
                   } else {
-                    // Actuellement complet, donc marquer comme incomplet
-                    console.log(`📡 [ActionButton] Marquage comme incomplet du chapitre ${chapterId}`)
                     await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
                   }
                   
-                  // Mettre à jour le cache IMMÉDIATEMENT après le succès serveur
                   localStorage.setItem(`chapter-complete-${chapterId}`, String(newCompleteState))
-                  console.log(`✅ [ActionButton] État du chapitre sauvegardé en cache: ${newCompleteState}`)
                   
-                  // Appeler le callback pour trigger la mise à jour du state du hook
                   if (onMarkDone) {
                     onMarkDone()
                   }
                 } catch (error) {
-                  console.error(`❌ [ActionButton] Erreur lors de l'opération:`, error)
+                  console.error(`[ActionButton] Erreur lors de l'opération:`, error)
                 }
               }}
               className={cn(
@@ -294,7 +280,6 @@ export default function ActionButton({
             </Button>
           )}
 
-          {/* ---------- Supprimer chapitre ---------- */}
           {onDeleteChapter && (
             <>
               <DropdownMenuSeparator className="my-1 opacity-20" />

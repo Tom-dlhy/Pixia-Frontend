@@ -5,7 +5,6 @@ import { Button } from "~/components/ui/button"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { cn } from "~/lib/utils"
 
-// Couleurs seulement au survol; palette alignée sur la sidebar.
 function colorClasses(kind: 'exercice' | 'cours' | 'deep') {
   switch (kind) {
     case 'exercice':

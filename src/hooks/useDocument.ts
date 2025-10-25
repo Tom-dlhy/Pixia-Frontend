@@ -38,7 +38,6 @@ export function useExercise(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useExercise] Fetching exercise: ${sessionId}`)
         const result = await getExercise({
           data: { session_id: sessionId },
         })
@@ -47,11 +46,10 @@ export function useExercise(
           throw new Error("Invalid exercise output")
         }
 
-        console.log(`✅ [useExercise] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useExercise] Error:`, error)
+        console.error(`[useExercise] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }
@@ -78,7 +76,6 @@ export function useCourse(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useCourse] Fetching course: ${sessionId}`)
         const result = await getCourse({
           data: { session_id: sessionId },
         })
@@ -87,11 +84,10 @@ export function useCourse(
           throw new Error("Invalid course output")
         }
 
-        console.log(`✅ [useCourse] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useCourse] Error:`, error)
+        console.error(`[useCourse] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }
@@ -119,16 +115,14 @@ export function useDocument(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useDocument] Fetching ${type}: ${sessionId}`)
         const result = await getDocument({
           data: { session_id: sessionId, type },
         })
 
-        console.log(`✅ [useDocument] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useDocument] Error:`, error)
+        console.error(`[useDocument] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }

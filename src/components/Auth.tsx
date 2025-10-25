@@ -66,7 +66,6 @@ export function Auth({
                    backdrop-blur-md shadow-lg p-8 space-y-6"
         style={{ transform: "translate3d(0, 0, 0)", willChange: "auto" }}
       >
-        {/* Effet de lumière interne - statique au lieu d'animé */}
         <span
           aria-hidden
           className="absolute inset-[-20%] bg-[radial-gradient(circle,rgba(255,255,255,0.15),transparent_60%)] rounded-[inherit] pointer-events-none"

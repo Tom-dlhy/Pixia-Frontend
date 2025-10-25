@@ -57,7 +57,7 @@ function RouteComponent() {
       setCourse(courseData)
       setTitle(courseData.title)
       
-      console.log("✅ [course.$id] Course data set in context:", courseData)
+      
     }
   }, [document, id, setCourse, setTitle])
 

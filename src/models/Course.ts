@@ -1,13 +1,8 @@
 import { BaseEntity, ID, hydrateByIds } from "./GlobalType"
 
-// ----------------------------------------------
-// Enum-like type for course categories
-// ----------------------------------------------
 export type CourseType = "none" | "cours" | "exercice" | "deep"
 
-// ----------------------------------------------
-// Core models
-// ----------------------------------------------
+
 export interface Schema extends BaseEntity {
   name: string
   svgBase64: string
@@ -23,34 +18,22 @@ export interface Chapter extends BaseEntity {
   img_base64?: string
 }
 
-// ----------------------------------------------
-// Hydrated version (used in UI or state management)
-// ----------------------------------------------
 export interface Course extends BaseEntity {
   title: string
   chapters: Chapter[]
   type?: CourseType
 }
 
-// ----------------------------------------------
-// Canonical storage format (lightweight, for DB or API)
-// ----------------------------------------------
 export interface CourseRecord extends BaseEntity {
   title: string
-  chapterIds: ID[] // preserves order, references canonical storage
+  chapterIds: ID[] 
   type?: CourseType
 }
 
-// ----------------------------------------------
-// Hydrated version derived from CourseRecord
-// ----------------------------------------------
 export interface CourseWithChapters extends Omit<CourseRecord, "chapterIds"> {
   chapters: Chapter[]
 }
 
-// ----------------------------------------------
-// Utility types and transformation functions
-// ----------------------------------------------
 export type ChapterMap = Record<ID, Chapter>
 
 export function hydrateCourse(

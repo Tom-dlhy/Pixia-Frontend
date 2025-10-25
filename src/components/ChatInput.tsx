@@ -55,7 +55,6 @@ export function ChatInput({
     return document.documentElement.classList.contains("dark")
   })
 
-  // 🎤 Reconnaissance vocale
   const {
     transcript,
     interimTranscript,
@@ -71,7 +70,6 @@ export function ChatInput({
     interimResults: true,
   })
 
-  // 🎨 Thème dynamique (dark / light)
   useEffect(() => {
     if (typeof document === "undefined") return
     const checkDark = () =>
@@ -87,7 +85,6 @@ export function ChatInput({
     return () => observer.disconnect()
   }, [])
 
-  // 🎤 Quand la reconnaissance vocale se termine, ajouter le texte
   useEffect(() => {
     if (!isListening && transcript && !isSending) {
       onChange(value + transcript)
@@ -102,23 +99,21 @@ export function ChatInput({
     <Mic className="h-5 w-5" />
   )
 
-  // 🟢 Gradients cohérents selon le type de cours
   const gradientColors = useMemo<[string, string, string, string]>(() => {
     switch (courseType) {
       case "exercice":
-        return ["#93c5fd", "#60a5fa", "#3b82f6", "#1e40af"] // bleu
+        return ["#93c5fd", "#60a5fa", "#3b82f6", "#1e40af"] 
       case "cours":
-        return ["#5ef1c2", "#34e7a6", "#1de9b6", "#00c4b4"] // vert menthe
+        return ["#5ef1c2", "#34e7a6", "#1de9b6", "#00c4b4"] 
       case "deep":
-        return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] // violet lavande
+        return ["#c4b5fd", "#a78bfa", "#8b5cf6", "#7c3aed"] 
       case "none":
-        return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"] // neutre
+        return ["#f5f5f5", "#e5e7eb", "#d1d5db", "#9ca3af"] 
       default:
         return ["#93c5fd", "#5eead4", "#34d399", "#2563eb"]
     }
   }, [courseType])
 
-  // 🎨 Couleurs selon le thème
   const backgroundColor = isDark ? "bg-neutral-900/40" : "bg-gray-200/30"
   const backgroundColorNormal = isDark ? "bg-neutral-900" : "bg-gray-200"
 
@@ -127,7 +122,6 @@ export function ChatInput({
     : "text-zinc-900 placeholder:text-zinc-500"
   const borderColor = isDark ? "border-white/10" : "border-zinc-200"
 
-  // 📨 Gestion des envois
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!hasContent || isSending) return
@@ -167,13 +161,11 @@ export function ChatInput({
     event.target.value = ""
   }
 
-  // 📝 Contenu du formulaire (réutilisable pour deep et normal)
   const formContent = (
     <form
       onSubmit={handleSubmit}
       className="flex flex-col gap-3 px-4 py-3 relative z-[2]"
     >
-      {/* 🎤 Affichage de la transcription vocale avec effet */}
       {isListening && interimTranscript && (
         <TextGenerateEffect
           words={interimTranscript}
@@ -184,7 +176,6 @@ export function ChatInput({
         />
       )}
 
-      {/* 🗂️ Pièces jointes */}
       {queuedFiles.length > 0 && (
         <div
           className={cn(
@@ -223,7 +214,6 @@ export function ChatInput({
         </div>
       )}
 
-      {/* 💬 Zone de saisie */}
       <div className="flex items-center gap-3">
         {!disableAttachments && (
           <Button
@@ -264,7 +254,6 @@ export function ChatInput({
           )}
         />
 
-        {/* 🎤 Bouton microphone ou 📨 Bouton d'envoi */}
         {isSpeechSupported && !hasContent && !isListening && (
           <Button
             type="button"
@@ -336,7 +325,6 @@ export function ChatInput({
   return (
     <div className={cn("w-full relative", className)}>
       {courseType === "deep" ? (
-        // Mode deep: contour violet sans gradient intérieur
         <div
           className={cn(
             "relative z-[1] rounded-[20px] border backdrop-blur-md transition-colors duration-500",
@@ -347,7 +335,6 @@ export function ChatInput({
           {formContent}
         </div>
       ) : (
-        // Mode normal: avec gradient
         <BackgroundGradient className="rounded-[22px] w-full p-[0.5px]" colors={gradientColors}>
           <div
             className={cn(

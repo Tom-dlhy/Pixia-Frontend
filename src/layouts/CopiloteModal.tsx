@@ -17,7 +17,6 @@ interface CopiloteModalProps {
 export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: CopiloteModalProps) {
   const { session } = useAppSession()
   
-  // 🔹 Récupération du userId depuis la session
   const userId = useMemo(() => {
     if (session.userId != null) {
       return String(session.userId)
@@ -29,7 +28,6 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: Copi
 
   return (
     <>
-      {/* Backdrop floutée */}
       <div
         className={cn(
           "fixed inset-0 z-40 transition-opacity duration-300",
@@ -39,10 +37,8 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: Copi
         aria-hidden="true"
       />
 
-      {/* Modal centré */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="relative w-full max-w-2xl h-[600px] rounded-[28px]">
-          {/* Bouton fermeture */}
           <Button
             onClick={onClose}
             variant="ghost"
@@ -57,7 +53,6 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: Copi
             <X className="h-5 w-5" />
           </Button>
 
-          {/* Copilote Container */}
           <CopiloteContainer
             className="w-full h-full"
             sessionId={sessionId}

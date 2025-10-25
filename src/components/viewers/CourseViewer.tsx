@@ -28,12 +28,12 @@ export function CourseViewer({ course }: CourseViewerProps) {
 
   // Debug: Log chapter images availability
   useEffect(() => {
-    console.log('📚 [CourseViewer] Course loaded with', chapters.length, 'chapters')
+    
     chapters.forEach((chapter: any, idx: number) => {
       if (chapter.img_base64) {
-        console.log(`  ✅ Chapter ${idx} "${chapter.title}": has image (${chapter.img_base64.length} bytes)`)
+        
       } else {
-        console.log(`  ⚠️ Chapter ${idx} "${chapter.title}": NO image`)
+        
       }
     })
   }, [chapters])

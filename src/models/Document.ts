@@ -1,11 +1,5 @@
-/**
- * Types TypeScript correspondant aux modèles Pydantic du backend
- * Pour les exercices et les cours générés par l'IA
- */
 
-// ==================== EXERCICES ====================
 
-// QCM Types
 export interface QCMAnswer {
   id?: string
   text: string
@@ -29,7 +23,6 @@ export interface QCM {
   questions: QCMQuestion[]
 }
 
-// Open Text Types
 export interface OpenQuestion {
   id?: string
   question: string
@@ -46,16 +39,13 @@ export interface Open {
   questions: OpenQuestion[]
 }
 
-// Union type for exercise blocks
 export type ExerciseBlock = QCM | Open
 
 export interface ExerciseOutput {
   id?: string
-  title?: string  // Optional title for exercises
+  title?: string
   exercises: ExerciseBlock[]
 }
-
-// ==================== COURS ====================
 
 export interface ChaptersPlanItem {
   title: string
@@ -82,18 +72,14 @@ export interface CourseOutput {
   id?: string
   title: string
   chapters?: Chapter[]
-  parts?: Chapter[] // Backend sends this - alias for chapters
+  parts?: Chapter[]
 }
-
-// ==================== API RESPONSES ====================
 
 export interface FetchDocumentResponse {
   success: boolean
   data?: ExerciseOutput | CourseOutput
   error?: string
 }
-
-// ==================== TYPE GUARDS ====================
 
 export function isQCM(block: ExerciseBlock): block is QCM {
   return block.type === "qcm"

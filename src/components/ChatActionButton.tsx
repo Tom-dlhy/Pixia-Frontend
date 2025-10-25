@@ -26,28 +26,21 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
   const { course } = useCourseContent()
   const { exportToPdf } = usePdfExport()
 
-  // Ne pas afficher le bouton si ce n'est pas un cours
   if (courseType === 'exercice' || courseType === 'deep') {
     return null
   }
 
-  // Récupérer la référence au contenu depuis le DOM
   const handleExportPdf = async () => {
-    // Vérifier si on a les données du cours
     if (!course) {
-      console.error('❌ [ChatActionButton] Course data not available')
+      console.error('[ChatActionButton] Course data not available')
       return
     }
 
-    console.log('✅ [ChatActionButton] Generating PDF from course data...')
-
     const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
     
-    // Utiliser la nouvelle fonction avec données structurées
     await generatePdfFromCourseData(course, filename)
   }
 
-  // Palette d'accents cohérente avec ton style global
   const accentMap: Record<string, { light: string; dark: string }> = {
     none: { light: "rgba(209,213,219,0.3)", dark: "rgba(82,82,91,0.25)" },
     cours: { light: "rgba(167,243,208,0.25)", dark: "rgba(16,185,129,0.25)" },
@@ -59,7 +52,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
 
   return (
     <DropdownMenu>
-      {/* ——— MAIN BUTTON ——— */}
       <DropdownMenuTrigger asChild>
         <Button
           variant="secondary"
@@ -79,7 +71,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      {/* ——— MENU CONTENT ——— */}
       <DropdownMenuContent
         className={cn(
           "min-w-56 rounded-xl border border-white/20 dark:border-white/10 p-2",
@@ -93,28 +84,12 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
       >
         {[
           {
-            label: "Envoyer par mail",
-            icon: Mail,
-            action: () => console.log("Envoyer par mail"),
-          },
-          {
-            label: "Enregistrer dans Notion",
-            icon: Database,
-            action: () => console.log("Enregistrer dans Notion"),
-          },
-          {
-            label: "Enregistrer sur Drive",
-            icon: HardDrive,
-            action: () => console.log("Enregistrer sur Drive"),
-          },
-          {
             label: "Enregistrer en PDF",
             icon: FileText,
             action: handleExportPdf,
           },
         ].map(({ label, icon: Icon, action }, idx, arr) => (
           <div key={label}>
-            {/* ——— ITEM BUTTON ——— */}
             <Button
               variant="ghost"
               onClick={action}
@@ -124,7 +99,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
                 "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
               )}
               style={{
-                // Hover glassmorphique dynamique selon le type
                 background: `linear-gradient(135deg, transparent, transparent)`,
               }}
               onMouseEnter={(e) => {

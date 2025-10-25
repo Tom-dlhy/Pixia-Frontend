@@ -28,16 +28,9 @@ export function ChapterDocumentContainer() {
     { enabled: !!memoizedChapterId && !!userId }
   )
 
-  console.log(`🔍 [ChapterDocumentContainer] chapterDocs loaded:`, {
-    chapter_id: chapterDocs?.chapter_id,
-    course_session_id: chapterDocs?.course_session_id,
-    exercice_session_id: chapterDocs?.exercice_session_id,
-    evaluation_session_id: chapterDocs?.evaluation_session_id,
-  })
-
   const sessionId = useMemo(() => {
     if (!chapterDocs) {
-      console.warn(`⚠️ [ChapterDocumentContainer] chapterDocs not available yet`)
+      console.warn(`[ChapterDocumentContainer] chapterDocs not available yet`)
       return null
     }
     
@@ -56,7 +49,6 @@ export function ChapterDocumentContainer() {
         selectedId = null
     }
     
-    console.log(`📍 [ChapterDocumentContainer] activeTab="${memoizedActiveTab}", selectedSessionId="${selectedId}", chapterId="${memoizedChapterId}"`)
     return selectedId
   }, [chapterDocs, memoizedActiveTab, memoizedChapterId])
 
@@ -138,7 +130,6 @@ export function ChapterDocumentContainer() {
     )
   }
 
-  // 🎯 Afficher le bon composant selon le type
   if (isExerciseOutput(document)) {
     return (
       <DocumentTitleProvider>

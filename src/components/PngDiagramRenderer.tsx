@@ -43,14 +43,14 @@ export function PngDiagramRenderer({
       // Vérifier que c'est du base64 valide
       // Si c'est déjà une URL (commence par data:), l'utiliser directement
       if (imgBase64.startsWith('data:')) {
-        console.log('🖼️ [PngDiagramRenderer] Using existing data URL, size:', imgBase64.length)
+        
         return imgBase64
       }
       
       // Sinon, construire l'URL de données PNG
       // On suppose que c'est du PNG en base64
       const dataUrlConstructed = `data:image/png;base64,${imgBase64}`
-      console.log('🖼️ [PngDiagramRenderer] Created data URL, base64 size:', imgBase64.length, 'total URL:', dataUrlConstructed.length)
+      
       return dataUrlConstructed
     } catch (error) {
       console.error('❌ [PngDiagramRenderer] Error processing base64:', error)
@@ -63,7 +63,7 @@ export function PngDiagramRenderer({
     return null
   }
 
-  console.log('✅ [PngDiagramRenderer] Rendering image with description:', schemaDescription)
+  
 
   return (
     <div

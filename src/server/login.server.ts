@@ -19,25 +19,8 @@ export const loginUser = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { email, password } = data
 
-    const isDebug = typeof window !== "undefined" && window.location.search.includes("debug-login")
-
-    if (isDebug) {
-      console.log("%c[login.server.ts] loginUser handler CALLED", "color: #8e44ad; font-weight: bold;", {
-        email,
-        timestamp: new Date().toISOString(),
-      })
-    }
-
     try {
-      if (isDebug) {
-        console.log("%c[login.server.ts] Calling login()...", "color: #8e44ad;")
-      }
       const res = await login(email, password)
-      if (isDebug) {
-        console.log("%c[login.server.ts] login() succeeded", "color: #27ae60;", {
-          existing_user: res.existing_user,
-        })
-      }
 
       return {
         success: true as const,
@@ -53,7 +36,7 @@ export const loginUser = createServerFn({ method: "POST" })
         userNotFound: false,
       }
     } catch (error) {
-      console.error("%c[login.server.ts] login() ERROR", "color: #c0392b; font-weight: bold;", error)
+      console.warn("[login.server.ts] login() failed:", error)
 
       if (error instanceof HttpError) {
         return {
@@ -71,7 +54,7 @@ export const loginUser = createServerFn({ method: "POST" })
         }
       }
 
-      console.error("Unexpected login error", error)
+      console.error("Unexpected login error:", error)
       return {
         success: false as const,
         error: true as const,
