@@ -1,4 +1,5 @@
 "use client"
+/// <reference types="vite/client" />
 
 import * as React from "react"
 import {
@@ -23,7 +24,7 @@ import { CourseContentProvider } from "~/context/CourseContentContext"
 import { ChatSessionsProvider } from "~/context/ChatSessionsContext"
 import { QueryProvider } from "~/context/QueryProvider"
 
-import "~/styles/app.css"
+import appCss from '~/styles/app.css?url'
 
 // --- Root Route Definition ---
 export const Route = createRootRoute({
@@ -32,10 +33,11 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       ...seo({
-        title: "Hackathon | Full-Stack React Framework",
-        description: "Hackathon app using TanStack + FastAPI",
+        title: "Pixia - Votre assistant d'apprentissage intelligent",
+        description: "Progressez plus vite avec Pixia, votre compagnon d'étude personnalisé propulsé par l'intelligence artificielle.",
       }),
     ],
+    links: [{ rel: 'stylesheet', href: appCss }],
   }),
 
   errorComponent: (props: ErrorComponentProps) => (
