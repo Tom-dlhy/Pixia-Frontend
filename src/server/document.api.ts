@@ -1,6 +1,6 @@
 import { ExerciseOutput, CourseOutput } from "~/models/Document"
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
 
 /**
  * Classe pour gérer les erreurs API
@@ -28,11 +28,11 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
 
   try {
     console.group(`%c🌐 [API] fetchExercise Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchexercise`)
+    console.log(`📍 Endpoint: ${API_BASE}/fetchexercise`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/fetchexercise`, {
+    const response = await fetch(`${API_BASE}/fetchexercise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -86,11 +86,11 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
 
   try {
     console.group(`%c🌐 [API] fetchCourse Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchcourse`)
+    console.log(`📍 Endpoint: ${API_BASE}/fetchcourse`)
     console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/fetchcourse`, {
+    const response = await fetch(`${API_BASE}/fetchcourse`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

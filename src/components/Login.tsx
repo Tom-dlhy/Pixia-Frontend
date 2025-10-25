@@ -25,7 +25,9 @@ export function Login() {
   const { redirect: redirectTarget } = LoginRoute.useSearch()
   const { setSession } = useAppSession()
 
-  const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
+  const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
+
+  console.log("API_BASE (VITE):", API_BASE)
 
   // --- LOGIN MUTATION ---
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
