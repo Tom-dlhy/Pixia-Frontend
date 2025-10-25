@@ -1,4 +1,6 @@
-const API_BASE: string | undefined = process.env.API_BASE
+const API_BASE: string = process.env.API_BASE || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
+
+console.log("API_BASE (SERVER):", API_BASE)
 
 export type SendChatResponse = {
   session_id: string
