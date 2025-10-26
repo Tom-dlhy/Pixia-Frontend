@@ -27,15 +27,6 @@ export function Login() {
 
   const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api"
 
-  // 🔍 DEBUG: Track renders (disable in production)
-  if (typeof window !== "undefined" && window.location.search.includes("debug-login")) {
-    console.log("%c[Login] RENDER", "color: #ff6b6b; font-weight: bold;", {
-      redirectTarget,
-      timestamp: new Date().toISOString(),
-    })
-  }
-
-  // --- LOGIN MUTATION ---
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
     fn: async (data) => {
       const res = await fetch(`${API_BASE}/login`, {

@@ -46,7 +46,7 @@ export default function DeepCourseChaptersPage() {
         
         setChapters(fetchedChapters)
       } catch (error) {
-        console.error(`❌ [DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)
+        console.error(`[DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)
         setChapters([])
       } finally {
         setIsLoading(false)

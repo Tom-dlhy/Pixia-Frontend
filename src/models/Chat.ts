@@ -18,7 +18,7 @@ export interface ChatMessage extends BaseEntity {
 export interface ConversationRecord extends BaseEntity {
   title?: string
   typeCourse: "exercice" | "cours" | "evaluation" | "basic" | "none"
-  messageIds?: ID[] // optional: allows empty or initializing conversations
+  messageIds?: ID[] 
 }
 
 

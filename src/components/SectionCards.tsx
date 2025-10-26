@@ -12,24 +12,14 @@ import { useAppSession } from "~/utils/session"
 
 type CourseType = "exercice" | "cours" | "deep" | "none"
 
-/* -------------------------------------------------------------------------- */
-/* 🎨 Gradient animé adapté au thème clair/sombre                             */
-/* -------------------------------------------------------------------------- */
-
 function getTitleGradient(isDark: boolean): string {
   if (isDark) {
-    // Mode sombre : couleurs vibrantes teal → indigo → fuchsia
     return "linear-gradient(90deg, rgba(45,212,191,0.9) 0%, rgba(129,140,248,0.9) 25%, rgba(216,180,254,0.9) 50%, rgba(129,140,248,0.9) 75%, rgba(45,212,191,0.9) 100%)"
   }
-  // Mode clair : couleurs douces teal → indigo → fuchsia
   return "linear-gradient(90deg, rgba(94,234,212,0.9) 0%, rgba(165,216,255,0.9) 25%, rgba(240,171,252,0.9) 50%, rgba(165,216,255,0.9) 75%, rgba(94,234,212,0.9) 100%)"
 }
 
 type GradientMap = Record<"light" | "dark", Record<CourseType, string>>
-
-/* -------------------------------------------------------------------------- */
-/* 🌈 Gradients harmonieux pour les titres                                    */
-/* -------------------------------------------------------------------------- */
 
 const gradientMap: GradientMap = {
   light: {
@@ -53,10 +43,6 @@ const gradientMap: GradientMap = {
       "linear-gradient(90deg, rgba(96,165,250,0.8) 0%, rgba(52,211,153,0.8) 25%, rgba(21,128,61,0.8) 50%, rgba(59,130,246,0.8) 75%, rgba(96,165,250,0.8) 100%)",
   },
 }
-
-/* -------------------------------------------------------------------------- */
-/* 🧊 Styles glassmorphism avec teinte dynamique                              */
-/* -------------------------------------------------------------------------- */
 
 function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive: boolean) {
   const base = cn(
@@ -88,10 +74,6 @@ function glassTint(kind: Exclude<CourseType, "none">, isDark: boolean, isActive:
   return cn(base, innerGlow, active, styles[kind])
 }
 
-/* -------------------------------------------------------------------------- */
-/* 🚀 Section principale                                                      */
-/* -------------------------------------------------------------------------- */
-
 export function SectionCards() {
   const navigate = useNavigate()
   const location = useRouterState({ select: (state) => state.location })
@@ -115,7 +97,6 @@ export function SectionCards() {
     return () => observer.disconnect()
   }, [])
 
-  // Reset du courseType à chaque navigation
   useEffect(() => {
     setCourseType("none")
   }, [setCourseType])
@@ -139,7 +120,6 @@ export function SectionCards() {
 
   return (
     <div className="w-full max-w-3xl mx-auto px-4 py-8">
-      {/* 🌈 Titre avec gradient animé */}
       <div className="text-center mb-10">
         <GradientText
           text={`Bienvenue sur Pixia ${firstName}`}
@@ -149,9 +129,7 @@ export function SectionCards() {
         />
       </div>
 
-      {/* 🧊 Grille des cartes en pyramide */}
       <div className="flex flex-col items-center gap-6">
-        {/* Top - Deep Course */}
         <div className="w-full max-w-xs flex justify-center">
           {cards.filter(c => c.key === "deep").map((c) => {
             const Icon = c.icon
@@ -206,7 +184,6 @@ export function SectionCards() {
           })}
         </div>
 
-        {/* Bottom - Cours et Exercice */}
         <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-6">
           {cards.filter(c => c.key !== "deep").map((c) => {
             const Icon = c.icon

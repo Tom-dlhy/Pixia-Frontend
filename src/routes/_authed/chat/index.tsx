@@ -40,17 +40,12 @@ function ChatPage() {
   const [queuedFiles, setQueuedFiles] = useState<File[]>([])
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [hasInitialized, setHasInitialized] = useState(false)
-
-  // � Utiliser le hook de cache React Query
   const { sessions, isLoading: loadingSessions } = useAllChatSessions()
-
-  // 🔍 Vérifier si on est sur /chat (pas /chat/$id)
   const isOnChatHome = location.pathname === "/chat" || location.pathname === "/chat/"
 
   const userId =
     session.userId != null ? String(session.userId) : "anonymous-user"
 
-  // 🐛 Debug: Afficher les infos de session au montage
   useEffect(() => {
     if (userId !== "anonymous-user") {
       
@@ -58,8 +53,6 @@ function ChatPage() {
   }, [userId])
 
   useEffect(() => {
-    // 🔹 Sur la page /chat (index), on commence toujours avec une nouvelle session
-    // On NE restaure PAS le sessionId depuis le sessionStorage
     setSessionId(null)
     setHasInitialized(true)
   }, [])
@@ -72,20 +65,16 @@ function ChatPage() {
     if (sessionId) sessionStorage.setItem("chatSession", sessionId)
   }, [sessionId])
 
-  // 📤 Mettre à jour le context global avec les sessions
   useEffect(() => {
     setGlobalSessions(sessions)
   }, [sessions, setGlobalSessions])
 
-
-  // 📩 Envoi d'un message
   const handleSend = useCallback(async () => {
     if (!input.trim()) return
     setSending(true)
     setError(null)
 
     try {
-      // 🔹 Conversion des fichiers en base64
       const encodedFiles = await Promise.all(
         queuedFiles.map(
           (file) =>
@@ -111,7 +100,6 @@ function ChatPage() {
         sessionId: sessionId ?? undefined,
         message: input,
         files: encodedFiles.length ? encodedFiles : undefined,
-      // 🎯 Ajouter le contexte de /chat avec le type de carte sélectionnée
         messageContext: {
           selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
           currentRoute: "chat",
@@ -119,34 +107,14 @@ function ChatPage() {
         },
       })
 
-      console.log("🔍 DEBUG - Session context:", {
-        "session.name": session.name,
-        "session.userId": session.userId,
-        "session.userEmail": session.userEmail,
-        "session.isLoggedIn": session.isLoggedIn,
-      })
-      
-      
-      
-      console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {
-        agent: res.agent,
-        redirect_id: res.redirect_id,
-        reply: res.reply,
-        session_id: res.session_id
-      })
-
       const newSessionId = res.session_id
-      // 🔹 Si on est sur /chat (accueil) et qu'on reçoit une session → c'est nouveau
       const wasNewSession = isOnChatHome && !!newSessionId
-
-      
 
       if (newSessionId && newSessionId !== sessionId) {
         setSessionId(newSessionId)
         sessionStorage.setItem("chatSession", newSessionId)
       }
 
-      // 🔹 Mise à jour du chat
       const newMessages: ChatMessage[] = [
         ...messages,
         { id: crypto.randomUUID(), role: "user", content: input, createdAt: Date.now() },
@@ -156,9 +124,7 @@ function ChatPage() {
       setMessages(newMessages)
       saveConversation(newSessionId ?? sessionId ?? "default", newMessages)
 
-      // 🎯 Redirection basée sur l'agent et redirect_id (via hook)
       if (!handleRedirect(res)) {
-        // 🔹 Si pas de redirection automatique, redirection au premier message (nouvelle session)
         if (wasNewSession) {
           setTimeout(() => {
             setOpen(false)
@@ -167,7 +133,7 @@ function ChatPage() {
         }
       }
     } catch (err) {
-      console.error("❌ Erreur lors de l'envoi :", err)
+      console.error("Erreur lors de l'envoi :", err)
       setError("Une erreur est survenue lors de l'envoi du message.")
     } finally {
       setInput("")
@@ -175,7 +141,6 @@ function ChatPage() {
     }
   }, [input, messages, userId, sessionId, queuedFiles, navigate, setOpen])
 
-  // 📎 Fichiers
   const handleFilesSelected = (files: File[]) => {
     if (files.length) setQueuedFiles(files)
   }
@@ -184,7 +149,6 @@ function ChatPage() {
     setQueuedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // 🔙 Bouton retour
   const handleBack = () => {
     setOpen(true)
     setMessages([])

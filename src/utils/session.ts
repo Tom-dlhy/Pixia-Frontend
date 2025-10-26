@@ -113,7 +113,7 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
           isLoggedIn: true,
         })
       } catch (error) {
-        console.error("❌ Erreur lors du décodage du token :", error)
+        console.error("Erreur lors du décodage du token :", error)
         window.localStorage.removeItem("access_token")
         window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
         setSession(defaultSession)

@@ -14,7 +14,7 @@ const ChatMessageSchema = z.object({
         name: z.string(),
         type: z.string().optional(),
         size: z.number().optional(),
-        data: z.string(), // base64
+        data: z.string(), 
       })
     )
     .optional(),
@@ -223,7 +223,6 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
         }
       }
       else {
-        // Auto-detect: essayer exercise d'abord, puis course
         const [exercise, course, history] = await Promise.all([
           getExercise({ data: { session_id } }).catch(() => null),
           getCourse({ data: { session_id } }).catch(() => null),
@@ -250,20 +249,10 @@ export const getChatWithDocument = createServerFn({ method: "POST" })
     }
   })
 
-// ========================================================================================
-// 🔹 Chapters: Récupérer les chapitres d'un deep-course
-// ========================================================================================
-
-// -------------------------
-// 🔹 Validation pour getChapters
-// -------------------------
 const FetchChaptersSchema = z.object({
   deepcourse_id: z.string().min(1),
 })
 
-// -------------------------
-// 🔹 Server Function: Récupérer les chapitres d'un deep-course
-// -------------------------
 export const getChapters = createServerFn({ method: "POST" })
   .inputValidator(FetchChaptersSchema)
   .handler(async ({ data }) => {
@@ -272,7 +261,6 @@ export const getChapters = createServerFn({ method: "POST" })
     try {
       const res = await fetchChapters(deepcourse_id)
 
-      // Vérifier que res et res.chapters existent
       if (!res) {
         console.warn(`[getChapters] fetchChapters retourné null/undefined`)
         return []

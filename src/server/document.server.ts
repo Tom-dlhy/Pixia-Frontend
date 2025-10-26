@@ -91,7 +91,7 @@ export async function getDocument(payload: {
       })
     }
   } catch (error) {
-    console.error(`❌ [getDocument] Error:`, error)
+    console.error(`[getDocument] Error:`, error)
     throw error
   }
 }

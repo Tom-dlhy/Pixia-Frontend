@@ -19,7 +19,6 @@ interface ExerciseViewerProps {
   exercise: ExerciseOutput
 }
 
-// Move these outside the component file scope to ensure they're truly singleton
 const MARKDOWN_COMPONENTS = {
   p: ({ node, ...props }: any) => <p className="mb-0" {...props} />,
   strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
@@ -32,10 +31,8 @@ const MARKDOWN_COMPONENTS = {
 const REMARK_PLUGINS = [remarkMath]
 const REHYPE_PLUGINS = [rehypeKatex]
 
-// Memoize with aggressive caching - only re-render if the exact text hasn't been seen before
 const MarkdownText = memo(
   function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
-    // Use useMemo to prevent ReactMarkdown from re-rendering when text hasn't changed
     const content = useMemo(
       () => (
         <ReactMarkdown
@@ -46,7 +43,7 @@ const MarkdownText = memo(
           {text}
         </ReactMarkdown>
       ),
-      [text] // Only re-create when text changes
+      [text]
     )
     
     return (
@@ -56,12 +53,10 @@ const MarkdownText = memo(
     )
   },
   (prevProps, nextProps) => {
-    // Custom comparison: only re-render if text or className actually changes
     return prevProps.text === nextProps.text && prevProps.className === nextProps.className
   }
 )
 
-// Memoized answer option for radio questions to prevent unnecessary re-renders
 const RadioAnswerOption = memo(function RadioAnswerOption({
   value,
   text,
@@ -96,7 +91,6 @@ const RadioAnswerOption = memo(function RadioAnswerOption({
   )
 })
 
-// Memoized answer option for checkbox questions
 const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
   checked,
   onCheckedChange,
@@ -137,22 +131,16 @@ const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
   )
 })
 
-/**
- * Affiche le contenu d'un exercice (QCM, questions ouvertes, etc)
- */
 export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
   const { setTitle } = useDocumentTitle()
   
-  // State pour les réponses utilisateur
   const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>({})
   const [openAnswers, setOpenAnswers] = useState<Record<string, string>>({})
   const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>({})
   
-  // Cache for handlers to prevent recreation
   const handlersCache = useRef<Map<string, any>>(new Map())
   const isCorrectedRef = useRef<Record<string, boolean>>({})
   
-  // Update ref whenever correctedQuestions changes
   useEffect(() => {
     isCorrectedRef.current = Object.keys(correctedQuestions).reduce((acc, key) => {
       acc[key] = true
@@ -160,7 +148,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     }, {} as Record<string, boolean>)
   }, [correctedQuestions])
   
-  // Set the document title in context when component mounts
   useEffect(() => {
     setTitle(exercise.title || null)
     return () => setTitle(null)
@@ -174,7 +161,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     )
   }
 
-  // Handlers pour les réponses
   const handleRadioChange = useCallback((key: string, value: string) => {
     setUserAnswers(prev => ({ ...prev, [key]: value }))
   }, [])
@@ -194,7 +180,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     setOpenAnswers(prev => ({ ...prev, [key]: value }))
   }, [])
 
-  // Get or create cached handler for radio change
   const getRadioChangeHandler = useCallback((questionKey: string) => {
     const cacheKey = `radio_${questionKey}`
     if (!handlersCache.current.has(cacheKey)) {
@@ -207,7 +192,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     return handlersCache.current.get(cacheKey)
   }, [handleRadioChange])
 
-  // Get or create cached handler for checkbox change
   const getCheckboxChangeHandler = useCallback((questionKey: string, answerIdx: string) => {
     const cacheKey = `checkbox_${questionKey}_${answerIdx}`
     if (!handlersCache.current.has(cacheKey)) {
@@ -220,14 +204,12 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     return handlersCache.current.get(cacheKey)
   }, [handleCheckboxChange])
 
-  // Vérifier la réponse d'une question QCM
   const handleCheckQCM = (questionKey: string, question: QCMQuestion, isMultiAnswer: boolean) => {
     const userResponse = userAnswers[questionKey]
     
     let isCorrect = false
     
     if (isMultiAnswer) {
-      // Pour les multi-réponses, vérifier que toutes les réponses sélectionnées sont correctes
       const userSelectedIndices = (userResponse as string[]) || []
       const correctIndices = question.answers
         .map((ans, idx) => ans.is_correct ? String(idx) : null)
@@ -236,7 +218,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
       isCorrect = userSelectedIndices.length === correctIndices.length &&
                   userSelectedIndices.every(idx => correctIndices.includes(idx))
     } else {
-      // Pour les réponses uniques
       const selectedIndex = String(userResponse ?? '')
       isCorrect = selectedIndex !== '' && question.answers[Number(selectedIndex)]?.is_correct === true
     }
@@ -247,7 +228,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     }))
   }
 
-  // Vérifier la réponse d'une question ouverte
   const handleCheckOpen = (questionKey: string) => {
     setCorrectedQuestions(prev => ({
       ...prev,
@@ -260,14 +240,11 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
       <div className="space-y-8 pr-4 w-full">
         {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">
-                {/* QCM */}
                 {isQCM(block) && (
                   <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
                     <h2 className="text-xl font-bold text-center mb-4 text-foreground">
                       {block.topic}
                     </h2>
-                    
-                    {/* Divider line */}
                     <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
                     
                     <div className="space-y-6">
@@ -289,7 +266,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                 : 'border-white/20 dark:border-white/10'
                             }`}
                           >
-                            {/* Header avec titre et bouton Correct */}
                             <div className={`flex items-center justify-between px-4 py-3 border-b ${
                               isCorrected
                                 ? isAnswerCorrect
@@ -315,12 +291,9 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               )}
                             </div>
                             
-                            {/* Contenu */}
                             <div className="p-4">
                             
-                            {/* Réponses avec Checkbox ou RadioGroup */}
                             {isMultiAnswer ? (
-                              // Multi-réponses avec Checkbox
                               <div className="space-y-3 mb-4">
                                 {question.answers.map((answer, aIdx) => {
                                   const isChecked = ((userAnswers[questionKey] as string[]) || []).includes(String(aIdx))
@@ -339,7 +312,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                 })}
                               </div>
                             ) : (
-                              // Réponse unique avec RadioGroup
                               <RadioGroup
                                 value={String(userAnswers[questionKey] ?? '')}
                                 onValueChange={getRadioChangeHandler(questionKey)}
@@ -373,14 +345,12 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                   </div>
                 )}
 
-                {/* Open Questions */}
                 {isOpen(block) && (
                   <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
                     <h2 className="text-xl font-bold text-center mb-4 text-foreground">
                       {block.topic}
                     </h2>
                     
-                    {/* Divider line */}
                     <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
                     
                     <div className="space-y-6">
@@ -398,7 +368,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                 : 'border-white/20 dark:border-white/10'
                             }`}
                           >
-                            {/* Header avec titre et bouton Vérifier */}
                             <div className="flex items-center justify-between bg-white/5 dark:bg-white/5 px-4 py-3 border-b border-white/10">
                               <MarkdownText text={question.question} className="!prose-sm" />
                               <Button 
@@ -418,10 +387,8 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               </Button>
                             </div>
                             
-                            {/* Contenu */}
                             <div className="p-4">
                             
-                            {/* Textarea pour la réponse de l'utilisateur */}
                             <Textarea
                               placeholder="Entrez votre réponse ici..."
                               value={openAnswers[questionKey] ?? ''}
@@ -430,7 +397,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               className="mb-4 min-h-[100px]"
                             />
                             
-                            {/* Réponse attendue - affichée seulement après correction */}
                             {isCorrected && question.answers && (
                               <div className="bg-muted rounded-lg p-3 text-sm mb-4 border-l-4 border-foreground/30">
                                 <p className="font-semibold mb-2 text-foreground">✓ Réponse attendue:</p>
@@ -438,7 +404,6 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               </div>
                             )}
                             
-                            {/* Explication - affichée seulement après correction */}
                             {isCorrected && question.explanation && (
                               <div className="bg-accent/10 dark:bg-accent/5 rounded-lg p-3 text-xs border-l-4 border-accent">
                                 <p className="font-semibold mb-2 text-accent-foreground">💡 Explication:</p>

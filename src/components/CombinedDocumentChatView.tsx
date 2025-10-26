@@ -39,6 +39,11 @@ export function CombinedDocumentChatView({
           id: ch.id_chapter || Math.random().toString(),
           title: ch.title || "",
           content: ch.content || "",
+          img_base64: ch.img_base64,
+          schema_description: ch.schema_description,
+          diagram_type: ch.diagram_type,
+          diagram_code: ch.diagram_code,
+          schemas: ch.schemas,
         })),
         type: "cours",
       }

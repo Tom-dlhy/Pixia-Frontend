@@ -26,7 +26,6 @@ import { QueryProvider } from "~/context/QueryProvider"
 
 import appCss from '~/styles/app.css?url'
 
-// --- Root Route Definition ---
 export const Route = createRootRoute({
   head: () => ({
     meta: [
@@ -48,7 +47,6 @@ export const Route = createRootRoute({
   component: RootApp,
 })
 
-// --- Root Providers Wrapper ---
 function RootApp() {
   return (
     <QueryProvider>

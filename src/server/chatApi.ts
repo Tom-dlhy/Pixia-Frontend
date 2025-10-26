@@ -112,7 +112,7 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
   const result = await handle<FetchAllChatResponse>(r)
   
   if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
-    console.warn(`⚠️ [fetchAllChat] Réponse invalide du backend:`, result)
+    console.warn(`[fetchAllChat] Réponse invalide du backend:`, result)
     return { sessions: [] }
   }
   
@@ -133,7 +133,7 @@ export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepC
   const result = await handle<FetchAllDeepCoursesResponse>(r)
   
   if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
-    console.warn(`⚠️ [fetchAllDeepCourses] Réponse invalide du backend:`, result)
+    console.warn(`[fetchAllDeepCourses] Réponse invalide du backend:`, result)
     return { sessions: [] }
   }
   
@@ -237,7 +237,6 @@ export async function markChapterComplete(
   
   const result = await handle<MarkChapterCompleteResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
     console.warn(`[markChapterComplete] Réponse invalide du backend:`, result)
     return { is_complete: false }
@@ -246,9 +245,6 @@ export async function markChapterComplete(
   return result
 }
 
-// -------------------------
-// 🔹 Marquer un chapitre comme incomplet
-// -------------------------
 export async function markChapterUncomplete(
   chapterId: string
 ): Promise<MarkChapterCompleteResponse> {
@@ -263,7 +259,6 @@ export async function markChapterUncomplete(
   
   const result = await handle<MarkChapterCompleteResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
     console.warn(`[markChapterUncomplete] Réponse invalide du backend:`, result)
     return { is_complete: true }
@@ -363,7 +358,7 @@ export async function correctPlainQuestion(
   const result = await handle<CorrectPlainQuestionResponse>(r)
 
   if (!result || typeof result !== "object" || typeof result.is_correct !== "boolean") {
-    console.warn(`⚠️ [correctPlainQuestion] Réponse invalide du backend:`, result)
+    console.warn(`[correctPlainQuestion] Réponse invalide du backend:`, result)
     return { is_correct: false, feedback: "Erreur lors de la correction" }
   }
 

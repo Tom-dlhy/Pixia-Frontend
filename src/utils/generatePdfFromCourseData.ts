@@ -15,47 +15,61 @@ export async function generatePdfFromCourseData(
       compress: true,
     })
 
-    const margin = 15
+    const margin = 20
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
     const contentWidth = pageWidth - margin * 2
 
-    pdf.setFontSize(24)
-    pdf.setFont('Helvetica', 'bold')
-    pdf.setTextColor(0, 0, 0)
+    pdf.setFillColor(79, 70, 229) 
+    pdf.rect(0, 0, pageWidth, 50, 'F')
     
-    const titleWidth = pdf.getTextWidth(course.title)
-    pdf.text(course.title, (pageWidth - titleWidth) / 2, margin + 30)
+    pdf.setFontSize(26)
+    pdf.setFont('Helvetica', 'bold')
+    pdf.setTextColor(255, 255, 255)
+    
+    const titleLines = pdf.splitTextToSize(course.title, contentWidth - 20)
+    const titleY = titleLines.length === 1 ? 30 : 25
+    pdf.text(titleLines, pageWidth / 2, titleY, { align: 'center' })
 
     pdf.setFontSize(10)
     pdf.setFont('Helvetica', 'normal')
-    pdf.setTextColor(100, 100, 100)
+    pdf.setTextColor(220, 220, 255)
     const dateStr = new Date().toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     })
-    const dateWidth = pdf.getTextWidth(`Généré le ${dateStr}`)
-    pdf.text(`Généré le ${dateStr}`, (pageWidth - dateWidth) / 2, margin + 40)
+    pdf.text(`Généré le ${dateStr}`, pageWidth / 2, titleY + 10, { align: 'center' })
 
-    let yPos = margin + 60
+    pdf.setDrawColor(200, 200, 220)
+    pdf.setLineWidth(0.5)
+    pdf.line(margin, 58, pageWidth - margin, 58)
+
+    let yPos = 75
     let isFirstPage = true
 
-    course.chapters.forEach((chapter, chapterIdx) => {
-      if (!isFirstPage && yPos > pageHeight - margin - 20) {
+    for (let chapterIdx = 0; chapterIdx < course.chapters.length; chapterIdx++) {
+      const chapter = course.chapters[chapterIdx]
+      
+      if (!isFirstPage && yPos > pageHeight - margin - 30) {
         pdf.addPage()
         yPos = margin
       }
 
+      pdf.setFillColor(245, 247, 250)
+      pdf.rect(margin - 5, yPos - 8, contentWidth + 10, 14, 'F')
+      
       pdf.setFontSize(16)
       pdf.setFont('Helvetica', 'bold')
-      pdf.setTextColor(0, 0, 0)
+      pdf.setTextColor(79, 70, 229)
       
-      const chapterNumber = `Chapitre ${chapterIdx + 1}: ${chapter.title}`
-      const chapterLines = pdf.splitTextToSize(chapterNumber, contentWidth)
+      const chapterNumber = `Chapitre ${chapterIdx + 1} — ${chapter.title}`
+      const chapterLines = pdf.splitTextToSize(chapterNumber, contentWidth - 10)
       
       pdf.text(chapterLines, margin, yPos)
-      yPos += chapterLines.length * 8 + 8
+      yPos += chapterLines.length * 8 + 12
+
+      pdf.setTextColor(0, 0, 0)
 
       if (isMarkdown(chapter.content)) {
         yPos = applyMarkdownFormatting(pdf, chapter.content, margin, yPos, contentWidth)
@@ -76,14 +90,48 @@ export async function generatePdfFromCourseData(
         })
       }
 
-      yPos += 12 
-      isFirstPage = false
-    })
+      if (chapter.schemas && chapter.schemas.length > 0) {
+        for (const schema of chapter.schemas) {
+          if (schema.svgBase64) {
+            yPos = await addImageToPdf(
+              pdf,
+              schema.svgBase64,
+              margin,
+              yPos,
+              contentWidth,
+              pageHeight,
+              schema.name || chapter.schema_description
+            )
+          }
+        }
+      }
 
-    pdf.setFontSize(9)
+      if (chapter.img_base64) {
+        yPos = await addImageToPdf(
+          pdf,
+          chapter.img_base64,
+          margin,
+          yPos,
+          contentWidth,
+          pageHeight,
+          chapter.schema_description
+        )
+      }
+
+      yPos += 15
+      isFirstPage = false
+    }
+
+    pdf.setFontSize(8)
     pdf.setFont('Helvetica', 'normal')
-    pdf.setTextColor(150, 150, 150)
-    pdf.text(`© Hackathon Google Equipe Pixia - ${new Date().getFullYear()}`, margin, pageHeight - 10)
+    pdf.setTextColor(120, 120, 140)
+    
+    const footerText = `© ${new Date().getFullYear()} Hackathon Google — Équipe Pixia`
+    pdf.text(footerText, pageWidth / 2, pageHeight - 12, { align: 'center' })
+    
+    pdf.setDrawColor(200, 200, 220)
+    pdf.setLineWidth(0.3)
+    pdf.line(margin, pageHeight - 18, pageWidth - margin, pageHeight - 18)
 
     pdf.save(filename)
 
@@ -91,6 +139,123 @@ export async function generatePdfFromCourseData(
   } catch (error) {
     console.error('Erreur lors de la génération du PDF:', error)
     return false
+  }
+}
+
+async function addImageToPdf(
+  pdf: any,
+  imgBase64: string,
+  xPos: number,
+  yPos: number,
+  maxWidth: number,
+  pageHeight: number,
+  description?: string
+): Promise<number> {
+  const margin = 20
+  let currentY = yPos
+
+  if (currentY > pageHeight - margin - 80) {
+    pdf.addPage()
+    currentY = margin
+  }
+
+  currentY += 10
+
+  try {
+    let imageData = imgBase64
+    if (!imgBase64.startsWith('data:')) {
+      const isPng = imgBase64.startsWith('iVBOR')
+      const format = isPng ? 'png' : 'jpeg'
+      imageData = `data:image/${format};base64,${imgBase64}`
+    }
+
+    const img = new Image()
+    
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+      img.src = imageData
+    })
+
+    const imgAspectRatio = img.width / img.height
+    let imgWidth = maxWidth - 10
+    let imgHeight = imgWidth / imgAspectRatio
+
+    const maxImgHeight = pageHeight - margin * 2 - 60
+    if (imgHeight > maxImgHeight) {
+      imgHeight = maxImgHeight
+      imgWidth = imgHeight * imgAspectRatio
+    }
+
+    const imgX = xPos + (maxWidth - imgWidth) / 2
+
+    if (currentY + imgHeight + 20 > pageHeight - margin) {
+      pdf.addPage()
+      currentY = margin
+    }
+
+    pdf.setFillColor(250, 250, 252)
+    pdf.rect(imgX - 5, currentY - 5, imgWidth + 10, imgHeight + 10, 'F')
+    
+    pdf.setDrawColor(200, 200, 220)
+    pdf.setLineWidth(0.3)
+    pdf.rect(imgX - 5, currentY - 5, imgWidth + 10, imgHeight + 10)
+
+    const format = imageData.includes('image/png') ? 'PNG' : 'JPEG'
+
+    pdf.addImage(
+      imageData,
+      format,
+      imgX,
+      currentY,
+      imgWidth,
+      imgHeight,
+      undefined,
+      'FAST'
+    )
+
+    currentY += imgHeight + 10
+
+    if (description) {
+      currentY += 2
+      
+      if (currentY > pageHeight - margin - 15) {
+        pdf.addPage()
+        currentY = margin
+      }
+
+      pdf.setFont('Helvetica', 'italic')
+      pdf.setFontSize(9)
+      pdf.setTextColor(80, 80, 100)
+      
+      const descLines = pdf.splitTextToSize(`Figure: ${description}`, maxWidth - 10)
+      
+      descLines.forEach((line: string, idx: number) => {
+        const lineWidth = pdf.getTextWidth(line)
+        const descX = xPos + (maxWidth - lineWidth) / 2
+        pdf.text(line, descX, currentY + (idx * 4))
+      })
+      
+      currentY += descLines.length * 4 + 6
+      
+      pdf.setFont('Helvetica', 'normal')
+      pdf.setFontSize(11)
+      pdf.setTextColor(0, 0, 0)
+    }
+
+    return currentY + 5
+
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de l\'image au PDF:', error)
+    
+    pdf.setFont('Helvetica', 'italic')
+    pdf.setFontSize(9)
+    pdf.setTextColor(150, 150, 150)
+    const errorMsg = '[Image non disponible]'
+    const errorX = xPos + (maxWidth - pdf.getTextWidth(errorMsg)) / 2
+    pdf.text(errorMsg, errorX, currentY)
+    
+    return currentY + 10
   }
 }
 

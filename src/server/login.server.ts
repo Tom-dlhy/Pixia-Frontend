@@ -3,17 +3,11 @@ import { z } from "zod"
 import { login } from "./login"
 import { HttpError } from "./httpError"
 
-// -------------------------
-// 🔹 Validation des entrées
-// -------------------------
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(100),
 })
 
-// -------------------------
-// 🔹 Server Function principale
-// -------------------------
 export const loginUser = createServerFn({ method: "POST" })
   .inputValidator(LoginSchema)
   .handler(async ({ data }) => {

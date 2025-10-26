@@ -206,7 +206,7 @@ function CopiloteContainerContent({
   const handleSubmit = useCallback(async () => {
     if (!prompt.trim() || !effectiveUserId) {
       if (!effectiveUserId) {
-        console.warn(`⚠️ [CopiloteContainer] Impossible d'envoyer: userId non disponible`)
+        console.warn(`[CopiloteContainer] Impossible d'envoyer: userId non disponible`)
       }
       return
     }
@@ -230,7 +230,7 @@ function CopiloteContainerContent({
 
       handleRedirect(res)
     } catch (err) {
-      console.error("❌ Erreur Copilote:", err)
+      console.error("Erreur Copilote:", err)
       setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
       setPrompt("")
     }

@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo } from "react"
+import { useParams } from "@tanstack/react-router"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,13 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { Button } from "~/components/ui/button"
-import { Mail, FileText, Database, HardDrive, Menu } from "lucide-react"
+import { Mail, FileText, Database, HardDrive, Menu, FileCode } from "lucide-react"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { usePdfExport } from "~/hooks/usePdfExport"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { useCourseContent } from "~/context/CourseContentContext"
+import { useSessionCache } from "~/hooks/useSessionCache"
+import { useAppSession } from "~/utils/session"
 import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
+import { 
+  generateMarkdownFromCourseData
+} from "~/utils/generateMarkdownFromCourseData"
 import { cn } from "~/lib/utils"
+import type { CourseWithChapters } from "~/models/Course"
+import type { CourseOutput } from "~/models/Document"
 
 export interface ChatActionButtonProps {
   contentRef?: React.RefObject<HTMLDivElement | null>
@@ -23,22 +31,83 @@ export interface ChatActionButtonProps {
 export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
   const { courseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
-  const { course } = useCourseContent()
+  const { course: contextCourse } = useCourseContent()
   const { exportToPdf } = usePdfExport()
+  const { session } = useAppSession()
+
+  let courseId: string | undefined
+  try {
+    const courseParams = useParams({ from: "/_authed/course/$id" })
+    courseId = courseParams.id as string | undefined
+  } catch {
+    courseId = undefined
+  }
+
+  const effectiveUserId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
+
+  const { data: sessionCacheData } = useSessionCache(
+    courseId || null,
+    "course",
+    effectiveUserId || undefined,
+    { enabled: !!courseId && !!effectiveUserId }
+  )
+
+  const courseData = useMemo((): CourseWithChapters | null => {
+    const courseDocument = sessionCacheData?.document as CourseOutput | null
+    if (courseDocument && courseDocument.chapters) {
+      return {
+        id: courseDocument.id || "",
+        title: courseDocument.title || "Cours",
+        chapters: courseDocument.chapters.map((ch: any) => ({
+          id: ch.id_chapter || ch.id || Math.random().toString(),
+          title: ch.title || "",
+          content: ch.content || "",
+          img_base64: ch.img_base64,
+          schema_description: ch.schema_description,
+          diagram_type: ch.diagram_type,
+          diagram_code: ch.diagram_code,
+          schemas: ch.schemas,
+        })),
+        type: "cours",
+      }
+    }
+
+    if (contextCourse) {
+      return contextCourse
+    }
+
+    return null
+  }, [sessionCacheData, contextCourse])
 
   if (courseType === 'exercice' || courseType === 'deep') {
     return null
   }
 
   const handleExportPdf = async () => {
-    if (!course) {
+    if (!courseData) {
       console.error('[ChatActionButton] Course data not available')
       return
     }
 
     const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
     
-    await generatePdfFromCourseData(course, filename)
+    await generatePdfFromCourseData(courseData, filename)
+  }
+
+  const handleExportMarkdown = () => {
+    if (!courseData) {
+      console.error('[ChatActionButton] Course data not available')
+      return
+    }
+
+    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.md`
+    
+    generateMarkdownFromCourseData(courseData, filename)
   }
 
   const accentMap: Record<string, { light: string; dark: string }> = {
@@ -87,6 +156,11 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
             label: "Enregistrer en PDF",
             icon: FileText,
             action: handleExportPdf,
+          },
+          {
+            label: "Enregistrer en Markdown",
+            icon: FileCode,
+            action: handleExportMarkdown,
           },
         ].map(({ label, icon: Icon, action }, idx, arr) => (
           <div key={label}>

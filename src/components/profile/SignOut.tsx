@@ -27,8 +27,8 @@ export function SignOut() {
       onMouseEnter={(e) => {
         e.currentTarget.style.background = `linear-gradient(135deg, ${
           document.documentElement.classList.contains("dark")
-            ? "rgba(239,68,68,0.3)" // rouge doux (dark mode)
-            : "rgba(252,165,165,0.3)" // rouge clair (light mode)
+            ? "rgba(239,68,68,0.3)"
+            : "rgba(252,165,165,0.3)" 
         }, ${
           document.documentElement.classList.contains("dark")
             ? "rgba(127,29,29,0.3)"
