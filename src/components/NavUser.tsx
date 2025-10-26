@@ -48,12 +48,8 @@ export function NavUser({ user }: NavUserProps) {
   const userFullName = user.givenName || user.familyName
     ? [user.givenName, user.familyName].filter(Boolean).join(" ")
     : null
-  const sessionFullName = useMemo(() => {
-    if (session.givenName || session.familyName) {
-      return [session.givenName, session.familyName].filter(Boolean).join(" ")
-    }
-    return null
-  }, [session.givenName, session.familyName])
+
+  const sessionFullName = session.name || null
 
   const resolvedEmail = user.email ?? session.userEmail ?? settings.gmail ?? ""
   const resolvedName =
@@ -93,7 +89,6 @@ export function NavUser({ user }: NavUserProps) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          {/* --- USER BUTTON --- */}
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -120,8 +115,7 @@ export function NavUser({ user }: NavUserProps) {
               <ChevronsUpDown className="ml-auto size-4 opacity-70" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-
-          {/* --- DROPDOWN CONTENT --- */}
+          
           <DropdownMenuContent
             className={cn(
               "min-w-72 rounded-2xl px-4 py-4 border border-white/20 dark:border-white/10",
@@ -148,7 +142,6 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator className="my-2 opacity-20" />
 
-            {/* --- Paramètres --- */}
             <DropdownMenuItem
               onSelect={(event) => {
                 event.preventDefault()
@@ -159,7 +152,6 @@ export function NavUser({ user }: NavUserProps) {
               Paramètres
             </DropdownMenuItem>
 
-            {/* --- Thème --- */}
             <DropdownMenuItem
               onSelect={(e) => e.preventDefault()}
               className={menuItemClass}
@@ -172,7 +164,6 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator className="my-2 opacity-20" />
 
-            {/* --- Déconnexion --- */}
             <div className="px-1">
               <SignOut />
             </div>

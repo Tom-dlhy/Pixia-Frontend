@@ -16,7 +16,6 @@ export function CourseLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh w-full flex-col overflow-hidden bg-background text-foreground">
-      {/* HEADER */}
       <header
         className="flex items-center justify-between border-b border-border/40 px-6 py-4 text-lg font-semibold shadow-sm"
         style={{
@@ -41,27 +40,20 @@ export function CourseLayout({ children }: { children: React.ReactNode }) {
               ? "Session de Cours Rapide"
               : courseType === "exercice"
               ? "Session d'Exercices rapide"
-              : courseType === "discuss"
-              ? "Session Conversationnelle"
               : `Session de ${courseType}`}
           </span>
         </div>
       </header>
 
-      {/* MAIN ZONE */}
       <div className="flex flex-1 overflow-hidden">
-        {/* DOC PANEL */}
         <div className="flex-1 overflow-y-auto bg-background px-10 py-8">
           <DocPanel />
-          {/* ✅ sous-routes rendues ici */}
           {children}
         </div>
 
-        {/* SIDE PANEL */}
         <aside
           className={`flex flex-col border-l border-border/40 bg-background/60 backdrop-blur-sm transition-all duration-300 ease-in-out ${copilotOpen ? "w-[350px]" : "w-16"}`}
         >
-          {/* TOP - Copilot header */}
           <div className="border-b border-border/40 px-4 py-3">
             {copilotOpen ? (
               <div className="flex items-center justify-between">
@@ -93,14 +85,12 @@ export function CourseLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* CENTER - Copilot content */}
           {copilotOpen && (
             <div className="flex-1 overflow-y-auto px-6 py-4 text-sm text-muted-foreground">
               <p>Des suggestions contextuelles apparaîtront ici.</p>
             </div>
           )}
 
-          {/* BOTTOM - Input */}
           {copilotOpen && (
             <div className="border-t border-border/40 bg-background/80 px-4 py-3 backdrop-blur">
               <Chat />

@@ -18,7 +18,6 @@ export function HomeLayout({ user, children }: { user?: any; children: React.Rea
 
 function HomeLayoutContent({ user, children }: { user?: any; children: React.ReactNode }) {
 
-  // 🌙 Gestion du thème
   const [isDark, setIsDark] = useState(
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
@@ -34,14 +33,12 @@ function HomeLayoutContent({ user, children }: { user?: any; children: React.Rea
     return () => observer.disconnect()
   }, [])
 
-    // 💬 États du chat
   const gradientClass = getGradientClasses(isDark)
 
   return (
     <div className="flex h-dvh w-full overflow-hidden text-sidebar-foreground transition-all duration-500">
       <AppSidebar user={user} />
       <SidebarInset className="relative flex flex-1 flex-col overflow-hidden">
-        {/* 🌈 Fond dynamique */}
         <GradientBackground key={gradientClass} className={`absolute inset-0 ${gradientClass}`}>
           <div className="absolute inset-0 backdrop-blur-2xl transition-colors duration-700" />
         </GradientBackground>

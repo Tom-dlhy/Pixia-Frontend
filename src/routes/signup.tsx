@@ -54,7 +54,7 @@ function SignupComp() {
         throw new Error(data.error)
       }
 
-      console.log("Inscription réussie :", data)
+      
 
       setSession({
         userEmail: data.email,

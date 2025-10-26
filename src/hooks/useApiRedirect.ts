@@ -6,15 +6,10 @@ interface ApiResponse {
   [key: string]: any
 }
 
-/**
- * Hook pour gérer la redirection automatique basée sur la réponse API
- * Redirige vers /course/$id ou /exercise/$id si l'agent le demande
- */
 export function useApiRedirect() {
   const navigate = useNavigate()
 
   const handleRedirect = (res: ApiResponse) => {
-    // 🎯 Redirection basée sur l'agent et redirect_id
     if (res.redirect_id && res.agent) {
       let redirectTo = ""
       const agentLower = res.agent.toLowerCase()
@@ -27,13 +22,12 @@ export function useApiRedirect() {
 
       if (redirectTo) {
         setTimeout(() => {
-          console.log(`🎯 Redirecting to ${redirectTo} with id: ${res.redirect_id}`)
           navigate({ to: redirectTo as any, params: { id: res.redirect_id } as any })
         }, 800)
-        return true // Redirection effectuée
+        return true 
       }
     }
-    return false // Pas de redirection
+    return false
   }
 
   return { handleRedirect }

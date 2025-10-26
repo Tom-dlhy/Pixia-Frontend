@@ -22,27 +22,23 @@ function RouteComponent() {
   const { id } = useParams({ from: '/_authed/course/$id' })
   const { session } = useAppSession()
   
-  // 🚀 Utiliser le cache au lieu de refaire des appels API
   const { data, isLoading, error } = useSessionCache(
     id,
     'course',
     session.userId ? String(session.userId) : undefined,
-    { enabled: !!id } // Activer quand on a un ID
+    { enabled: !!id } 
   )
   
   const { document, documentType } = data
   const { setCourse } = useCourseContent()
   const { setTitle } = useDocumentTitle()
 
-  // Mettre à jour le contexte quand le document se charge
   useEffect(() => {
     if (document && isCourseOutput(document)) {
       const courseDoc = document as CourseOutput
       
-      // Utiliser 'parts' en fallback si 'chapters' n'est pas disponible
       const chapters = courseDoc.chapters || courseDoc.parts || []
       
-      // Convertir CourseOutput en CourseWithChapters
       const courseData: CourseWithChapters = {
         id: courseDoc.id || id,
         title: courseDoc.title || "Cours",
@@ -57,7 +53,7 @@ function RouteComponent() {
       setCourse(courseData)
       setTitle(courseData.title)
       
-      console.log("✅ [course.$id] Course data set in context:", courseData)
+      
     }
   }, [document, id, setCourse, setTitle])
 
@@ -90,7 +86,6 @@ function RouteComponent() {
     )
   }
 
-  // 🎯 Afficher le bon composant selon le type avec type guards
   if (isExerciseOutput(document)) {
     return <ExerciseViewer exercise={document} />
   }

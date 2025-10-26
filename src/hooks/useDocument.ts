@@ -22,9 +22,6 @@ export interface UseDocumentOptions {
   autoFetch?: boolean
 }
 
-/**
- * Hook pour fetcher et gérer les données d'exercices
- */
 export function useExercise(
   sessionId: string | null,
   options: UseDocumentOptions = { autoFetch: true }
@@ -41,7 +38,6 @@ export function useExercise(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useExercise] Fetching exercise: ${sessionId}`)
         const result = await getExercise({
           data: { session_id: sessionId },
         })
@@ -50,11 +46,10 @@ export function useExercise(
           throw new Error("Invalid exercise output")
         }
 
-        console.log(`✅ [useExercise] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useExercise] Error:`, error)
+        console.error(`[useExercise] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }
@@ -65,9 +60,6 @@ export function useExercise(
   return state
 }
 
-/**
- * Hook pour fetcher et gérer les données de cours
- */
 export function useCourse(
   sessionId: string | null,
   options: UseDocumentOptions = { autoFetch: true }
@@ -84,7 +76,6 @@ export function useCourse(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useCourse] Fetching course: ${sessionId}`)
         const result = await getCourse({
           data: { session_id: sessionId },
         })
@@ -93,11 +84,10 @@ export function useCourse(
           throw new Error("Invalid course output")
         }
 
-        console.log(`✅ [useCourse] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useCourse] Error:`, error)
+        console.error(`[useCourse] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }
@@ -108,9 +98,6 @@ export function useCourse(
   return state
 }
 
-/**
- * Hook générique pour fetcher un document (exercice ou cours)
- */
 export function useDocument(
   sessionId: string | null,
   type: "exercise" | "course" | null,
@@ -128,16 +115,14 @@ export function useDocument(
     const fetchData = async () => {
       setState({ data: null, loading: true, error: null })
       try {
-        console.log(`🎯 [useDocument] Fetching ${type}: ${sessionId}`)
         const result = await getDocument({
           data: { session_id: sessionId, type },
         })
 
-        console.log(`✅ [useDocument] Success`)
         setState({ data: result, loading: false, error: null })
       } catch (err) {
         const error = err instanceof Error ? err : new Error(String(err))
-        console.error(`❌ [useDocument] Error:`, error)
+        console.error(`[useDocument] Error:`, error)
         setState({ data: null, loading: false, error })
       }
     }
@@ -148,11 +133,6 @@ export function useDocument(
   return state
 }
 
-/**
- * Hook pour fetcher et gérer les données de chat + document combinées
- * Idéal pour afficher un document à gauche et le chat à droite
- * car doc_id === session_id dans la DB
- */
 export function useChatWithDocument(
   sessionId: string | null,
   documentType: "exercise" | "course" | null,
@@ -166,16 +146,22 @@ export function useChatWithDocument(
     error: null,
   })
 
+  const { session } = useAppSession()
+
   useEffect(() => {
     if (!options.autoFetch || !sessionId) return
 
     const fetchData = async () => {
       setState(prev => ({ ...prev, loading: true, error: null }))
       try {
-        // ✅ UN SEUL APPEL: getChatWithDocument() qui fait tout
+        const userId = session.userId ? String(session.userId) : null
+        if (!userId) {
+          throw new Error("User not authenticated")
+        }
+
         const result = await getChatWithDocument({
           data: {
-            user_id: "user-id", // à adapter
+            user_id: userId,
             session_id: sessionId,
             doc_type: documentType || undefined,
           },
@@ -199,7 +185,7 @@ export function useChatWithDocument(
     }
 
     fetchData()
-  }, [sessionId, documentType, options.autoFetch])
+  }, [sessionId, documentType, options.autoFetch, session.userId])
 
   return state
 }

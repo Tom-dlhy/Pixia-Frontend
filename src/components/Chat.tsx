@@ -6,9 +6,6 @@ import { ShimmeringText } from "~/components/ui/shimmering-text"
 import { TextGenerateEffect } from "~/components/ui/text-generate-effect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
 
-// ----------------------
-// 🔹 Types
-// ----------------------
 export type ChatAttachment = { name: string; size: number }
 
 export type ChatMessage = {
@@ -20,11 +17,7 @@ export type ChatMessage = {
 }
 
 const STORAGE_KEY = "chat:conversations"
-const MOCK_CHAT_ID = "test-session"
 
-// ----------------------
-// 🔹 Helpers
-// ----------------------
 export function loadConversation(id: string): ChatMessage[] | null {
   if (typeof window === "undefined") return null
   try {
@@ -47,9 +40,6 @@ export function saveConversation(id: string, messages: ChatMessage[]) {
   } catch {}
 }
 
-// ----------------------
-// 🔹 Component
-// ----------------------
 export function Chat({
   chatId,
   messages: propMessages,
@@ -63,7 +53,6 @@ export function Chat({
 }) {
   const listRef = useRef<HTMLDivElement | null>(null)
 
-  // 🌗 Détection du thème clair/sombre
   const [isDark, setIsDark] = useState<boolean>(
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
@@ -77,7 +66,6 @@ export function Chat({
     return () => observer.disconnect()
   }, [])
 
-  // 🧪 MOCK MESSAGES (pour test)
   const messages: ChatMessage[] =
     propMessages && propMessages.length > 0
       ? propMessages
@@ -98,20 +86,17 @@ export function Chat({
           },
         ]
 
-  // 📜 Scroll automatique
   useEffect(() => {
     const list = listRef.current
     if (list) list.scrollTop = list.scrollHeight
   }, [messages])
 
-  // 🎨 Couleurs dynamiques selon le thème
   const shimmerColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.7)"
   const baseColor = isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.3)"
 
   return (
     <div className="flex h-full flex-col bg-transparent text-sidebar-foreground transition-colors duration-500">
       <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
-        {/* 🔹 Messages */}
         {messages.map((m, index) => (
           <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
@@ -121,7 +106,6 @@ export function Chat({
                   : "bg-transparent text-foreground"
               }`}
             >
-              {/* 💬 Si c'est la dernière réponse de l'assistant → effet mot par mot */}
               {m.role === "assistant" ? (
                 <BotMessageDisplay
                   content={m.content}
@@ -131,8 +115,6 @@ export function Chat({
               ) : (
                 m.content
               )}
-
-              {/* 📎 Pièces jointes */}
               {m.attachments && m.attachments.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2 text-xs opacity-80">
                   {m.attachments.map((file: ChatAttachment) => (
@@ -152,7 +134,6 @@ export function Chat({
           </div>
         ))}
 
-        {/* 🧠 Effet shimmering pendant la réflexion */}
         {sending && (
           <div className="flex justify-start">
             <div className="max-w-[75%] text-sm bg-transparent text-foreground px-2 py-1">
@@ -167,8 +148,6 @@ export function Chat({
             </div>
           </div>
         )}
-
-        {/* ⚠️ Message d’erreur */}
         {error && <div className="px-4 text-xs text-red-500 italic">{error}</div>}
       </div>
     </div>

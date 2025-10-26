@@ -1,5 +1,7 @@
 "use client"
 
+import { useRef, useState, useMemo } from "react"
+import { useParams } from "@tanstack/react-router"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,11 +9,19 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { Button } from "~/components/ui/button"
-import { Plus, Trash2, Menu } from "lucide-react"
+import { Plus, Trash2, Menu, FileText, FileCode } from "lucide-react"
 import { FaCheckCircle } from "react-icons/fa"
 import { useCourseType } from "~/context/CourseTypeContext"
+import { useDocumentTitle } from "~/context/DocumentTitleContext"
+import { useCourseContent } from "~/context/CourseContentContext"
+import { useSessionCache } from "~/hooks/useSessionCache"
+import { useAppSession } from "~/utils/session"
+import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
+import { generateMarkdownFromCourseData } from "~/utils/generateMarkdownFromCourseData"
 import { cn } from "~/lib/utils"
 import { markChapterCompleteServerFn, markChapterUncompleteServerFn } from "~/server/chat.server"
+import type { CourseWithChapters } from "~/models/Course"
+import type { CourseOutput } from "~/models/Document"
 
 interface ActionButtonProps {
   viewLevel?: "root" | "course" | "chapter"
@@ -35,8 +45,102 @@ export default function ActionButton({
   onMarkDone,
 }: ActionButtonProps) {
   const { courseType } = useCourseType()
+  
+  let documentTitle: string | null = null
+  try {
+    const titleContext = useDocumentTitle()
+    documentTitle = titleContext.title
+  } catch {
+    // DocumentTitleProvider not available in this context
+  }
 
-  // Palette d’accents cohérente et adaptative au thème
+  let contextCourse = null
+  try {
+    const courseContext = useCourseContent()
+    contextCourse = courseContext.course
+  } catch {
+    // CourseContentProvider not available in this context
+  }
+
+  let session: any = { userId: null }
+  try {
+    const sessionContext = useAppSession()
+    session = sessionContext.session
+  } catch {
+    // useAppSession not available in this context
+  }
+
+  let courseId: string | undefined
+  try {
+    const courseParams = useParams({ from: "/_authed/course/$id" })
+    courseId = courseParams.id as string | undefined
+  } catch {
+    courseId = undefined
+  }
+
+  const effectiveUserId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
+
+  const { data: sessionCacheData } = useSessionCache(
+    courseId || null,
+    "course",
+    effectiveUserId || undefined,
+    { enabled: !!courseId && !!effectiveUserId }
+  )
+
+  const courseData = useMemo((): CourseWithChapters | null => {
+    const courseDocument = sessionCacheData?.document as CourseOutput | null
+    if (courseDocument && courseDocument.chapters) {
+      return {
+        id: courseDocument.id || "",
+        title: courseDocument.title || "Cours",
+        chapters: courseDocument.chapters.map((ch: any) => ({
+          id: ch.id_chapter || ch.id || Math.random().toString(),
+          title: ch.title || "",
+          content: ch.content || "",
+          img_base64: ch.img_base64,
+          schema_description: ch.schema_description,
+          diagram_type: ch.diagram_type,
+          diagram_code: ch.diagram_code,
+          schemas: ch.schemas,
+        })),
+        type: "cours",
+      }
+    }
+
+    if (contextCourse) {
+      return contextCourse
+    }
+
+    return null
+  }, [sessionCacheData, contextCourse])
+
+  const handleExportPdf = async () => {
+    if (!courseData) {
+      console.error('[ActionButton] Course data not available')
+      return
+    }
+
+    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
+    
+    await generatePdfFromCourseData(courseData, filename)
+  }
+
+  const handleExportMarkdown = () => {
+    if (!courseData) {
+      console.error('[ActionButton] Course data not available')
+      return
+    }
+
+    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.md`
+    
+    generateMarkdownFromCourseData(courseData, filename)
+  }
+
   const accentMap: Record<
     string,
     {
@@ -64,23 +168,16 @@ export default function ActionButton({
       lightHover: "rgba(96,165,250,0.35)",
       darkHover: "rgba(14,165,233,0.35)",
     },
-    discuss: {
+    deep: {
       light: "rgba(216,180,254,0.25)",
       dark: "rgba(139,92,246,0.25)",
       lightHover: "rgba(192,132,252,0.35)",
       darkHover: "rgba(124,58,237,0.35)",
-    },
-    deep: {
-      light: "rgba(203,213,225,0.25)",
-      dark: "rgba(71,85,105,0.25)",
-      lightHover: "rgba(148,163,184,0.35)",
-      darkHover: "rgba(51,65,85,0.35)",
-    },
+    }
   }
 
   const accent = accentMap[courseType] ?? accentMap["none"]
 
-  /* -------------------- 1️⃣ Vue racine -------------------- */
   if (viewLevel === "root" && onCreateCourse) {
     return (
       <Button
@@ -102,7 +199,6 @@ export default function ActionButton({
     )
   }
 
-  /* -------------------- 2️⃣ Vue d’un cours -------------------- */
   if (viewLevel === "course") {
     return (
       <DropdownMenu>
@@ -135,7 +231,6 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {/* ---------- Ajouter un chapitre ---------- */}
           {onAddChapter && (
             <Button
               variant="ghost"
@@ -169,7 +264,6 @@ export default function ActionButton({
             </Button>
           )}
 
-          {/* ---------- Supprimer le cours ---------- */}
           {onDeleteCourse && (
             <>
               <DropdownMenuSeparator className="my-1 opacity-20" />
@@ -205,7 +299,6 @@ export default function ActionButton({
     )
   }
 
-  /* -------------------- 3️⃣ Vue d’un chapitre -------------------- */
   if (viewLevel === "chapter") {
     return (
       <DropdownMenu>
@@ -238,40 +331,87 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {/* ---------- Marquer terminé / Reprendre ---------- */}
+          {courseData && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={handleExportPdf}
+                className={cn(
+                  "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
+                  "border border-transparent",
+                  "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
+                )}
+                style={{
+                  background: `linear-gradient(135deg, transparent, transparent)`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
+                  e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
+                  e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
+                }}
+              >
+                <FileText className="h-4 w-4 opacity-80" />
+                Enregistrer en PDF
+              </Button>
+
+              <DropdownMenuSeparator className="my-1 opacity-20" />
+
+              <Button
+                variant="ghost"
+                onClick={handleExportMarkdown}
+                className={cn(
+                  "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
+                  "border border-transparent",
+                  "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
+                )}
+                style={{
+                  background: `linear-gradient(135deg, transparent, transparent)`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
+                  e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
+                  e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
+                }}
+              >
+                <FileCode className="h-4 w-4 opacity-80" />
+                Enregistrer en Markdown
+              </Button>
+
+              <DropdownMenuSeparator className="my-1 opacity-20" />
+            </>
+          )}
+
           {onMarkDone && (
             <Button
               variant="ghost"
               onClick={async () => {
                 try {
                   if (!chapterId) {
-                    console.error(`❌ [ActionButton] chapterId manquant`)
+                    console.error(`[ActionButton] chapterId manquant`)
                     return
                   }
                   
-                  // Déterminer la nouvelle valeur (inverser l'état actuel)
                   const newCompleteState = !isChapterComplete
                   
                   if (!isChapterComplete) {
-                    // Actuellement incomplet, donc marquer comme complet
-                    console.log(`📡 [ActionButton] Marquage comme complet du chapitre ${chapterId}`)
                     await markChapterCompleteServerFn({ data: { chapter_id: chapterId } })
                   } else {
-                    // Actuellement complet, donc marquer comme incomplet
-                    console.log(`📡 [ActionButton] Marquage comme incomplet du chapitre ${chapterId}`)
                     await markChapterUncompleteServerFn({ data: { chapter_id: chapterId } })
                   }
                   
-                  // Mettre à jour le cache IMMÉDIATEMENT après le succès serveur
                   localStorage.setItem(`chapter-complete-${chapterId}`, String(newCompleteState))
-                  console.log(`✅ [ActionButton] État du chapitre sauvegardé en cache: ${newCompleteState}`)
                   
-                  // Appeler le callback pour trigger la mise à jour du state du hook
                   if (onMarkDone) {
                     onMarkDone()
                   }
                 } catch (error) {
-                  console.error(`❌ [ActionButton] Erreur lors de l'opération:`, error)
+                  console.error(`[ActionButton] Erreur lors de l'opération:`, error)
                 }
               }}
               className={cn(
@@ -300,7 +440,6 @@ export default function ActionButton({
             </Button>
           )}
 
-          {/* ---------- Supprimer chapitre ---------- */}
           {onDeleteChapter && (
             <>
               <DropdownMenuSeparator className="my-1 opacity-20" />

@@ -18,45 +18,47 @@ import {
   EmptyTitle,
 } from "~/components/ui/empty"
 import { MessageSquare } from "lucide-react"
+import { extractPrimaryColor, getColorBorderStyle } from "~/lib/gradients"
 
-// Gradients cohérents
 const courseGradients = {
-  rose: "bg-gradient-to-br from-rose-400/60 to-pink-500/60",
-  blue: "bg-gradient-to-br from-blue-400/60 to-cyan-400/60",
-  emerald: "bg-gradient-to-br from-emerald-400/60 to-teal-400/60",
-  amber: "bg-gradient-to-br from-amber-300/60 to-orange-400/60",
+  sunset: "bg-gradient-to-br from-red-500 to-orange-500",
+  nemesia: "bg-gradient-to-br from-emerald-400 to-cyan-400",
+  heartsease: "bg-gradient-to-br from-fuchsia-600 to-pink-600",
+  snowflakeAlt: "bg-gradient-to-br from-fuchsia-500 to-cyan-500",
+  lime: "bg-gradient-to-br from-teal-400 to-yellow-200",
+  gold: "bg-gradient-to-br from-amber-200 to-yellow-500",
+  blueprint: "bg-gradient-to-br from-indigo-500 to-blue-500",
+  rosebud: "bg-gradient-to-br from-pink-500 to-rose-500",
+  northernLights: "bg-gradient-to-br from-teal-200 to-teal-500",
+  candy: "bg-gradient-to-br from-fuchsia-500 to-pink-500",
+  rawGreen: "bg-gradient-to-br from-lime-400 to-lime-500",
+  twilight: "bg-gradient-to-br from-amber-500 to-pink-500",
+  snowflake: "bg-gradient-to-br from-indigo-400 to-cyan-400",
+  poppy: "bg-gradient-to-br from-rose-400 to-red-500",
+  salvia: "bg-gradient-to-br from-blue-600 to-violet-600",
+  amaranthus: "bg-gradient-to-br from-fuchsia-600 to-purple-600",
+  clearNight: "bg-gradient-to-br from-blue-800 to-indigo-900",
+  verbena: "bg-gradient-to-br from-violet-500 to-purple-500",
+  sunshine: "bg-gradient-to-br from-amber-200 to-yellow-400",
+  clematis: "bg-gradient-to-br from-violet-600 to-indigo-600",
+  blueBird: "bg-gradient-to-br from-cyan-500 to-blue-500",
+  hibiscus: "bg-gradient-to-br from-purple-500 to-purple-900",
 } as const
 
-const defaultCourses = [
-  {
-    id: "deepcourse-123",
-    title: "Deep Course 1 Title",
-  },
-  {
-    id: "deepcourse-456",
-    title: "Deep Course 2 Title",
-  },
-]
 
 export default function DeepCourseListPage() {
   const navigate = useNavigate()
   const { session } = useAppSession()
   
-  // � Utiliser le hook de cache React Query
   const { deepCourses, isLoading } = useAllDeepCourses()
 
-  // Mapper les deep-courses avec des gradients
   const coursesWithGradients = useMemo(() => {
     const gradientKeys = Object.keys(courseGradients) as Array<keyof typeof courseGradients>
     
-    console.log(`📊 [useMemo] deepCourses avant mapping:`, deepCourses)
-    
     return deepCourses
       .map((course, index) => {
-        // Utiliser la structure du backend: deepcourse_id, title, completion
         const id = course.deepcourse_id || `course-${index}`
         const title = course.title || `Course ${index + 1}`
-        // Backend envoie completion normalisé (0-1), conversion en pourcentage (0-100)
         const completionNormalized = typeof course.completion === 'number' ? course.completion : 0
         const completion = Math.round(completionNormalized * 100)
         
@@ -106,7 +108,7 @@ export default function DeepCourseListPage() {
 
   return (
     <ScrollArea className="w-full h-full">
-      <div className="mt-16 flex flex-col gap-8 pr-4 pb-4">
+      <div className="mt-16 flex flex-col gap-8 pr-8 pb-4 px-4 mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
           {coursesWithGradients.map((course, index) => (
             <motion.div
@@ -115,9 +117,11 @@ export default function DeepCourseListPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               onClick={() => {
-                // 💾 Sauvegarder le titre avant de naviguer
                 localStorage.setItem(`deepcourse-title-${course.id}`, course.title)
-                console.log(`💾 [DeepCourseListPage] Titre sauvegardé: ${course.title}`)
+                localStorage.setItem(`deepcourse-gradient-${course.id}`, course.gradient)
+                const primaryColor = extractPrimaryColor(course.gradient)
+                const borderStyle = getColorBorderStyle(primaryColor)
+                localStorage.setItem(`deepcourse-border-${course.id}`, borderStyle)
                 navigate({ to: `/deep-course/${course.id}` })
               }}
               className="cursor-pointer h-full"

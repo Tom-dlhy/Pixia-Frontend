@@ -1,6 +1,7 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo } from "react"
+import { useParams } from "@tanstack/react-router"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,13 +9,20 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { Button } from "~/components/ui/button"
-import { Mail, FileText, Database, HardDrive, Menu } from "lucide-react"
+import { Mail, FileText, Database, HardDrive, Menu, FileCode } from "lucide-react"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { usePdfExport } from "~/hooks/usePdfExport"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { useCourseContent } from "~/context/CourseContentContext"
+import { useSessionCache } from "~/hooks/useSessionCache"
+import { useAppSession } from "~/utils/session"
 import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
+import { 
+  generateMarkdownFromCourseData
+} from "~/utils/generateMarkdownFromCourseData"
 import { cn } from "~/lib/utils"
+import type { CourseWithChapters } from "~/models/Course"
+import type { CourseOutput } from "~/models/Document"
 
 export interface ChatActionButtonProps {
   contentRef?: React.RefObject<HTMLDivElement | null>
@@ -23,44 +31,96 @@ export interface ChatActionButtonProps {
 export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
   const { courseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
-  const { course } = useCourseContent()
+  const { course: contextCourse } = useCourseContent()
   const { exportToPdf } = usePdfExport()
+  const { session } = useAppSession()
 
-  // Ne pas afficher le bouton si ce n'est pas un cours
-  if (courseType === 'exercice' || courseType === 'discuss' || courseType === 'deep') {
+  let courseId: string | undefined
+  try {
+    const courseParams = useParams({ from: "/_authed/course/$id" })
+    courseId = courseParams.id as string | undefined
+  } catch {
+    courseId = undefined
+  }
+
+  const effectiveUserId = useMemo(() => {
+    if (session.userId != null) {
+      return String(session.userId)
+    }
+    return null
+  }, [session.userId])
+
+  const { data: sessionCacheData } = useSessionCache(
+    courseId || null,
+    "course",
+    effectiveUserId || undefined,
+    { enabled: !!courseId && !!effectiveUserId }
+  )
+
+  const courseData = useMemo((): CourseWithChapters | null => {
+    const courseDocument = sessionCacheData?.document as CourseOutput | null
+    if (courseDocument && courseDocument.chapters) {
+      return {
+        id: courseDocument.id || "",
+        title: courseDocument.title || "Cours",
+        chapters: courseDocument.chapters.map((ch: any) => ({
+          id: ch.id_chapter || ch.id || Math.random().toString(),
+          title: ch.title || "",
+          content: ch.content || "",
+          img_base64: ch.img_base64,
+          schema_description: ch.schema_description,
+          diagram_type: ch.diagram_type,
+          diagram_code: ch.diagram_code,
+          schemas: ch.schemas,
+        })),
+        type: "cours",
+      }
+    }
+
+    if (contextCourse) {
+      return contextCourse
+    }
+
+    return null
+  }, [sessionCacheData, contextCourse])
+
+  if (courseType === 'exercice' || courseType === 'deep') {
     return null
   }
 
-  // Récupérer la référence au contenu depuis le DOM
   const handleExportPdf = async () => {
-    // Vérifier si on a les données du cours
-    if (!course) {
-      console.error('❌ [ChatActionButton] Course data not available')
+    if (!courseData) {
+      console.error('[ChatActionButton] Course data not available')
       return
     }
 
-    console.log('✅ [ChatActionButton] Generating PDF from course data...')
-
     const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
     
-    // Utiliser la nouvelle fonction avec données structurées
-    await generatePdfFromCourseData(course, filename)
+    await generatePdfFromCourseData(courseData, filename)
   }
 
-  // Palette d'accents cohérente avec ton style global
+  const handleExportMarkdown = () => {
+    if (!courseData) {
+      console.error('[ChatActionButton] Course data not available')
+      return
+    }
+
+    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.md`
+    
+    generateMarkdownFromCourseData(courseData, filename)
+  }
+
   const accentMap: Record<string, { light: string; dark: string }> = {
     none: { light: "rgba(209,213,219,0.3)", dark: "rgba(82,82,91,0.25)" },
     cours: { light: "rgba(167,243,208,0.25)", dark: "rgba(16,185,129,0.25)" },
     exercice: { light: "rgba(147,197,253,0.25)", dark: "rgba(56,189,248,0.25)" },
-    discuss: { light: "rgba(216,180,254,0.25)", dark: "rgba(139,92,246,0.25)" },
-    deep: { light: "rgba(203,213,225,0.25)", dark: "rgba(71,85,105,0.25)" },
+    deep: { light: "rgba(216,180,254,0.25)", dark: "rgba(139,92,246,0.25)" },
   }
 
   const accent = accentMap[courseType] ?? accentMap["none"]
 
   return (
     <DropdownMenu>
-      {/* ——— MAIN BUTTON ——— */}
       <DropdownMenuTrigger asChild>
         <Button
           variant="secondary"
@@ -80,7 +140,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
         </Button>
       </DropdownMenuTrigger>
 
-      {/* ——— MENU CONTENT ——— */}
       <DropdownMenuContent
         className={cn(
           "min-w-56 rounded-xl border border-white/20 dark:border-white/10 p-2",
@@ -94,28 +153,17 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
       >
         {[
           {
-            label: "Envoyer par mail",
-            icon: Mail,
-            action: () => console.log("Envoyer par mail"),
-          },
-          {
-            label: "Enregistrer dans Notion",
-            icon: Database,
-            action: () => console.log("Enregistrer dans Notion"),
-          },
-          {
-            label: "Enregistrer sur Drive",
-            icon: HardDrive,
-            action: () => console.log("Enregistrer sur Drive"),
-          },
-          {
             label: "Enregistrer en PDF",
             icon: FileText,
             action: handleExportPdf,
           },
+          {
+            label: "Enregistrer en Markdown",
+            icon: FileCode,
+            action: handleExportMarkdown,
+          },
         ].map(({ label, icon: Icon, action }, idx, arr) => (
           <div key={label}>
-            {/* ——— ITEM BUTTON ——— */}
             <Button
               variant="ghost"
               onClick={action}
@@ -125,7 +173,6 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
                 "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
               )}
               style={{
-                // Hover glassmorphique dynamique selon le type
                 background: `linear-gradient(135deg, transparent, transparent)`,
               }}
               onMouseEnter={(e) => {
