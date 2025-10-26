@@ -1,11 +1,12 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
 import "katex/dist/katex.min.css"
 import { cn } from "~/lib/utils"
+import { ShimmeringText } from "~/components/ui/shimmering-text"
 
 interface BotMessageDisplayProps {
   content: string
@@ -38,6 +39,35 @@ export const BotMessageDisplay = memo(function BotMessageDisplay({
   showShimmering = true,
   className = "",
 }: BotMessageDisplayProps) {
+  const [isDark, setIsDark] = useState<boolean>(
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  )
+
+  useEffect(() => {
+    if (typeof document === "undefined") return
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"))
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
+
+  if (!content && showShimmering) {
+    const shimmerColor = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.7)"
+    const baseColor = isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.3)"
+    
+    return (
+      <ShimmeringText
+        text="L'agent réfléchit..."
+        duration={1.2}
+        wave
+        shimmeringColor={shimmerColor}
+        color={baseColor}
+        className="font-medium"
+      />
+    )
+  }
+
   return (
     <div className={cn("prose prose-sm dark:prose-invert max-w-none text-foreground", className)}>
       <ReactMarkdown

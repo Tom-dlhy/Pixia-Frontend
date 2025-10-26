@@ -211,11 +211,16 @@ function CopiloteContainerContent({
       return
     }
     
+    const userMessage = prompt.trim()
+    
     try {
+      setMessages((m) => [...m, userMessage, ""])
+      setPrompt("")
+      setIsNewMessage(true)
       
       const res = await sendChatWithRefresh({
         user_id: effectiveUserId,
-        message: prompt,
+        message: userMessage,
         sessionId: effectiveSessionId || undefined, 
         messageContext: {
           currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
@@ -224,15 +229,20 @@ function CopiloteContainerContent({
         },
       })
 
-      setMessages((m) => [...m, prompt.trim(), res.reply])
-      setPrompt("")
-      setIsNewMessage(true) 
+      setMessages((m) => {
+        const newMessages = [...m]
+        newMessages[newMessages.length - 1] = res.reply
+        return newMessages
+      })
 
       handleRedirect(res)
     } catch (err) {
       console.error("Erreur Copilote:", err)
-      setMessages((m) => [...m, prompt.trim(), "Erreur lors de la requête"])
-      setPrompt("")
+      setMessages((m) => {
+        const newMessages = [...m]
+        newMessages[newMessages.length - 1] = "Erreur lors de la requête"
+        return newMessages
+      })
     }
   }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh])
 

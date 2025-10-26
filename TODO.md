@@ -18,11 +18,7 @@
 
     - Supprimer / Renommer un document (B/F)
 
-    - Faire l'agent discuss (B++++ / F+++)
-
     - revoir l'ui
-
-    - streaming
 
     - afficher 
 
@@ -33,8 +29,6 @@
 
 # MTN 
 
-    - enlever l'enregistrement (drive et mail F)
-
     - gérer les redirect copilote
 
 
@@ -42,3 +36,5 @@ $k_{n+1}$
 
 
 https://hackathon-backend-356001158171.europe-west9.run.app/api
+
+http://localhost:8000/api
