@@ -17,7 +17,7 @@ interface ChapterCardProps {
   icon?: LucideIcon
   isComplete?: boolean
   onClick?: () => void
-  gradient?: string 
+  borderStyle?: string
   className?: string
   iconClassName?: string
   badgeClassName?: string
@@ -33,7 +33,7 @@ export function ChapterCard({
   icon: Icon,
   isComplete = false,
   onClick,
-  gradient,
+  borderStyle,
   className,
   iconClassName,
   badgeClassName,
@@ -64,15 +64,11 @@ export function ChapterCard({
         "hover:scale-[1.02] hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_12px_35px_rgba(0,0,0,0.3)]",
         className
       )}
-      style={{ position: "relative" }}
+      style={{ 
+        position: "relative",
+        border: borderStyle
+      }}
     >
-      <div
-        className={cn(
-          "absolute inset-0 z-0 rounded-2xl opacity-70 mix-blend-overlay pointer-events-none",
-          gradient
-        )}
-      />
-
       <div className="absolute inset-0 z-0 rounded-2xl bg-gradient-to-t from-white/10 to-transparent mix-blend-soft-light pointer-events-none" />
 
       <CardHeader className="flex flex-col gap-6 p-0 relative z-10">

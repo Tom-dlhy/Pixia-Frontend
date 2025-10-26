@@ -234,8 +234,6 @@ export function EvaluationDurationDrawerButtons({
     Commencer ({duration} min)
   </Button>
 
-
-{/* --- Bouton Destructif (rouge glassmorphic Apple-like) --- */}
 <DrawerClose asChild>
   <Button
     variant="outline"

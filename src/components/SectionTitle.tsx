@@ -1,5 +1,7 @@
 import { cn } from "~/lib/utils"
-import React from "react"
+import React, { useMemo } from "react"
+import type { CSSProperties } from "react"
+import { convertTailwindGradientToCss } from "~/lib/gradients"
 
 interface SectionTitleProps {
   title: string
@@ -8,6 +10,7 @@ interface SectionTitleProps {
   size?: "sm" | "md" | "lg"
   icon?: React.ReactNode
   className?: string
+  gradient?: string
 }
 
 export default function SectionTitle({
@@ -17,6 +20,7 @@ export default function SectionTitle({
   size = "lg",
   icon,
   className,
+  gradient,
 }: SectionTitleProps) {
   const sizes = {
     sm: "text-xl font-semibold",
@@ -30,15 +34,31 @@ export default function SectionTitle({
     right: "text-right",
   }[align]
 
+  const titleStyle = useMemo(() => {
+    if (!gradient) return undefined
+    
+    const gradientCss = convertTailwindGradientToCss(gradient)
+    
+    return {
+      backgroundImage: gradientCss,
+      backgroundSize: "100% 100%",
+      backgroundPosition: "center",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+    } as CSSProperties
+  }, [gradient])
+
   return (
     <div className={cn(alignment, className)}>
-      {/* Titre principal — blanc en dark, noir en light */}
-      <h1 className={cn(sizes, "text-zinc-900 dark:text-white flex items-center justify-center gap-3")}>
+      <h1 
+        className={cn(sizes, "text-zinc-900 dark:text-white flex items-center justify-center gap-3")}
+        style={titleStyle}
+      >
         {icon && <span className="flex-shrink-0">{icon}</span>}
         {title}
       </h1>
 
-      {/* Sous-titre — gris doux selon le thème */}
       {subtitle && (
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           {subtitle}

@@ -4,25 +4,11 @@
 
     - corriger plain_text (F)
 
-    - faire en sorte que l'image soit aussi sur le pdf (F)
-
     - connecter suppimer chapter et supprimer deep course (B/F)
 
     - centrer pendant l'évaluation et que ca redirect pas vers cours (F)
 
-    - faire en sorte que quand on quitte l'évaluation la variable eval sorte (F)
-
-    - Couleurs plus claires dans deepcours:dark
-
-    - contour des chapitre de la meme couleur que le deepcourse
-
-    - enlever le truc bizarre dasn les coins 
-
-    - attention au padding left dans appsidebar, deepcourse et chapter
-
-    - CODE CLEANING
-
-    - gérer le probleme de nombre de requetes 
+    - enlever le truc bizarre dasn les coins  
 
 # Extras
 

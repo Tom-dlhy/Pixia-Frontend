@@ -10,6 +10,7 @@ interface DeepCourseHeaderProps {
   children?: React.ReactNode
   className?: string
   iconType?: 'graduation-cap' | 'book-open' | null
+  titleGradient?: string
 }
 
 export default function DeepCourseHeader({
@@ -20,6 +21,7 @@ export default function DeepCourseHeader({
   children,
   className,
   iconType,
+  titleGradient,
 }: DeepCourseHeaderProps) {
   const iconMap = {
     'graduation-cap': <GraduationCap className="h-8 w-8" />,
@@ -39,6 +41,7 @@ export default function DeepCourseHeader({
             align="center"
             size="lg"
             icon={iconType ? iconMap[iconType] : undefined}
+            gradient={titleGradient}
           />
         </div>
 

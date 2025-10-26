@@ -25,6 +25,11 @@ export default function DeepCourseChaptersPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [deepCourseTitle, setDeepCourseTitle] = useState<string>("")
 
+  const borderStyle = useMemo(() => {
+    if (!deepcourseId) return ""
+    return localStorage.getItem(`deepcourse-border-${deepcourseId}`) || ""
+  }, [deepcourseId])
+
   useEffect(() => {
     if (deepcourseId) {
       const title = `Cours ${deepcourseId.split("-")[1] || deepcourseId}`
@@ -94,7 +99,7 @@ export default function DeepCourseChaptersPage() {
 
   return (
     <ScrollArea className="w-full h-full">
-      <div className="flex flex-col gap-8 pr-4 pb-4">
+      <div className="flex flex-col gap-8 pr-8 pb-4 px-4 mx-auto w-full">
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
           {chapters.map((chapter, index) => (
             <motion.div
@@ -114,6 +119,7 @@ export default function DeepCourseChaptersPage() {
                 icon={chapter.is_complete ? Book : Zap}
                 isComplete={chapter.is_complete}
                 badge={`#${index + 1}`}
+                borderStyle={borderStyle}
               />
             </motion.div>
           ))}

@@ -92,7 +92,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
               Historique
               {courseType !== "none" && ` (${courseType})`}
             </h3>
-            <div className="space-y-2 overflow-y-auto overflow-x-hidden flex-1 pr-4">
+            <div className="space-y-2 overflow-y-auto overflow-x-hidden flex-1 pr-4 px-2 mx-auto w-full">
               {filteredSessions.map((session) => {
                 const courseTypeLower = session.document_type?.toLowerCase() || ""
                 const isExercise = courseTypeLower === "exercice" || courseTypeLower === "exercise"

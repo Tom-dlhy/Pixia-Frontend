@@ -31,10 +31,8 @@ export function AppLayout({ user, children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <div className="flex h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
-        {/* Sidebar gauche */}
         <AppSidebar user={user} />
 
-        {/* Zone principale */}
         <SidebarInset className="relative flex h-full flex-1 flex-col overflow-hidden bg-transparent">
           <div className="neon-motion-border flex h-full w-full" style={neonLayoutStyle}>
             <div className="neon-motion-border__inner flex h-full w-full">

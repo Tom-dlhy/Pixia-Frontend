@@ -47,6 +47,11 @@ export function DeepCoursesLayout() {
       document.documentElement.classList.contains("dark")
   )
 
+  const courseGradient = useMemo(() => {
+    if (!deepcourseId) return ""
+    return localStorage.getItem(`deepcourse-gradient-${deepcourseId}`) || ""
+  }, [deepcourseId])
+
   useEffect(() => {
     const courseType: CourseType = depth === 3
       ? (activeTab === "cours" ? "cours" : activeTab === "exercice" ? "exercice" : "deep")
@@ -111,6 +116,7 @@ export function DeepCoursesLayout() {
             rightAction={enrichedActionConfig ? <ActionButton {...enrichedActionConfig} /> : null}
             className="text-foreground"
             iconType={headerIcon}
+            titleGradient={courseGradient}
           >
             {depth === 3 && (
               <DeepCourseTabs

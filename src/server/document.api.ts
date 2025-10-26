@@ -1,6 +1,6 @@
 import { ExerciseOutput, CourseOutput } from "~/models/Document"
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000/api"
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
 
 export class DocumentFetchError extends Error {
   constructor(
