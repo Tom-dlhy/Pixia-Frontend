@@ -390,7 +390,6 @@ const CheckPlainQuestionSchema = z.object({
 
 export interface CheckPlainQuestionResponse {
   is_correct: boolean
-  feedback?: string
 }
 
 export const checkPlainQuestion = createServerFn({ method: "POST" })
@@ -399,17 +398,15 @@ export const checkPlainQuestion = createServerFn({ method: "POST" })
     const { question, user_answer, expected_answer } = data
 
     try {
-
       const res = await correctPlainQuestion(question, user_answer, expected_answer)
 
-      if (!res || typeof res.is_correct !== "boolean") {
+      if (typeof res !== "boolean") {
         console.warn(`[checkPlainQuestion] Réponse invalide du backend:`, res)
-        return { is_correct: false, feedback: "Erreur lors de la correction" }
+        return { is_correct: false }
       }
 
       return {
-        is_correct: res.is_correct,
-        feedback: res.feedback || undefined,
+        is_correct: res,
       }
     } catch (error) {
       console.error(`[checkPlainQuestion] Erreur:`, error)
@@ -426,7 +423,7 @@ const CheckAllPlainQuestionsSchema = z.object({
 })
 
 export interface CheckAllPlainQuestionsResponse {
-  results: Array<{ is_correct: boolean; feedback?: string }>
+  results: Array<{ is_correct: boolean }>
 }
 
 export const checkAllPlainQuestions = createServerFn({ method: "POST" })
@@ -437,10 +434,14 @@ export const checkAllPlainQuestions = createServerFn({ method: "POST" })
     try {
       const results = await correctAllPlainQuestions(questions)
 
+      if (!Array.isArray(results)) {
+        console.warn(`[checkAllPlainQuestions] Réponse invalide du backend:`, results)
+        return { results: [] }
+      }
+
       return {
-        results: results.map(r => ({
-          is_correct: r.is_correct,
-          feedback: r.feedback || undefined,
+        results: results.map(isCorrect => ({
+          is_correct: typeof isCorrect === "boolean" ? isCorrect : false,
         }))
       }
     } catch (error) {

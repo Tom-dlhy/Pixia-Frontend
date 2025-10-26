@@ -343,29 +343,22 @@ export async function correctPlainQuestion(
   question: string,
   userAnswer: string,
   expectedAnswer: string
-): Promise<CorrectPlainQuestionResponse> {
-
-  const formData = new FormData()
-  formData.append("question", question)
-  formData.append("user_answer", userAnswer)
-  formData.append("expected_answer", expectedAnswer)
+): Promise<boolean> {
 
   const r = await fetch(`${API_BASE}/correctplainquestion`, {
     method: "POST",
-    body: formData,
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question, user_answer: userAnswer, expected_answer: expectedAnswer }),
   })
 
-  const result = await handle<CorrectPlainQuestionResponse>(r)
+  const result = await handle<{ is_correct: boolean }>(r)
 
-  if (!result || typeof result !== "object" || typeof result.is_correct !== "boolean") {
+  if (!result || typeof result.is_correct !== "boolean") {
     console.warn(`[correctPlainQuestion] Réponse invalide du backend:`, result)
-    return { is_correct: false, feedback: "Erreur lors de la correction" }
+    return false
   }
 
-  return {
-    is_correct: result.is_correct,
-    feedback: result.feedback || undefined,
-  }
+  return result.is_correct
 }
 
 export async function correctAllPlainQuestions(

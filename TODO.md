@@ -2,8 +2,6 @@
 
     - NE PAS OBLIGER DE REMETTRE http://localhost:8000/api PARTOUT
 
-    - corriger plain_text (F)
-
     - connecter suppimer chapter et supprimer deep course (B/F)
 
     - centrer pendant l'évaluation et que ca redirect pas vers cours (F)

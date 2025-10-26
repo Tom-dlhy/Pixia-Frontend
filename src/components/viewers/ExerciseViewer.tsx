@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -19,6 +20,7 @@ import { cn } from '~/lib/utils'
 interface ExerciseViewerProps {
   exercise: ExerciseOutput
   isEvaluation?: boolean
+  onEvaluationComplete?: () => void
 }
 
 const MARKDOWN_COMPONENTS = {
@@ -133,16 +135,52 @@ const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
   )
 })
 
-export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewerProps) {
+export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationComplete }: ExerciseViewerProps) {
   const { setTitle } = useDocumentTitle()
-  
-  const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>({})
-  const [openAnswers, setOpenAnswers] = useState<Record<string, string>>({})
-  const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>({})
+  const queryClient = useQueryClient()
+  const sessionStorageKey = `evaluation_${exercise.title || 'unknown'}`  
+  const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_userAnswers`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [openAnswers, setOpenAnswers] = useState<Record<string, string>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_openAnswers`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_correctedQuestions`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
   const [isCheckingAll, setIsCheckingAll] = useState(false)
+  const [isEvaluationFullyComplete, setIsEvaluationFullyComplete] = useState(false)
   
   const handlersCache = useRef<Map<string, any>>(new Map())
   const isCorrectedRef = useRef<Record<string, boolean>>({})
+  
+  // Calculer le nombre total de questions
+  const totalQuestions = useMemo(() => {
+    let count = 0
+    exercise.exercises.forEach((block) => {
+      if (isQCM(block)) count += block.questions.length
+      if (isOpen(block)) count += block.questions.length
+    })
+    return count
+  }, [exercise.exercises])
   
   useEffect(() => {
     isCorrectedRef.current = Object.keys(correctedQuestions).reduce((acc, key) => {
@@ -155,6 +193,52 @@ export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewe
     setTitle(exercise.title || null)
     return () => setTitle(null)
   }, [exercise.title, setTitle])
+
+  useEffect(() => {
+    if (isEvaluation && Object.keys(correctedQuestions).length > 0) {
+      queryClient.invalidateQueries({ queryKey: ["sessionCache"] })
+    }
+  }, [isEvaluation, correctedQuestions, queryClient])
+
+  useEffect(() => {
+    if (!isEvaluation || isCheckingAll) return
+    
+    const correctedCount = Object.keys(correctedQuestions).length
+    if (correctedCount > 0 && correctedCount === totalQuestions) {
+      if (!isEvaluationFullyComplete) {
+        setIsEvaluationFullyComplete(true)
+        setTimeout(() => {
+          onEvaluationComplete?.()
+        }, 500)
+      }
+    }
+  }, [isEvaluation, isCheckingAll, correctedQuestions, totalQuestions, isEvaluationFullyComplete, onEvaluationComplete])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_userAnswers`, JSON.stringify(userAnswers))
+    } catch {
+    }
+  }, [userAnswers, sessionStorageKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_openAnswers`, JSON.stringify(openAnswers))
+    } catch {
+      // Ignorer les erreurs localStorage
+    }
+  }, [openAnswers, sessionStorageKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_correctedQuestions`, JSON.stringify(correctedQuestions))
+    } catch {
+      // Ignorer les erreurs localStorage
+    }
+  }, [correctedQuestions, sessionStorageKey])
   
   if (!exercise.exercises || exercise.exercises.length === 0) {
     return (
@@ -441,7 +525,12 @@ export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewe
                               value={openAnswers[questionKey] ?? ''}
                               onChange={(e) => handleOpenAnswerChange(questionKey, e.target.value)}
                               disabled={isCorrected}
-                              className="mb-4 min-h-[100px]"
+                              className={cn(
+                                "w-full min-h-[100px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto scrollbar-hide mb-4",
+                                isCorrected
+                                  ? "text-foreground/50 placeholder:text-foreground/30"
+                                  : "text-foreground placeholder:text-foreground/60"
+                              )}
                             />
                             
                             {isCorrected && question.answers && (
@@ -468,35 +557,35 @@ export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewe
             ))}
             
             <div className="flex justify-center items-center gap-8 py-8">
-              <Button
-                onClick={handleCheckAllQuestions}
-                disabled={isCheckingAll}
-                size="lg"
-                className="gap-2"
-              >
-                {isCheckingAll ? "Évaluation en cours..." : "✓ Terminer l'évaluation"}
-              </Button>
-              
-              {Object.keys(correctedQuestions).length > 0 && (
+              {!isEvaluationFullyComplete ? (
+                <Button
+                  onClick={handleCheckAllQuestions}
+                  disabled={isCheckingAll}
+                  size="lg"
+                  className="gap-2"
+                >
+                  {isCheckingAll ? "Évaluation en cours..." : "✓ Corriger l'évaluation"}
+                </Button>
+              ) : (
                 <div className={`px-6 py-3 rounded-lg font-semibold text-lg ${
                   (() => {
-                    const totalQuestions = Object.keys(correctedQuestions).length
+                    const totalQs = Object.keys(correctedQuestions).length
                     const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
-                    const percentage = (correctAnswers / totalQuestions) * 100
+                    const percentage = (correctAnswers / totalQs) * 100
                     return percentage >= 50 ? 'bg-green-600/20 text-green-600 border border-green-600/50' : 'bg-red-600/20 text-red-600 border border-red-600/50'
                   })()
                 }`}>
                   {(() => {
-                    const totalQuestions = Object.keys(correctedQuestions).length
+                    const totalQs = Object.keys(correctedQuestions).length
                     const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
-                    return `${correctAnswers} / ${totalQuestions}`
+                    return `${correctAnswers} / ${totalQs}`
                   })()}
                 </div>
               )}
             </div>
           </>
         ) : (
-          // Mode normal : afficher exercices avec boutons individuels
+
           <>
             {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">
@@ -683,7 +772,12 @@ export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewe
                               value={openAnswers[questionKey] ?? ''}
                               onChange={(e) => handleOpenAnswerChange(questionKey, e.target.value)}
                               disabled={isCorrected}
-                              className="mb-4 min-h-[100px]"
+                              className={cn(
+                                "w-full min-h-[100px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto scrollbar-hide mb-4",
+                                isCorrected
+                                  ? "text-foreground/50 placeholder:text-foreground/30"
+                                  : "text-foreground placeholder:text-foreground/60"
+                              )}
                             />
                             
                             {isCorrected && question.answers && (

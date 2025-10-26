@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react"
 
 import { useCourseType } from "~/context/CourseTypeContext"
@@ -75,6 +76,14 @@ export function DeepCoursesLayout() {
     setIsCopiloteModalOpen(false)
   }
 
+  const handleEvaluationComplete = () => {
+    setIsEvaluating(false)
+  }
+
+  const handleEvaluationCompleted = useCallback(() => {
+    handleEvaluationComplete()
+  }, [])
+
   const enrichedActionConfig = useMemo(() => {
     if (!rightActionConfig) return null
     
@@ -124,6 +133,7 @@ export function DeepCoursesLayout() {
                 onChange={setActiveTab}
                 onDrawerToggle={setDrawerOpen}
                 onEvaluationStateChange={setIsEvaluating}
+                onEvaluationComplete={handleEvaluationCompleted}
               />
             )}
           </DeepCourseHeader>
@@ -133,7 +143,7 @@ export function DeepCoursesLayout() {
           "flex flex-1 overflow-hidden px-6 pb-10 pt-6 sm:px-10 min-h-0 transition-all duration-500",
           (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
         )}>
-          <DeepCourseMainContent isEvaluating={isEvaluating} />
+          <DeepCourseMainContent isEvaluating={isEvaluating} onEvaluationComplete={handleEvaluationComplete} />
         </div>
 
         <CopiloteModal
