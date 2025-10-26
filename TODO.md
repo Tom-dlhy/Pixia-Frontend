@@ -1,6 +1,6 @@
 # Mandatory
 
-    - NE PAS OBLIGER DE REMETTRE https://hackathon-backend-356001158171.europe-west9.run.app/api PARTOUT
+    - NE PAS OBLIGER DE REMETTRE http://localhost:8000/api PARTOUT
 
     - corriger plain_text (F)
 
@@ -35,6 +35,6 @@
 $k_{n+1}$
 
 
-https://hackathon-backend-356001158171.europe-west9.run.app/api
+http://localhost:8000/api
 
 http://localhost:8000/api
