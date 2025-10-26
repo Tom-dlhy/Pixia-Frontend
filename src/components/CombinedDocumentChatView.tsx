@@ -1,16 +1,15 @@
-/**
- * Exemple d'utilisation du hook useChatWithDocument
- * Affiche un document à gauche et le chat à droite
- * (comme dans ChatQuickViewLayout)
- */
-
-import { useEffect } from "react"
+import { useEffect, memo } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import "katex/dist/katex.min.css"
 import { useChatWithDocument } from "~/hooks/useDocument"
 import { useCourseContent } from "~/context/CourseContentContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { MarkdownRenderer } from '~/components/MarkdownRenderer'
 import { isQCM, isOpen, CourseOutput } from "~/models/Document"
 import { CourseWithChapters, Chapter } from "~/models/Course"
+import { cn } from "~/lib/utils"
 
 interface CombinedViewProps {
   sessionId: string
@@ -22,20 +21,17 @@ export function CombinedDocumentChatView({
   documentType,
 }: CombinedViewProps) {
   const { messages, document, documentType: detectedType, loading, error } =
-    useChatWithDocument(sessionId, documentType)
+    useChatWithDocument(sessionId, documentType ?? null)
   
   const { setCourse } = useCourseContent()
   const { setTitle } = useDocumentTitle()
 
-  // Quand le document est chargé, mettre à jour le contexte
   useEffect(() => {
     if (document && detectedType === "course") {
       const courseDoc = document as CourseOutput
       
-      // Utiliser 'parts' en fallback si 'chapters' n'est pas disponible
       const chapters = courseDoc.chapters || courseDoc.parts || []
       
-      // Convertir CourseOutput en CourseWithChapters
       const courseData: CourseWithChapters = {
         id: courseDoc.id || "",
         title: courseDoc.title || "Cours",
@@ -43,14 +39,17 @@ export function CombinedDocumentChatView({
           id: ch.id_chapter || Math.random().toString(),
           title: ch.title || "",
           content: ch.content || "",
+          img_base64: ch.img_base64,
+          schema_description: ch.schema_description,
+          diagram_type: ch.diagram_type,
+          diagram_code: ch.diagram_code,
+          schemas: ch.schemas,
         })),
         type: "cours",
       }
       
       setCourse(courseData)
       setTitle(courseData.title)
-      
-      console.log("✅ [CombinedDocumentChatView] Course data set in context:", courseData)
     }
   }, [document, detectedType, setCourse, setTitle])
 
@@ -68,7 +67,6 @@ export function CombinedDocumentChatView({
 
   return (
     <div className="flex h-full gap-6">
-      {/* LEFT PANEL - Document */}
       <div className="flex-1 overflow-y-auto">
         {!document ? (
           <div className="text-center text-muted-foreground p-8">
@@ -81,7 +79,6 @@ export function CombinedDocumentChatView({
         )}
       </div>
 
-      {/* RIGHT PANEL - Chat Messages */}
       <div className="flex-1 overflow-y-auto border-l">
         <div className="space-y-4 p-4">
           {messages.length === 0 ? (
@@ -108,7 +105,31 @@ export function CombinedDocumentChatView({
   )
 }
 
-// ==================== DISPLAY COMPONENTS ====================
+const COMBINED_MARKDOWN_COMPONENTS = {
+  p: ({ node, ...props }: any) => <p className="mb-0" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+  em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+  code: ({ node, ...props }: any) => (
+    <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+  ),
+}
+
+const COMBINED_REMARK_PLUGINS = [remarkMath]
+const COMBINED_REHYPE_PLUGINS = [rehypeKatex]
+
+const MarkdownText = memo(function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
+  return (
+    <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
+      <ReactMarkdown
+        remarkPlugins={COMBINED_REMARK_PLUGINS}
+        rehypePlugins={COMBINED_REHYPE_PLUGINS}
+        components={COMBINED_MARKDOWN_COMPONENTS}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  )
+})
 
 function ExerciseDisplay({ exercise }: any) {
   if (!exercise.exercises) {
@@ -125,7 +146,7 @@ function ExerciseDisplay({ exercise }: any) {
               <div className="mt-4 space-y-4">
                 {block.questions.map((q: any) => (
                   <div key={q.id} className="border-l-2 pl-4">
-                    <p className="font-semibold">{q.question}</p>
+                    <MarkdownText text={q.question} className="!prose-sm" />
                     <div className="mt-2 space-y-1">
                       {q.answers.map((a: any) => (
                         <label key={a.id} className="flex items-center gap-2">
@@ -134,13 +155,13 @@ function ExerciseDisplay({ exercise }: any) {
                             disabled
                             checked={a.is_selected}
                           />
-                          <span
+                          <div
                             className={
                               a.is_correct ? "text-green-600 font-semibold" : ""
                             }
                           >
-                            {a.text}
-                          </span>
+                            <MarkdownText text={a.text} className="!prose-sm" />
+                          </div>
                         </label>
                       ))}
                     </div>
@@ -161,7 +182,7 @@ function ExerciseDisplay({ exercise }: any) {
               <div className="mt-4 space-y-4">
                 {block.questions.map((q: any) => (
                   <div key={q.id} className="border-l-2 pl-4">
-                    <p className="font-semibold">{q.question}</p>
+                    <MarkdownText text={q.question} className="!prose-sm" />
                     <textarea
                       className="w-full mt-2 p-2 border rounded"
                       placeholder="Votre réponse..."
@@ -169,9 +190,9 @@ function ExerciseDisplay({ exercise }: any) {
                       disabled
                     />
                     {q.explanation && (
-                      <p className="text-sm text-gray-600 mt-2">
-                        💡 {q.explanation}
-                      </p>
+                      <div className="text-sm text-gray-600 mt-2">
+                        💡 <MarkdownText text={q.explanation} className="!prose-sm inline" />
+                      </div>
                     )}
                   </div>
                 ))}
@@ -200,7 +221,7 @@ function CourseDisplay({ course }: any) {
           </div>
           {chapter.schema_description && (
             <p className="text-sm text-gray-600 mt-4">
-              📊 Schéma: {chapter.schema_description}
+              Schéma: {chapter.schema_description}
             </p>
           )}
         </div>

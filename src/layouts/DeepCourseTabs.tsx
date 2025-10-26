@@ -11,7 +11,7 @@ export default function DeepCourseTabs({
   activeTab,
   onChange,
   onDrawerToggle,
-  onEvaluationStateChange, // 🔹 nouveau callback
+  onEvaluationStateChange,
 }: {
   activeTab: DeepCoursesTab
   onChange: (tab: DeepCoursesTab) => void
@@ -23,15 +23,14 @@ export default function DeepCourseTabs({
   const [timer, setTimer] = useState<number | null>(null)
   const [isRunning, setIsRunning] = useState(false)
 
-// --- Décrémentation automatique du timer ---
 useEffect(() => {
   if (!isRunning || timer === null) return
 
   if (timer <= 0) {
     setIsRunning(false)
-    setTimer(null) // ✅ cache le timer
+    setTimer(null) 
     onEvaluationStateChange?.(false)
-    onChange("cours") // ✅ revient sur "cours"
+    onChange("cours") 
     return
   }
 
@@ -42,13 +41,10 @@ useEffect(() => {
   return () => clearInterval(interval)
 }, [isRunning, timer])
 
-
-  // --- Gestion du drawer ---
   const handleDrawerChange = (open: boolean) => {
     setDrawerOpen(open)
     onDrawerToggle?.(open)
 
-    // Si le drawer se ferme (clic en dehors ou annulation)
     if (!open) onChange("cours")
   }
 
@@ -94,14 +90,12 @@ useEffect(() => {
 
   return (
     <>
-      {/* --- Conteneur principal avec blur quand drawer ouvert --- */}
       <div
         className={cn(
           "relative flex items-center justify-center w-full transition-all duration-500",
           drawerOpen && "blur-md brightness-75 pointer-events-none"
         )}
       >
-        {/* --- Tabs centrés --- */}
         <Tabs
           value={activeTab}
           onValueChange={(v) => onChange(v as DeepCoursesTab)}
@@ -115,7 +109,6 @@ useEffect(() => {
               const isActive = activeTab === tab
 
               const handleClick = () => {
-                // 🔒 Empêche l’ouverture du drawer s’il y a un timer en cours
                 if (tab === "evaluation") {
                   if (isRunning && timer && timer > 0) return
                   handleDrawerChange(true)
@@ -157,7 +150,6 @@ useEffect(() => {
           </TabsList>
         </Tabs>
 
-        {/* --- Timer positionné à droite --- */}
         {timer !== null && (
           <div
             className={cn(
@@ -177,16 +169,15 @@ useEffect(() => {
         )}
       </div>
 
-      {/* --- Drawer d’évaluation --- */}
       <EvaluationDurationDrawerButtons
         open={drawerOpen}
         onOpenChange={handleDrawerChange}
         onConfirm={(duration) => {
-          console.log("Durée choisie :", duration)
+          
           setTimer(duration * 60)
           setIsRunning(true)
           onChange("evaluation")
-          onEvaluationStateChange?.(true) // 🔹 lancement de l’évaluation
+          onEvaluationStateChange?.(true)
         }}
         onCancel={() => {
           handleDrawerChange(false)

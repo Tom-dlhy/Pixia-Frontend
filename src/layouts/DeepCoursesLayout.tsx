@@ -47,7 +47,11 @@ export function DeepCoursesLayout() {
       document.documentElement.classList.contains("dark")
   )
 
-  // Sync CourseType avec activeTab
+  const courseGradient = useMemo(() => {
+    if (!deepcourseId) return ""
+    return localStorage.getItem(`deepcourse-gradient-${deepcourseId}`) || ""
+  }, [deepcourseId])
+
   useEffect(() => {
     const courseType: CourseType = depth === 3
       ? (activeTab === "cours" ? "cours" : activeTab === "exercice" ? "exercice" : "deep")
@@ -55,12 +59,14 @@ export function DeepCoursesLayout() {
     setCourseType(courseType)
   }, [depth, activeTab, setCourseType])
 
-  // Reset activeTab quand depth < 3
   useEffect(() => {
     if (depth < 3) setActiveTab("cours")
   }, [depth])
 
-  // Callbacks pour ouvrir le modal Copilote
+  useEffect(() => {
+    setIsEvaluating(false)
+  }, [chapterId])
+
   const handleOpenCopiloteModal = () => {
     setIsCopiloteModalOpen(true)
   }
@@ -69,7 +75,6 @@ export function DeepCoursesLayout() {
     setIsCopiloteModalOpen(false)
   }
 
-  // Enrichir le rightActionConfig avec les callbacks du modal
   const enrichedActionConfig = useMemo(() => {
     if (!rightActionConfig) return null
     
@@ -101,7 +106,6 @@ export function DeepCoursesLayout() {
           gradientClass
         )}
       >
-        {/* HEADER */}
         <div className={cn(
           "flex-shrink-0 px-6 py-10 sm:px-10 transition-all duration-500",
           (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
@@ -112,6 +116,7 @@ export function DeepCoursesLayout() {
             rightAction={enrichedActionConfig ? <ActionButton {...enrichedActionConfig} /> : null}
             className="text-foreground"
             iconType={headerIcon}
+            titleGradient={courseGradient}
           >
             {depth === 3 && (
               <DeepCourseTabs
@@ -124,7 +129,6 @@ export function DeepCoursesLayout() {
           </DeepCourseHeader>
         </div>
 
-        {/* MAIN CONTENT */}
         <div className={cn(
           "flex flex-1 overflow-hidden px-6 pb-10 pt-6 sm:px-10 min-h-0 transition-all duration-500",
           (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
@@ -132,7 +136,6 @@ export function DeepCoursesLayout() {
           <DeepCourseMainContent isEvaluating={isEvaluating} />
         </div>
 
-        {/* Copilote Modal */}
         <CopiloteModal
           isOpen={isCopiloteModalOpen}
           onClose={handleCloseCopiloteModal}

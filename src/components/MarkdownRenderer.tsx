@@ -8,16 +8,10 @@ interface MarkdownRendererProps {
   className?: string
 }
 
-/**
- * Composant pour rendre le Markdown avec la même logique que generatePdfFromCourseData.ts
- * Reproduit l'indentation, les sauts de ligne, et la mise en forme (gras, italique, code)
- */
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
-  // Utilise la même logique de détection que le PDF
   const isMarkdownContent = isMarkdown(content)
 
   if (!isMarkdownContent) {
-    // Si ce n'est pas du Markdown, rend simplement le texte avec des sauts de ligne
     return (
       <div className={cn("whitespace-pre-wrap text-sm leading-relaxed", className)}>
         {content}
@@ -25,7 +19,6 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
     )
   }
 
-  // Parse le Markdown comme dans le PDF
   const elements = parseMarkdown(content)
 
   return (
@@ -37,9 +30,6 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   )
 }
 
-/**
- * Rend un élément Markdown individuel
- */
 function MarkdownElement({ element }: { element: any }) {
   switch (element.type) {
     case 'heading':
@@ -102,10 +92,6 @@ function MarkdownElement({ element }: { element: any }) {
   }
 }
 
-/**
- * Rend le texte avec mise en forme inline (gras, italique, code)
- * Utilise la même logique que renderParagraphWithFormatting dans le PDF
- */
 function InlineFormattedText({ text }: { text: string }) {
   const parts = parseInlineMarkdown(text)
 
@@ -138,18 +124,10 @@ function InlineFormattedText({ text }: { text: string }) {
   )
 }
 
-// --- Fonctions utilitaires (mêmes que dans generatePdfFromCourseData.ts) ---
-
-/**
- * Détecte si le contenu est du Markdown
- */
 function isMarkdown(text: string): boolean {
   return /^#+\s|^\*\*|^__|\n#+\s|\n\*\*|\n__|`|^\*\s|^\d+\./m.test(text)
 }
 
-/**
- * Parse le Markdown et retourne un tableau d'éléments structurés
- */
 function parseMarkdown(markdown: string): Array<{
   type: 'heading' | 'paragraph' | 'bold' | 'italic' | 'code' | 'list' | 'blockquote'
   level?: number
@@ -163,7 +141,6 @@ function parseMarkdown(markdown: string): Array<{
   while (i < lines.length) {
     const line = lines[i]
 
-    // Heading
     if (line.match(/^#{1,6}\s/)) {
       const match = line.match(/^(#{1,6})\s(.+)$/)
       if (match) {
@@ -178,7 +155,6 @@ function parseMarkdown(markdown: string): Array<{
       continue
     }
 
-    // Blockquote
     if (line.startsWith('> ')) {
       let quote = line.slice(2)
       i++
@@ -194,7 +170,6 @@ function parseMarkdown(markdown: string): Array<{
       continue
     }
 
-    // Code block
     if (line.startsWith('```')) {
       let code = ''
       i++
@@ -202,7 +177,7 @@ function parseMarkdown(markdown: string): Array<{
         code += lines[i] + '\n'
         i++
       }
-      if (i < lines.length) i++ // Skip closing ```
+      if (i < lines.length) i++ 
       elements.push({
         type: 'code',
         content: code.trim(),
@@ -211,7 +186,6 @@ function parseMarkdown(markdown: string): Array<{
       continue
     }
 
-    // List items
     if (line.match(/^\s*[-*+]\s/) || line.match(/^\s*\d+\.\s/)) {
       let list = ''
       while (i < lines.length && (lines[i].match(/^\s*[-*+]\s/) || lines[i].match(/^\s*\d+\.\s/))) {
@@ -226,7 +200,6 @@ function parseMarkdown(markdown: string): Array<{
       continue
     }
 
-    // Paragraph
     if (line.trim()) {
       elements.push({
         type: 'paragraph',
@@ -241,9 +214,6 @@ function parseMarkdown(markdown: string): Array<{
   return elements
 }
 
-/**
- * Parse le texte pour les éléments Markdown inline
- */
 function parseInlineMarkdown(text: string): Array<{ type: 'bold' | 'italic' | 'code' | 'normal', content: string }> {
   const parts: Array<{ type: 'bold' | 'italic' | 'code' | 'normal', content: string }> = []
 
@@ -251,14 +221,12 @@ function parseInlineMarkdown(text: string): Array<{ type: 'bold' | 'italic' | 'c
     return [{ type: 'normal', content: text }]
   }
 
-  // Regex pour matcher les patterns Markdown
   const regex = /`([^`]+)`|\*\*(.+?)\*\*|__(.+?)__|\_([^_]+)\_|\*([^*]+)\*|([^`*_]+)/g
 
   let match
   let lastIndex = 0
 
   while ((match = regex.exec(text)) !== null) {
-    // Ajouter le texte avant le match si c'est pas au début
     if (match.index > lastIndex && !match[0].match(/^`|^\*|^_|^__/)) {
       const gap = text.substring(lastIndex, match.index)
       if (gap.trim()) {
@@ -267,22 +235,16 @@ function parseInlineMarkdown(text: string): Array<{ type: 'bold' | 'italic' | 'c
     }
 
     if (match[1]) {
-      // `code`
       parts.push({ type: 'code', content: match[1] })
     } else if (match[2]) {
-      // **gras**
       parts.push({ type: 'bold', content: match[2] })
     } else if (match[3]) {
-      // __gras__
       parts.push({ type: 'bold', content: match[3] })
     } else if (match[4]) {
-      // _italique_
       parts.push({ type: 'italic', content: match[4] })
     } else if (match[5]) {
-      // *italique*
       parts.push({ type: 'italic', content: match[5] })
     } else if (match[6]) {
-      // texte normal
       if (match[6].trim()) {
         parts.push({ type: 'normal', content: match[6] })
       }
@@ -291,7 +253,6 @@ function parseInlineMarkdown(text: string): Array<{ type: 'bold' | 'italic' | 'c
     lastIndex = regex.lastIndex
   }
 
-  // Ajouter le texte restant après le dernier match
   if (lastIndex < text.length) {
     const remaining = text.substring(lastIndex)
     if (remaining.trim()) {

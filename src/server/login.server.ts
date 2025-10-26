@@ -3,17 +3,11 @@ import { z } from "zod"
 import { login } from "./login"
 import { HttpError } from "./httpError"
 
-// -------------------------
-// 🔹 Validation des entrées
-// -------------------------
 const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6).max(100),
 })
 
-// -------------------------
-// 🔹 Server Function principale
-// -------------------------
 export const loginUser = createServerFn({ method: "POST" })
   .inputValidator(LoginSchema)
   .handler(async ({ data }) => {
@@ -36,6 +30,8 @@ export const loginUser = createServerFn({ method: "POST" })
         userNotFound: false,
       }
     } catch (error) {
+      console.warn("[login.server.ts] login() failed:", error)
+
       if (error instanceof HttpError) {
         return {
           success: false as const,
@@ -52,7 +48,7 @@ export const loginUser = createServerFn({ method: "POST" })
         }
       }
 
-      console.error("Unexpected login error", error)
+      console.error("Unexpected login error:", error)
       return {
         success: false as const,
         error: true as const,

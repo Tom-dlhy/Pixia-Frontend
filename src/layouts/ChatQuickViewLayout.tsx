@@ -20,7 +20,7 @@ interface ChatQuickViewLayoutProps {
 
 export function ChatQuickViewLayout({ 
   children, 
-  title = "", // Titres réels viennent de DocumentTitleContext (ExerciseViewer/CourseViewer)
+  title = "", 
   backTo = "/chat",
   courseType: overrideCourseType
 }: ChatQuickViewLayoutProps) {
@@ -30,9 +30,6 @@ export function ChatQuickViewLayout({
   const { title: documentTitle } = useDocumentTitle()
   const { session } = useAppSession()
   const contentRef = useRef<HTMLDivElement>(null)
-  
-  // 🔹 Essayer d'extraire l'ID des params de route directement avec useParams
-  // NOTE: useParams peut lever une erreur si on n'est pas sur la bonne route
   let courseId: string | undefined
   let exerciseId: string | undefined
   
@@ -40,7 +37,6 @@ export function ChatQuickViewLayout({
     const courseParams = useParams({ from: "/_authed/course/$id" })
     courseId = courseParams.id as string | undefined
   } catch {
-    // Pas sur la route course, c'est ok
     courseId = undefined
   }
   
@@ -48,46 +44,34 @@ export function ChatQuickViewLayout({
     const exerciseParams = useParams({ from: "/_authed/exercise/$id" })
     exerciseId = exerciseParams.id as string | undefined
   } catch {
-    // Pas sur la route exercise, c'est ok
     exerciseId = undefined
   }
   
   const routeId = courseId || exerciseId
-  
-  // Utiliser le courseType passé en prop, sinon utiliser celui du contexte
   const courseType = overrideCourseType || contextCourseType
-  
-  // Si un courseType override est fourni, le définir dans le contexte
   useEffect(() => {
     if (overrideCourseType && overrideCourseType !== contextCourseType) {
       setCourseType(overrideCourseType)
     }
   }, [overrideCourseType, contextCourseType, setCourseType])
 
-  // 🔹 Récupération du sessionId: d'abord les params de route, puis fallback URL
   const sessionId = useMemo(() => {
-    // ✅ Priorité 1: Utiliser l'ID extrait des params de route
     if (routeId) {
-      console.log(`✅ [ChatQuickViewLayout] sessionId depuis useParams: ${routeId}`)
       return routeId
     }
     
-    // ⚠️ Fallback: Extraire de l'URL (au cas où useParams ne fonctionne pas)
     const pathSegments = location.pathname.split("/").filter(Boolean)
     
     for (let i = 0; i < pathSegments.length; i++) {
       if ((pathSegments[i] === "course" || pathSegments[i] === "exercise") && pathSegments[i + 1]) {
         const id = pathSegments[i + 1]
-        console.log(`⚠️ [ChatQuickViewLayout] sessionId depuis URL fallback: ${id}`)
         return id
       }
     }
     
-    console.log(`📦 [ChatQuickViewLayout] Aucun sessionId trouvé`)
     return null
   }, [routeId, location.pathname])
   
-  // 🔹 Récupération du userId depuis la session
   const userId = useMemo(() => {
     if (session.userId != null) {
       return String(session.userId)
@@ -95,22 +79,17 @@ export function ChatQuickViewLayout({
     return null
   }, [session.userId])
 
-  // 🔹 Format d'affichage convivial
   const formattedSession = useMemo(() => {
     if (!sessionId) return "Session"
     if (sessionId.startsWith("chat-")) return `Chat ${sessionId.split("chat-")[1]}`
     return sessionId
   }, [sessionId])
 
-  // Use document title if available, otherwise use passed title
   const displayTitle = documentTitle || title
-
-  console.log('📄 [ChatQuickViewLayout] Title source:', documentTitle ? '✅ From DocumentTitleContext' : title ? '⚠️ From props' : '❌ None')
 
   return (
     <div className="flex h-dvh w-full overflow-hidden bg-sidebar text-sidebar-foreground">
       <div className="flex h-full w-full flex-col overflow-hidden bg-background">
-        {/* HEADER */}
         <div className="flex-shrink-0 px-10 pt-10 pb-4">
           <ChatHeader
             title={displayTitle}
@@ -119,9 +98,7 @@ export function ChatQuickViewLayout({
           />
         </div>
 
-        {/* MAIN CONTENT */}
         <div className="flex flex-1 gap-6 overflow-hidden px-10 pb-10 pt-6 min-h-0">
-          {/* LEFT PANEL — Conversation Area */}
           <div
             ref={contentRef}
             className="
@@ -140,7 +117,6 @@ export function ChatQuickViewLayout({
             </ScrollArea>
           </div>
 
-          {/* RIGHT PANEL — Copilote */}
           <div className="flex flex-[0.3] flex-col overflow-hidden min-h-0">
             <CopiloteContainer sessionId={sessionId} userId={userId} courseType={courseType} />
           </div>

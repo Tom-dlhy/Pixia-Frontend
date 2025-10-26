@@ -36,16 +36,13 @@ function SettingsPage() {
     if (typeof window === 'undefined') return;
     setIsSaving(true);
     try {
-      // Vérifier que l'utilisateur est authentifié
       if (!session.userId) {
-        console.error('❌ [Settings] Utilisateur non authentifié');
         setStatus('error');
         toast.error('Vous devez être connecté pour enregistrer vos paramètres.');
         setIsSaving(false);
         return;
       }
 
-      // Appeler la server function pour mettre à jour les paramètres
       const updateSettings = async () => {
         try {
           const result = await updateSettingsServerFn({
@@ -57,7 +54,6 @@ function SettingsPage() {
             },
           });
 
-          console.log('✅ [Settings] Paramètres mis à jour:', result);
           setStatus('idle');
           toast.success('Modifications enregistrées.', {
             className:
@@ -67,7 +63,6 @@ function SettingsPage() {
             window.history.back();
           }, 200);
         } catch (error) {
-          console.error('❌ [Settings] Erreur lors de la sauvegarde:', error);
           setStatus('error');
           toast.error("Impossible d'enregistrer vos modifications.");
         } finally {
@@ -94,7 +89,6 @@ function SettingsPage() {
           </p>
         </div>
 
-        {/* --- Carte principale --- */}
         <Card
           className={cn(
             "flex flex-col gap-6 rounded-3xl border border-white/20 dark:border-white/10",
@@ -103,31 +97,38 @@ function SettingsPage() {
             "shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all duration-300 p-8"
           )}
         >
-          {/* --- Email (lecture seule) --- */}
-          {session.userEmail && (
-            <div className="rounded-2xl border border-white/20 dark:border-white/10 bg-[rgba(255,255,255,0.08)] dark:bg-[rgba(24,24,27,0.3)] p-4">
-              <Label className="text-xs text-muted-foreground">Email</Label>
-              <p className="text-sm font-medium mt-2">{session.userEmail}</p>
-            </div>
-          )}
-
           <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
             <div className="flex flex-col gap-4">
+              {session.userEmail && (
+                <Card
+                  className={cn(
+                    "rounded-2xl border border-white/20 dark:border-white/10",
+                    "bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.4)]",
+                    "backdrop-blur-xl backdrop-saturate-150",
+                    "shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_6px_16px_rgba(0,0,0,0.2)]",
+                    "transition-all duration-300 p-4"
+                  )}
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={session.userEmail}
+                      disabled
+                      className="bg-opacity-50 cursor-not-allowed"
+                    />
+                  </div>
+                </Card>
+              )}
               <SettingsField
                 label="Nom complet"
                 placeholder="Alex Dupont"
                 value={settings.fullName}
                 onChange={(val) => setField('fullName', val)}
               />
-              <SettingsField
-                label="Token Notion"
-                placeholder="https://notion.so/votre-espace ou votre token"
-                value={settings.notionToken}
-                onChange={(val) => setField('notionToken', val)}
-              />
             </div>
 
-            {/* --- Bloc niveau d’étude --- */}
             <Card
               className={cn(
                 "rounded-2xl border border-white/20 dark:border-white/10",

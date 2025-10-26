@@ -1,22 +1,18 @@
 import { useQuery } from "@tanstack/react-query"
+import { useMemo } from "react"
 import { getChapterDocuments } from "~/server/chat.server"
 
-/**
- * Hook pour récupérer les IDs des documents d'un chapitre (cours, exercice, évaluation)
- * 
- * Utilise le système de cache fresh data avec staleTime: 0
- */
 export function useChapterDocuments(
   chapterId: string | undefined,
   options?: { enabled?: boolean }
 ) {
-  const { enabled = !!chapterId } = options || {}
+  const memoizedChapterId = useMemo(() => chapterId, [chapterId])
+  const { enabled = !!memoizedChapterId } = options || {}
 
   return useQuery({
-    queryKey: ["chapterDocuments", chapterId],
+    queryKey: ["chapterDocuments", memoizedChapterId],
     queryFn: async () => {
-      if (!chapterId) {
-        console.log(`⚠️ [useChapterDocuments] chapterId non fourni`)
+      if (!memoizedChapterId) {
         return {
           chapter_id: "",
           exercice_session_id: "",
@@ -24,17 +20,14 @@ export function useChapterDocuments(
           evaluation_session_id: "",
         }
       }
-
-      console.log(`🔍 [useChapterDocuments] Récupération des documents pour chapitre: ${chapterId}`)
-      const result = await getChapterDocuments({ data: { chapter_id: chapterId } })
-      console.log(`✅ [useChapterDocuments] Documents récupérés:`, result)
+      const result = await getChapterDocuments({ data: { chapter_id: memoizedChapterId } })
       return result
     },
     enabled,
-    staleTime: 0, // Toujours considérer les données comme fraîches
-    gcTime: 30 * 1000, // Garbage collect après 30s
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false, 
+    refetchOnReconnect: false,
   })
 }

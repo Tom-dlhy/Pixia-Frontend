@@ -10,6 +10,7 @@ interface DeepCourseHeaderProps {
   children?: React.ReactNode
   className?: string
   iconType?: 'graduation-cap' | 'book-open' | null
+  titleGradient?: string
 }
 
 export default function DeepCourseHeader({
@@ -20,6 +21,7 @@ export default function DeepCourseHeader({
   children,
   className,
   iconType,
+  titleGradient,
 }: DeepCourseHeaderProps) {
   const iconMap = {
     'graduation-cap': <GraduationCap className="h-8 w-8" />,
@@ -29,12 +31,9 @@ export default function DeepCourseHeader({
 
   return (
     <header className={cn("relative flex flex-col gap-8", className)}>
-      {/* Ligne principale : boutons + titre centré */}
       <div className="relative flex items-center justify-between">
-        {/* Bouton gauche */}
         <div className="flex-1 flex justify-start z-10">{leftAction}</div>
 
-        {/* Titre centré */}
         <div className="absolute left-1/2 -translate-x-1/2">
           <SectionTitle
             title={title}
@@ -42,14 +41,13 @@ export default function DeepCourseHeader({
             align="center"
             size="lg"
             icon={iconType ? iconMap[iconType] : undefined}
+            gradient={titleGradient}
           />
         </div>
 
-        {/* Bouton droit */}
         <div className="flex-1 flex justify-end z-10">{rightAction}</div>
       </div>
 
-      {/* Onglets (Cours / Exercice / Évaluation) */}
       {children && <div className="flex justify-center">{children}</div>}
     </header>
   )

@@ -10,10 +10,6 @@ interface ContentContainerProps {
   className?: string
 }
 
-/**
- * Generic container for main page content.
- * Styled with a glassmorphism effect for visual consistency with CopiloteContainer.
- */
 export default function ContentContainer({
   children,
   className = "",

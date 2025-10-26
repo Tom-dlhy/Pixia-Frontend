@@ -42,6 +42,12 @@ export function NavUser({ user }: NavUserProps) {
   const { session } = useAppSession()
   const { settings, updateSettings, isLoaded } = useSettings()
 
+  const userFullName = user.givenName || user.familyName
+    ? [user.givenName, user.familyName].filter(Boolean).join(" ")
+    : null
+
+  const sessionFullName = session.name || null
+
   const resolvedEmail = user.email ?? session.userEmail ?? settings.gmail ?? ""
   const resolvedName = user.name ?? session.name ?? settings.fullName ?? null
 

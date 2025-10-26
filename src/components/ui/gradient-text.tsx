@@ -26,7 +26,6 @@ function GradientText({
   }, [])
 
   if (!hydrated) {
-    // Retourne un rendu neutre (évite divergence SSR)
     return <span className={cn('opacity-0 select-none', className)}>{text}</span>
   }
 

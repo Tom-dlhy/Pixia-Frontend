@@ -42,18 +42,15 @@ export function ThemeSwitch({ className }: { className?: string }) {
       aria-label="Basculer le mode sombre"
       className={cn(
         "relative inline-flex h-7 w-12 items-center rounded-full p-[2px] transition-all duration-300",
-        // 💎 fond en verre translucide
         "border border-white/20 dark:border-white/10",
         "bg-[rgba(255,255,255,0.25)] dark:bg-[rgba(24,24,27,0.4)]",
         "backdrop-blur-xl backdrop-saturate-150",
         "shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.1)]",
-        // ✨ hover effet lumineux
         "hover:scale-[1.05] hover:shadow-[inset_0_1px_4px_rgba(255,255,255,0.6),0_6px_18px_rgba(0,0,0,0.15)]",
         "transition-transform ease-out",
         className
       )}
     >
-      {/* halo de fond */}
       <div
         className={cn(
           "absolute inset-0 rounded-full transition-opacity duration-300 blur-[8px]",
@@ -63,7 +60,6 @@ export function ThemeSwitch({ className }: { className?: string }) {
         )}
       />
 
-      {/* Bouton interne */}
       <span
         className={cn(
           "relative z-10 flex h-5 w-5 items-center justify-center rounded-full shadow-md transition-transform duration-300",
