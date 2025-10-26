@@ -23,10 +23,6 @@ interface EvaluationDurationDrawerProps {
   onCancel?: () => void 
 }
 
-
-/* =========================================================
-   VERSION 1 — SLIDER
-========================================================= */
 export function EvaluationDurationDrawerSlider({
   open,
   onOpenChange,
@@ -44,7 +40,6 @@ export function EvaluationDurationDrawerSlider({
         )}
       >
         <div className="mx-auto w-full max-w-3xl">
-          {/* --- HEADER --- */}
           <DrawerHeader className="text-center space-y-1">
             <DrawerTitle className="text-2xl font-semibold text-center">
               Durée de l’évaluation
@@ -54,7 +49,6 @@ export function EvaluationDurationDrawerSlider({
             </DrawerDescription>
           </DrawerHeader>
 
-          {/* --- VALEUR + SLIDER --- */}
           <div className="p-6 flex flex-col items-center gap-8">
             <AnimatePresence mode="wait">
               <motion.div
@@ -93,9 +87,7 @@ export function EvaluationDurationDrawerSlider({
             />
           </div>
 
-          {/* --- FOOTER --- */}
           <DrawerFooter className="flex flex-col items-center gap-3 mt-6">
-            {/* --- Bouton Commencer --- */}
             <Button
               className="w-full max-w-sm mx-auto h-11 rounded-xl 
               relative overflow-hidden 
@@ -115,7 +107,6 @@ export function EvaluationDurationDrawerSlider({
               Commencer ({duration} min)
             </Button>
 
-            {/* --- Bouton Annuler avec effet destructif en hover --- */}
             <DrawerClose asChild>
               <Button
                 variant="outline"
@@ -142,14 +133,11 @@ export function EvaluationDurationDrawerSlider({
   )
 }
 
-/* =========================================================
-   VERSION 2 — MOVE GOAL-LIKE
-========================================================= */
 export function EvaluationDurationDrawerButtons({
   open,
   onOpenChange,
   onConfirm,
-  onCancel, // ✅ ajout ici
+  onCancel, 
 }: EvaluationDurationDrawerProps) {
   const [duration, setDuration] = React.useState(30)
 
@@ -165,7 +153,6 @@ export function EvaluationDurationDrawerButtons({
         )}
       >
         <div className="mx-auto w-full max-w-3xl">
-          {/* --- TITRE --- */}
           <DrawerHeader className="text-center space-y-1">
             <DrawerTitle className="text-2xl font-semibold text-center">
               Durée de l’évaluation
@@ -175,10 +162,8 @@ export function EvaluationDurationDrawerButtons({
             </DrawerDescription>
           </DrawerHeader>
 
-          {/* --- CHIFFRE + BOUTONS --- */}
           <div className="p-6 flex flex-col items-center">
             <div className="flex items-center justify-center gap-10">
-              {/* Bouton - */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 className="h-14 w-14 rounded-full 
@@ -192,7 +177,6 @@ export function EvaluationDurationDrawerButtons({
                 <Minus className="h-5 w-5" />
               </motion.button>
 
-            {/* --- CHIFFRE AVEC EFFET VERRE APPLE PARFAIT --- */}
             <motion.div
                 animate={{ scale: [1, 1.08, 1], opacity: [1, 0.95, 1] }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
@@ -206,7 +190,6 @@ export function EvaluationDurationDrawerButtons({
                 {duration}
             </motion.div>
 
-              {/* Bouton + */}
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 className="h-14 w-14 rounded-full 
@@ -221,7 +204,6 @@ export function EvaluationDurationDrawerButtons({
               </motion.button>
             </div>
 
-            {/* Label */}
             <motion.div
               key={`text-${duration}`}
               initial={{ opacity: 0, y: 10 }}
@@ -233,9 +215,7 @@ export function EvaluationDurationDrawerButtons({
             </motion.div>
           </div>
 
-{/* --- FOOTER --- */}
 <DrawerFooter className="flex flex-col items-center gap-3 mt-6">
-  {/* --- Bouton Commencer --- */}
   <Button
     variant="outline"
     className="w-full max-w-sm mx-auto rounded-xl font-medium
@@ -254,8 +234,6 @@ export function EvaluationDurationDrawerButtons({
     Commencer ({duration} min)
   </Button>
 
-
-{/* --- Bouton Destructif (rouge glassmorphic Apple-like) --- */}
 <DrawerClose asChild>
   <Button
     variant="outline"

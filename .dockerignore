@@ -1,9 +1,9 @@
 *
 !package.json
 !package-lock.json
-!tailwind.config.mjs
+!tailwind.config.js
 !tsconfig.json
-!postcss.config.mjs
+!postcss.config.js
 !vite.config.ts
-!src
-!public
+!src/
+!public/

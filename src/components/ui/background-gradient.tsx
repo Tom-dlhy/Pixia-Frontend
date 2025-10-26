@@ -50,7 +50,6 @@ export const BackgroundGradient = ({
         className="absolute inset-0 rounded-3xl z-[2] opacity-80"
       />
 
-      {/* Bordure nette */}
       <motion.div
         variants={animate ? variants : undefined}
         initial={animate ? "initial" : undefined}
@@ -67,7 +66,6 @@ export const BackgroundGradient = ({
         className="absolute inset-0 rounded-3xl z-[2]"
       />
 
-      {/* Contenu */}
       <div className={cn("relative z-[3]", className)}>{children}</div>
     </div>
   );

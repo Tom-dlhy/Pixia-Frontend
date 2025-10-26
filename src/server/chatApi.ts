@@ -1,4 +1,4 @@
-const API_BASE: string | undefined = process.env.API_BASE
+const API_BASE: string = process.env.API_BASE || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
 
 export type SendChatResponse = {
   session_id: string
@@ -37,9 +37,6 @@ export type FetchChaptersResponse = {
   chapters: Chapter[]
 }
 
-// -------------------------
-// 🔹 Message de chat
-// -------------------------
 export type EventMessage = {
   type: "user" | "bot" | "system" | "unknown"
   text: string | null
@@ -61,34 +58,18 @@ async function handle<T = any>(r: Response): Promise<T> {
   return r.json() as Promise<T>
 }
 
-/**
- * Extrait le contenu du message après la balise [ENDCONTEXT]
- * 
- * Format attendu:
- * [Indications pour le bot]
- * [ENDCONTEXT]
- * [Contenu du message à afficher]
- * 
- * Si la balise est présente, retourne UNIQUEMENT ce qui vient après
- * Si la balise n'est pas présente, retourne le texte entier
- */
 function extractMessageContent(text: string | null | undefined): string {
   if (!text) return ""
   
-  // Regex pour extraire tout ce qui vient après [ENDCONTEXT]
-  // Cherche [ENDCONTEXT] (case-insensitive) et capture tout après
   const match = text.match(/\[ENDCONTEXT\]([\s\S]*)/i)
   
   if (match && match[1]) {
-    // On prend le groupe capturé (tout après la balise) et on trim
     const content = match[1].trim()
-    // Ne retourner que si y'a du contenu après la balise
     if (content) {
       return content
     }
   }
   
-  // Si pas de balise trouvée OU si rien après la balise, retourner le texte entier
   return text.trim()
 }
 
@@ -115,17 +96,12 @@ export async function sendChat(
       body: JSON.stringify(jsonBody),
     }
   }
-  console.log(`📡 [sendChat] Envoi du message :\n  - user_id: ${(data instanceof FormData) ? data.get("user_id") : data.user_id}\n  - session_id: ${(data instanceof FormData) ? data.get("session_id") : data.sessionId}\n  - message: ${(data instanceof FormData) ? data.get("message") : data.message}`)
 
   const r = await fetch(`${API_BASE}/chat`, options)
   return handle<SendChatResponse>(r)
 }
 
-// -------------------------
-// 🔹 Récupérer toutes les sessions de chat
-// -------------------------
 export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse> {
-  console.log(`📡 [fetchAllChat] Appel API pour user_id: ${userId}`)
   
   const r = await fetch(`${API_BASE}/fetchallchats`, {
     method: "POST",
@@ -135,22 +111,16 @@ export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse
   
   const result = await handle<FetchAllChatResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
-    console.warn(`⚠️ [fetchAllChat] Réponse invalide du backend:`, result)
+    console.warn(`[fetchAllChat] Réponse invalide du backend:`, result)
     return { sessions: [] }
   }
   
-  console.log(`📡 [fetchAllChat] ${result.sessions.length} sessions récupérées`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Récupérer tous les deep-courses
-// -------------------------
 export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepCoursesResponse> {
-  console.log(`📡 [fetchAllDeepCourses] Appel API pour user_id: ${userId}`)
   
   const formData = new FormData()
   formData.append("user_id", userId)
@@ -162,28 +132,19 @@ export async function fetchAllDeepCourses(userId: string): Promise<FetchAllDeepC
   
   const result = await handle<FetchAllDeepCoursesResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || !Array.isArray(result.sessions)) {
-    console.warn(`⚠️ [fetchAllDeepCourses] Réponse invalide du backend:`, result)
+    console.warn(`[fetchAllDeepCourses] Réponse invalide du backend:`, result)
     return { sessions: [] }
   }
-  
-  console.log(`📡 [fetchAllDeepCourses] ${result.sessions.length} deep-courses récupérés`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Récupérer l'historique d'une session de chat
-// -------------------------
 export async function fetchChat(
   userId: string,
   sessionId: string
 ): Promise<FetchChatResponse> {
-  console.log(`📡 [fetchChat] Appel API pour user_id: ${userId}, session_id: ${sessionId}`)
-  console.log(`📡 [fetchChat] user_id is ${userId === "" ? "EMPTY STRING" : userId === null ? "NULL" : userId === undefined ? "UNDEFINED" : "OK"}`)
   
-  // Utiliser FormData pour passer les paramètres comme le backend l'attend
   const formData = new FormData()
   formData.append("user_id", userId)
   formData.append("session_id", sessionId)
@@ -195,21 +156,18 @@ export async function fetchChat(
   
   const result = await handle<FetchChatResponse>(r)
   
-  // Vérification défensive: s'assurer que result a les bonnes propriétés
   if (!result || typeof result !== 'object') {
-    console.warn(`⚠️ [fetchChat] Réponse invalide du backend:`, result)
+    console.warn(`[fetchChat] Réponse invalide du backend:`, result)
     return { session_id: sessionId, user_id: userId, messages: [] }
   }
   
-  // Le backend retourne soit 'messages' soit 'events' - les normaliser en 'messages'
   let messages = result.messages || result.events || []
   
   if (!Array.isArray(messages)) {
-    console.warn(`⚠️ [fetchChat] messages/events n'est pas un array:`, typeof messages, messages)
+    console.warn(`[fetchChat] messages/events n'est pas un array:`, typeof messages, messages)
     messages = []
   }
   
-  // Convertir les events en EventMessage si nécessaire
   const normalizedMessages = messages
     .map((m: any) => {
       let text: string | null = null
@@ -231,8 +189,6 @@ export async function fetchChat(
     })
     .filter((m): m is EventMessage => m.text !== null && m.text !== '')
   
-  console.log(`📡 [fetchChat] ${normalizedMessages.length} messages récupérés`)
-  
   return { 
     session_id: result.session_id || sessionId, 
     user_id: result.user_id || userId, 
@@ -240,13 +196,9 @@ export async function fetchChat(
   }
 }
 
-// -------------------------
-// 🔹 Récupérer les chapitres d'un deep-course
-// -------------------------
 export async function   fetchChapters(
   deepcourseId: string
 ): Promise<FetchChaptersResponse> {
-  console.log(`📡 [fetchChapters] Appel API pour deepcourse_id: ${deepcourseId}`)
   
   const formData = new FormData()
   formData.append("deepcourse_id", deepcourseId)
@@ -258,20 +210,15 @@ export async function   fetchChapters(
   
   const result = await handle<FetchChaptersResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || !Array.isArray(result.chapters)) {
-    console.warn(`⚠️ [fetchChapters] Réponse invalide du backend:`, result)
+    console.warn(`[fetchChapters] Réponse invalide du backend:`, result)
     return { chapters: [] }
   }
   
-  console.log(`📡 [fetchChapters] ${result.chapters.length} chapitres récupérés`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Marquer un chapitre comme complet
-// -------------------------
 export type MarkChapterCompleteResponse = {
   is_complete: boolean
 }
@@ -279,7 +226,6 @@ export type MarkChapterCompleteResponse = {
 export async function markChapterComplete(
   chapterId: string
 ): Promise<MarkChapterCompleteResponse> {
-  console.log(`📡 [markChapterComplete] Marquage du chapitre comme complet: ${chapterId}`)
   
   const formData = new FormData()
   formData.append("chapter_id", chapterId)
@@ -291,24 +237,17 @@ export async function markChapterComplete(
   
   const result = await handle<MarkChapterCompleteResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
-    console.warn(`⚠️ [markChapterComplete] Réponse invalide du backend:`, result)
+    console.warn(`[markChapterComplete] Réponse invalide du backend:`, result)
     return { is_complete: false }
   }
-  
-  console.log(`✅ [markChapterComplete] Chapitre ${chapterId} marqué comme complet`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Marquer un chapitre comme incomplet
-// -------------------------
 export async function markChapterUncomplete(
   chapterId: string
 ): Promise<MarkChapterCompleteResponse> {
-  console.log(`📡 [markChapterUncomplete] Marquage du chapitre comme incomplet: ${chapterId}`)
   
   const formData = new FormData()
   formData.append("chapter_id", chapterId)
@@ -320,20 +259,14 @@ export async function markChapterUncomplete(
   
   const result = await handle<MarkChapterCompleteResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || typeof result.is_complete !== 'boolean') {
-    console.warn(`⚠️ [markChapterUncomplete] Réponse invalide du backend:`, result)
+    console.warn(`[markChapterUncomplete] Réponse invalide du backend:`, result)
     return { is_complete: true }
   }
-  
-  console.log(`✅ [markChapterUncomplete] Chapitre ${chapterId} marqué comme incomplet`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Changer les paramètres utilisateur
-// -------------------------
 export type ChangeSettingsResponse = {
   user_id: string
   is_changed: boolean
@@ -345,7 +278,6 @@ export async function changeSettings(
   newNotionToken?: string,
   newNiveauEtude?: string
 ): Promise<ChangeSettingsResponse> {
-  console.log(`📡 [changeSettings] Mise à jour des paramètres pour user_id: ${userId}`)
   
   const formData = new FormData()
   formData.append("user_id", userId)
@@ -360,20 +292,14 @@ export async function changeSettings(
   
   const result = await handle<ChangeSettingsResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || typeof result.is_changed !== 'boolean') {
-    console.warn(`⚠️ [changeSettings] Réponse invalide du backend:`, result)
+    console.warn(`[changeSettings] Réponse invalide du backend:`, result)
     return { user_id: userId, is_changed: false }
   }
-  
-  console.log(`✅ [changeSettings] Paramètres mis à jour pour user_id: ${userId}`)
   
   return result
 }
 
-// -------------------------
-// 🔹 Récupérer les documents d'un chapitre
-// -------------------------
 export type FetchChapterDocumentsResponse = {
   chapter_id: string
   exercice_session_id: string
@@ -384,7 +310,6 @@ export type FetchChapterDocumentsResponse = {
 export async function fetchChapterDocuments(
   chapterId: string
 ): Promise<FetchChapterDocumentsResponse> {
-  console.log(`📡 [fetchChapterDocuments] Appel API pour chapter_id: ${chapterId}`)
   
   const formData = new FormData()
   formData.append("chapter_id", chapterId)
@@ -396,9 +321,8 @@ export async function fetchChapterDocuments(
   
   const result = await handle<FetchChapterDocumentsResponse>(r)
   
-  // Vérification défensive
   if (!result || typeof result !== 'object' || !result.chapter_id) {
-    console.warn(`⚠️ [fetchChapterDocuments] Réponse invalide du backend:`, result)
+    console.warn(`[fetchChapterDocuments] Réponse invalide du backend:`, result)
     return {
       chapter_id: chapterId,
       exercice_session_id: "",
@@ -407,11 +331,39 @@ export async function fetchChapterDocuments(
     }
   }
   
-  console.log(`✅ [fetchChapterDocuments] Documents récupérés pour chapitre ${chapterId}:`, {
-    course_session_id: result.course_session_id,
-    exercice_session_id: result.exercice_session_id,
-    evaluation_session_id: result.evaluation_session_id
-  })
-  
   return result
+}
+
+export type CorrectPlainQuestionResponse = {
+  is_correct: boolean
+  feedback?: string
+}
+
+export async function correctPlainQuestion(
+  question: string,
+  userAnswer: string,
+  expectedAnswer: string
+): Promise<CorrectPlainQuestionResponse> {
+
+  const formData = new FormData()
+  formData.append("question", question)
+  formData.append("user_answer", userAnswer)
+  formData.append("expected_answer", expectedAnswer)
+
+  const r = await fetch(`${API_BASE}/correctplainquestion`, {
+    method: "POST",
+    body: formData,
+  })
+
+  const result = await handle<CorrectPlainQuestionResponse>(r)
+
+  if (!result || typeof result !== "object" || typeof result.is_correct !== "boolean") {
+    console.warn(`[correctPlainQuestion] Réponse invalide du backend:`, result)
+    return { is_correct: false, feedback: "Erreur lors de la correction" }
+  }
+
+  return {
+    is_correct: result.is_correct,
+    feedback: result.feedback || undefined,
+  }
 }

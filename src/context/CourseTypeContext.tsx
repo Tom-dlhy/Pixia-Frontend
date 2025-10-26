@@ -3,7 +3,7 @@
 import * as React from "react"
 import { getCourseAccent } from "~/utils/courseTypeStyles"
 
-export type CourseType = 'exercice' | 'cours' | 'discuss' | 'deep' | 'none'
+export type CourseType = 'exercice' | 'cours' | 'deep' | 'none'
 
 interface CourseTypeCtx {
   courseType: CourseType
@@ -17,7 +17,7 @@ const STORAGE_KEY = "course-type"
 function readStoredCourseType(): CourseType {
   if (typeof window === "undefined") return "none"
   const stored = window.localStorage.getItem(STORAGE_KEY)
-  if (stored === "exercice" || stored === "cours" || stored === "discuss" || stored === "deep" || stored === "none") {
+  if (stored === "exercice" || stored === "cours" || stored === "deep" || stored === "none") {
     return stored
   }
   return "none"

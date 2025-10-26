@@ -1,10 +1,7 @@
 import { ExerciseOutput, CourseOutput } from "~/models/Document"
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000"
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
 
-/**
- * Classe pour gérer les erreurs API
- */
 export class DocumentFetchError extends Error {
   constructor(
     message: string,
@@ -16,23 +13,15 @@ export class DocumentFetchError extends Error {
   }
 }
 
-/**
- * Fetch un exercice par son ID
- * @param sessionId - L'ID de la session/exercice
- * @returns Les données d'exercice
- */
 export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> {
   if (!sessionId) {
     throw new DocumentFetchError("sessionId is required")
   }
 
   try {
-    console.group(`%c🌐 [API] fetchExercise Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchexercise`)
-    console.log(`📦 Payload: { session_id: "${sessionId}" }`)
     console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/fetchexercise`, {
+    const response = await fetch(`${API_BASE}/fetchexercise`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -41,11 +30,6 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
         session_id: sessionId,
       }).toString(),
     })
-
-    console.group(`%c📨 [API] fetchExercise Response Status`, 'color: #06b6d4; font-weight: bold; font-size: 12px;')
-    console.log(`✓ Status: ${response.status} ${response.statusText}`)
-    console.log(`✓ OK: ${response.ok}`)
-    console.groupEnd()
 
     if (!response.ok) {
       throw new DocumentFetchError(
@@ -55,17 +39,9 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
     }
 
     const data = await response.json()
-    console.group(`%c✅ [API] fetchExercise Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
-    console.log(`📦 Type: ${typeof data}`)
-    console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.groupEnd()
     
     return data as ExerciseOutput
   } catch (error) {
-    console.group(`%c❌ [API] fetchExercise Error`, 'color: #ef4444; font-weight: bold; font-size: 12px;')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
-    console.log(`Full error:`, error)
-    console.groupEnd()
     throw new DocumentFetchError(
       "Failed to fetch exercise",
       undefined,
@@ -74,23 +50,14 @@ export async function fetchExercise(sessionId: string): Promise<ExerciseOutput> 
   }
 }
 
-/**
- * Fetch un cours par son ID
- * @param sessionId - L'ID de la session/cours
- * @returns Les données du cours
- */
 export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
   if (!sessionId) {
     throw new DocumentFetchError("sessionId is required")
   }
 
   try {
-    console.group(`%c🌐 [API] fetchCourse Request`, 'color: #6366f1; font-weight: bold; font-size: 12px;')
-    console.log(`📍 Endpoint: ${API_BASE_URL}/fetchcourse`)
-    console.log(`📦 Payload: { session_id: "${sessionId}" }`)
-    console.groupEnd()
 
-    const response = await fetch(`${API_BASE_URL}/fetchcourse`, {
+    const response = await fetch(`${API_BASE}/fetchcourse`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
@@ -100,11 +67,6 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
       }).toString(),
     })
 
-    console.group(`%c📨 [API] fetchCourse Response Status`, 'color: #06b6d4; font-weight: bold; font-size: 12px;')
-    console.log(`✓ Status: ${response.status} ${response.statusText}`)
-    console.log(`✓ OK: ${response.ok}`)
-    console.groupEnd()
-
     if (!response.ok) {
       throw new DocumentFetchError(
         `Failed to fetch course: ${response.statusText}`,
@@ -113,17 +75,9 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
     }
 
     const data = await response.json()
-    console.group(`%c✅ [API] fetchCourse Response Data`, 'color: #10b981; font-weight: bold; font-size: 12px;')
-    console.log(`📦 Type: ${typeof data}`)
-    console.log(`📦 Keys: ${Object.keys(data || {})}`)
-    console.groupEnd()
     
     return data as CourseOutput
   } catch (error) {
-    console.group(`%c❌ [API] fetchCourse Error`, 'color: #ef4444; font-weight: bold; font-size: 12px;')
-    console.log(`Error: ${error instanceof Error ? error.message : String(error)}`)
-    console.log(`Full error:`, error)
-    console.groupEnd()
     throw new DocumentFetchError(
       "Failed to fetch course",
       undefined,
@@ -132,12 +86,6 @@ export async function fetchCourse(sessionId: string): Promise<CourseOutput> {
   }
 }
 
-/**
- * Fetch un document (exercice ou cours) par type
- * @param sessionId - L'ID de la session
- * @param type - Le type de document: "exercise" ou "course"
- * @returns Les données du document
- */
 export async function fetchDocument(
   sessionId: string,
   type: "exercise" | "course"
@@ -151,14 +99,6 @@ export async function fetchDocument(
   }
 }
 
-/**
- * Fetch un document avec retry automatique
- * @param sessionId - L'ID de la session
- * @param type - Le type de document: "exercise" ou "course"
- * @param maxRetries - Nombre maximum de tentatives
- * @param delayMs - Délai entre les tentatives en ms
- * @returns Les données du document
- */
 export async function fetchDocumentWithRetry(
   sessionId: string,
   type: "exercise" | "course",
@@ -169,14 +109,12 @@ export async function fetchDocumentWithRetry(
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`🔄 [fetchDocumentWithRetry] Attempt ${attempt}/${maxRetries}`)
       return await fetchDocument(sessionId, type)
     } catch (error) {
       lastError = error as Error
-      console.warn(`⚠️ [fetchDocumentWithRetry] Attempt ${attempt} failed:`, error)
+      console.warn(`[fetchDocumentWithRetry] Attempt ${attempt} failed:`, error)
 
       if (attempt < maxRetries) {
-        // Exponential backoff
         const delay = delayMs * Math.pow(2, attempt - 1)
         await new Promise((resolve) => setTimeout(resolve, delay))
       }

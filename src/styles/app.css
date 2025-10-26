@@ -72,60 +72,51 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Neon */
     --neon-gradient: linear-gradient(135deg, rgba(148,163,184,0.85) 0%, rgba(71,85,105,0.95) 45%, rgba(30,41,59,0.92) 100%);
     --neon-glow: 0 0 46px rgba(148,163,184,0.35);
     --course-accent: #94a3b8;
     --course-accent-muted: rgba(148,163,184,0.16);
   }
 .dark {
-  /* Base et surfaces */
-  --background: 0 0% 9%;        /* Gris anthracite (#1B1B1B) */
-  --foreground: 0 0% 92%;          /* Gris clair neutre (#EBEBEB) */
-  --card: 0 0% 12%;                /* Légèrement plus clair que le fond */
-  --card-foreground: 0 0% 92%;     /* Texte clair */
+  --background: 0 0% 9%;      
+  --foreground: 0 0% 92%;          
+  --card: 0 0% 12%;               
+  --card-foreground: 0 0% 92%;   
 
-  /* Popovers */
-  --popover: 0 0% 10.5%;           /* Même fond que background */
-  --popover-foreground: 0 0% 92%;  /* Texte clair */
+  --popover: 0 0% 10.5%;  
+  --popover-foreground: 0 0% 92%; 
 
-  /* Couleurs principales (remplacées par neutres / chaudes douces) */
-  --primary: 0 0% 92%;             /* Gris clair neutre */
-  --primary-foreground: 0 0% 15%;  /* Gris foncé pour contraste */
-  --secondary: 0 0% 16%;           /* Gris plus profond */
+  --primary: 0 0% 92%;            
+  --primary-foreground: 0 0% 15%; 
+  --secondary: 0 0% 16%;         
   --secondary-foreground: 0 0% 92%;
   --muted: 0 0% 16%;
-  --muted-foreground: 0 0% 65%;    /* Gris moyen lisible */
-  --accent: 0 0% 18%;              /* Gris légèrement plus clair */
+  --muted-foreground: 0 0% 65%; 
+  --accent: 0 0% 18%;            
   --accent-foreground: 0 0% 92%;
 
-  /* États et actions */
-  --destructive: 0 62% 35%;        /* Rouge sombre (#8C2E2E) */
+  --destructive: 0 62% 35%;       
   --destructive-foreground: 0 0% 92%;
 
-  /* Bordures et entrées */
-  --border: 0 0% 18%;              /* Gris foncé */
+  --border: 0 0% 18%;           
   --input: 0 0% 18%;
-  --ring: 0 0% 75%;                /* Gris clair pour focus */
+  --ring: 0 0% 75%;              
 
-  /* Couleurs de graphiques (désaturées, plus neutres ou terreuses) */
-  --chart-1: 30 25% 55%;           /* Marron doux */
-  --chart-2: 120 10% 45%;          /* Vert olive neutre */
-  --chart-3: 0 0% 50%;             /* Gris moyen */
-  --chart-4: 45 15% 60%;           /* Beige doux */
-  --chart-5: 10 30% 55%;           /* Terre cuivrée */
+  --chart-1: 30 25% 55%;        
+  --chart-2: 120 10% 45%;        
+  --chart-3: 0 0% 50%;          
+  --chart-4: 45 15% 60%;       
+  --chart-5: 10 30% 55%;         
 
-  /* Sidebar */
-  --sidebar-background: 0 0% 7%;           /* Gris très foncé (#171717) */
-  --sidebar-foreground: 0 0% 90%;          /* Gris clair */
-  --sidebar-primary: 0 0% 80%;             /* Gris moyen pour les éléments actifs */
+  --sidebar-background: 0 0% 7%;
+  --sidebar-foreground: 0 0% 90%;
+  --sidebar-primary: 0 0% 80%;
   --sidebar-primary-foreground: 0 0% 10%;
-  --sidebar-accent: 0 0% 15%;              /* Gris anthracite */
+  --sidebar-accent: 0 0% 15%;
   --sidebar-accent-foreground: 0 0% 90%;
-  --sidebar-border: 0 0% 15%;              /* Gris foncé */
-  --sidebar-ring: 0 0% 75%;                /* Gris clair pour surbrillance */
+  --sidebar-border: 0 0% 15%;
+  --sidebar-ring: 0 0% 75%;
 
-    /* Neon */
     --neon-gradient: linear-gradient(135deg, rgba(148,163,184,0.65) 0%, rgba(71,85,105,0.82) 45%, rgba(30,41,59,0.88) 100%);
     --neon-glow: 0 0 46px rgba(148,163,184,0.28);
     --course-accent: #94a3b8;
@@ -133,7 +124,6 @@
   }
 }
 
-/* Neon motion borders */
 .neon-motion-border {
   position: relative;
   border-radius: var(--neon-radius, 28px);
@@ -254,6 +244,6 @@
 
 
 [data-slot="gradient-text"] *::selection {
-  background: rgba(255, 255, 255, 0.15); /* léger voile blanc semi-transparent */
-  color: inherit; /* conserve la teinte du gradient visible */
+  background: rgba(255, 255, 255, 0.15);
+  color: inherit;
 }

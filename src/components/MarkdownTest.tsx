@@ -16,7 +16,7 @@ Voici une liste :
 
 \`\`\`javascript
 function hello() {
-  console.log("Hello World!")
+  
 }
 \`\`\`
 

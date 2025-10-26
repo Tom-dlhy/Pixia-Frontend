@@ -45,7 +45,6 @@ function ChatSessionPage() {
     setError(null)
 
     try {
-      // 🔹 Afficher IMMÉDIATEMENT la bulle du user (avant la réponse du bot)
       const userMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "user",
@@ -55,10 +54,9 @@ function ChatSessionPage() {
       
       const messagesWithUser = [...messages, userMessage]
       setMessages(messagesWithUser)
-      const userInput = input // Sauvegarder l'input avant de le réinitialiser
-      setInput("") // Réinitialiser l'input immédiatement
+      const userInput = input 
+      setInput("") 
 
-      // 🧩 Conversion des fichiers en base64 (si présents)
       const encodedFiles = await Promise.all(
         queuedFiles.map(
           (file) =>
@@ -67,7 +65,7 @@ function ChatSessionPage() {
               reader.onload = () =>
                 resolve({
                   name: file.name,
-                  data: (reader.result as string).split(",")[1], // retire le header base64
+                  data: (reader.result as string).split(",")[1], 
                   type: file.type,
                   size: file.size,
                 })
@@ -81,17 +79,9 @@ function ChatSessionPage() {
         user_id: userId,
         sessionId: id,
         message: userInput,
-        files: encodedFiles, // ✅ correspond au schéma attendu
+        files: encodedFiles, 
       })
 
-      console.log("%c🤖 API Response", "color: #00ff00; font-weight: bold; font-size: 14px;", {
-        agent: res.agent,
-        redirect_id: res.redirect_id,
-        reply: res.reply,
-        session_id: res.session_id
-      })
-
-      // 🔹 Ajouter la réponse du bot avec markdown support
       const assistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -104,14 +94,13 @@ function ChatSessionPage() {
       setMessages(newMessages)
       saveConversation(id, newMessages)
 
-      // 🎯 Redirection basée sur l'agent et redirect_id (via hook)
       handleRedirect(res)
     } catch (err) {
       console.error("Erreur lors de l’envoi :", err)
       setError("Une erreur est survenue lors de l’envoi du message.")
     } finally {
       setSending(false)
-      setQueuedFiles([]) // Réinitialiser les fichiers après envoi
+      setQueuedFiles([])
     }
   }
 
@@ -123,7 +112,6 @@ function ChatSessionPage() {
     setQueuedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
-  // 🔙 Bouton retour
   const handleBack = () => {
     setOpen(true)
     sessionStorage.removeItem("chat:conversations")
@@ -133,9 +121,7 @@ function ChatSessionPage() {
 
   return (
     <div className="flex flex-col h-full w-full max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-10">
-      {/* 🔙 Back Button + Chat Container */}
       <div className="flex gap-4 flex-1 min-h-0">
-        {/* Back Button */}
         <div className="flex-shrink-0 pt-2">
           <Button
             variant="secondary"
@@ -147,7 +133,6 @@ function ChatSessionPage() {
           </Button>
         </div>
 
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col min-h-0">
           <ScrollArea className="flex-1 mb-4 rounded-lg">
             <Chat messages={messages} sending={sending} error={error} />

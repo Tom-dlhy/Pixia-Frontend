@@ -33,9 +33,6 @@ interface NavUserProps {
     id?: string
     name?: string | null
     email?: string | null
-    image?: string | null
-    givenName?: string | null
-    familyName?: string | null
   }
 }
 
@@ -48,38 +45,27 @@ export function NavUser({ user }: NavUserProps) {
   const userFullName = user.givenName || user.familyName
     ? [user.givenName, user.familyName].filter(Boolean).join(" ")
     : null
-  const sessionFullName = useMemo(() => {
-    if (session.givenName || session.familyName) {
-      return [session.givenName, session.familyName].filter(Boolean).join(" ")
-    }
-    return null
-  }, [session.givenName, session.familyName])
+
+  const sessionFullName = session.name || null
 
   const resolvedEmail = user.email ?? session.userEmail ?? settings.gmail ?? ""
-  const resolvedName =
-    user.name ??
-    userFullName ??
-    sessionFullName ??
-    settings.fullName ??
-    (resolvedEmail ? resolvedEmail.split("@")[0] : null)
-
-  const avatarSrc = user.image ?? undefined
+  const resolvedName = user.name ?? session.name ?? settings.fullName ?? null
 
   useEffect(() => {
-    const preferredEmail = session.userEmail ?? user.email ?? null
+    const preferredEmail = user.email ?? session.userEmail ?? null
     if (!isLoaded || !preferredEmail) return
     if (!settings.gmail) {
       updateSettings({ gmail: preferredEmail })
     }
-  }, [isLoaded, session.userEmail, user.email, settings.gmail, updateSettings])
+  }, [isLoaded, user.email, session.userEmail, settings.gmail, updateSettings])
 
   useEffect(() => {
-    const preferredName = sessionFullName ?? userFullName ?? null
+    const preferredName = resolvedName
     if (!isLoaded || !preferredName) return
     if (!settings.fullName) {
       updateSettings({ fullName: preferredName })
     }
-  }, [isLoaded, sessionFullName, userFullName, settings.fullName, updateSettings])
+  }, [isLoaded, resolvedName, settings.fullName, updateSettings])
 
   const displayName = useMemo(() => {
     if (resolvedName) return resolvedName
@@ -93,7 +79,6 @@ export function NavUser({ user }: NavUserProps) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          {/* --- USER BUTTON --- */}
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
@@ -110,7 +95,7 @@ export function NavUser({ user }: NavUserProps) {
               )}
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={avatarSrc} alt={displayName} />
+                <AvatarImage src={undefined} alt={displayName} />
                 <AvatarFallback className="rounded-lg">{initial}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -120,8 +105,7 @@ export function NavUser({ user }: NavUserProps) {
               <ChevronsUpDown className="ml-auto size-4 opacity-70" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
-
-          {/* --- DROPDOWN CONTENT --- */}
+          
           <DropdownMenuContent
             className={cn(
               "min-w-72 rounded-2xl px-4 py-4 border border-white/20 dark:border-white/10",
@@ -136,7 +120,7 @@ export function NavUser({ user }: NavUserProps) {
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex flex-col items-center gap-2 text-center text-sm">
                 <Avatar className="mb-2 h-16 w-16 rounded-lg">
-                  <AvatarImage src={avatarSrc} alt={displayName} />
+                  <AvatarImage src={undefined} alt={displayName} />
                   <AvatarFallback className="rounded-lg text-xl">{initial}</AvatarFallback>
                 </Avatar>
                 <div className="flex w-full flex-col items-center px-2">
@@ -148,7 +132,6 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator className="my-2 opacity-20" />
 
-            {/* --- Paramètres --- */}
             <DropdownMenuItem
               onSelect={(event) => {
                 event.preventDefault()
@@ -159,7 +142,6 @@ export function NavUser({ user }: NavUserProps) {
               Paramètres
             </DropdownMenuItem>
 
-            {/* --- Thème --- */}
             <DropdownMenuItem
               onSelect={(e) => e.preventDefault()}
               className={menuItemClass}
@@ -172,7 +154,6 @@ export function NavUser({ user }: NavUserProps) {
 
             <DropdownMenuSeparator className="my-2 opacity-20" />
 
-            {/* --- Déconnexion --- */}
             <div className="px-1">
               <SignOut />
             </div>

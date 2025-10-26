@@ -2,14 +2,6 @@ import { BaseEntity, ID, hydrateByIds } from "./GlobalType"
 import { ExerciseWithItems as Exercise } from "./Exercise"
 import { Evaluation } from "./Evaluation"
 
-// ----------------------------------------------
-// Core models
-// ----------------------------------------------
-
-/**
- * Represents a Deep Learning–style course composed of multiple chapters,
- * each potentially linked to an exercise or evaluation.
- */
 export interface DeepCourse extends BaseEntity {
   title: string
   description: string
@@ -17,10 +9,6 @@ export interface DeepCourse extends BaseEntity {
   isCompleted: boolean
 }
 
-/**
- * Represents a single chapter in a DeepCourse.
- * It references the linked course, exercise, and evaluation by ID.
- */
 export interface DeepCourseChapter extends BaseEntity {
   title: string
   illustrationBase64?: string
@@ -30,14 +18,6 @@ export interface DeepCourseChapter extends BaseEntity {
   isCompleted: boolean
 }
 
-// ----------------------------------------------
-// Canonical (storage) version
-// ----------------------------------------------
-
-/**
- * Lightweight version of DeepCourse used for persistence or API transfer.
- * Stores chapter references as IDs only.
- */
 export interface DeepCourseRecord extends BaseEntity {
   title: string
   description: string
@@ -45,43 +25,24 @@ export interface DeepCourseRecord extends BaseEntity {
   isCompleted: boolean
 }
 
-/**
- * Canonical version of a chapter, referencing linked entities by ID only.
- */
 export interface DeepCourseChapterRecord extends DeepCourseChapter {}
 
-// ----------------------------------------------
-// Hydrated (UI/state) versions
-// ----------------------------------------------
-
-/**
- * Hydrated version of a chapter including full Exercise/Evaluation objects.
- */
 export interface DeepCourseChapterHydrated
   extends DeepCourseChapterRecord {
   exercise?: Exercise
   evaluation?: Evaluation
 }
 
-/**
- * Hydrated version of a DeepCourse with complete chapters.
- */
 export interface DeepCourseHydrated
   extends Omit<DeepCourseRecord, "chapterIds"> {
   chapters: DeepCourseChapterHydrated[]
 }
 
-// ----------------------------------------------
-// Utility maps and transformations
-// ----------------------------------------------
 export type DeepCourseChapterMap = Record<ID, DeepCourseChapterHydrated>
 export type DeepExerciseMap = Record<ID, Exercise>
 export type DeepEvaluationMap = Record<ID, Evaluation>
 
 
-/**
- * Hydrates a DeepCourse from its canonical record and related maps.
- */
 export function hydrateDeepCourse(
   record: DeepCourseRecord,
   chaptersById: DeepCourseChapterMap,
@@ -90,9 +51,6 @@ export function hydrateDeepCourse(
   return { ...record, chapters }
 }
 
-/**
- * Dehydrates a DeepCourseHydrated back to its canonical form.
- */
 export function dehydrateDeepCourse(
   course: DeepCourseHydrated,
 ): DeepCourseRecord {
@@ -102,9 +60,6 @@ export function dehydrateDeepCourse(
   }
 }
 
-/**
- * Hydrates a DeepCourseChapter by linking its Exercise and Evaluation.
- */
 export function hydrateDeepCourseChapter(
   chapter: DeepCourseChapterRecord,
   exercisesById: DeepExerciseMap,
@@ -128,9 +83,6 @@ export function hydrateDeepCourseChapter(
   return { ...chapter, exercise, evaluation }
 }
 
-/**
- * Dehydrates a hydrated chapter back into its canonical record.
- */
 export function dehydrateDeepCourseChapter(
   chapter: DeepCourseChapterHydrated,
 ): DeepCourseChapterRecord {
@@ -148,20 +100,10 @@ export function dehydrateDeepCourseChapter(
   }
 }
 
-// ----------------------------------------------
-// Domain helpers
-// ----------------------------------------------
-
-/**
- * Returns true if all chapters of a DeepCourse are completed.
- */
 export function isDeepCourseCompleted(course: DeepCourseHydrated): boolean {
   return course.chapters.every((chapter) => chapter.isCompleted)
 }
 
-/**
- * Returns the completion rate of a DeepCourse (0–1).
- */
 export function getDeepCourseProgress(course: DeepCourseHydrated): number {
   const total = course.chapters.length
   if (total === 0) return 0
@@ -169,16 +111,10 @@ export function getDeepCourseProgress(course: DeepCourseHydrated): number {
   return completed / total
 }
 
-/**
- * Serialize a DeepCourseRecord for local storage or network transport.
- */
 export function serializeDeepCourse(course: DeepCourseRecord): string {
   return JSON.stringify(course)
 }
 
-/**
- * Deserialize a DeepCourseRecord from JSON.
- */
 export function deserializeDeepCourse(json: string): DeepCourseRecord {
   return JSON.parse(json) as DeepCourseRecord
 }

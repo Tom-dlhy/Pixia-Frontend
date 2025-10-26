@@ -27,7 +27,7 @@ export function useSpeechRecognition(
 ): UseSpeechRecognitionReturn {
   const {
     language = "fr-FR",
-    continuous = true,  // Changé à true pour permettre plusieurs énoncés
+    continuous = true,  
     interimResults = true,
   } = options
 
@@ -40,7 +40,6 @@ export function useSpeechRecognition(
 
   const isSupported = SpeechRecognition !== null
 
-  // Initialiser une seule fois
   useEffect(() => {
     if (!isSupported || recognition.current) return
 
@@ -51,9 +50,7 @@ export function useSpeechRecognition(
     instance.interimResults = interimResults
     instance.language = language
 
-    // 🎤 Quand un résultat final est obtenu
     instance.onresult = (event: any) => {
-      // Reset le timeout de silence
       if (silenceTimeoutRef.current) {
         clearTimeout(silenceTimeoutRef.current)
       }
@@ -64,31 +61,27 @@ export function useSpeechRecognition(
         const transcriptSegment = event.results[i][0].transcript
 
         if (event.results[i].isFinal) {
-          // ✅ Résultat final - ajouter à la transcription
           setTranscript((prev) => prev + transcriptSegment + " ")
         } else {
-          // 📝 Résultat intérimaire - afficher en temps réel
           interim += transcriptSegment
         }
       }
 
       setInterimTranscript(interim)
 
-      // Si c'est un résultat final, attendre 3 secondes avant d'arrêter
       if (event.results[event.results.length - 1].isFinal) {
         silenceTimeoutRef.current = setTimeout(() => {
           if (instance) {
             try {
               instance.stop()
             } catch (e) {
-              // Ignore
+              // Ignore errors 
             }
           }
         }, 3000)
       }
     }
 
-    // ❌ Gestion des erreurs
     instance.onerror = (event: any) => {
       const errorMessages: Record<string, string> = {
         "no-speech": "Aucun son détecté. Veuillez réessayer.",
@@ -105,7 +98,6 @@ export function useSpeechRecognition(
       setIsListening(false)
     }
 
-    // 🛑 Quand la reconnaissance s'arrête
     instance.onend = () => {
       setIsListening(false)
       if (silenceTimeoutRef.current) {
@@ -121,7 +113,7 @@ export function useSpeechRecognition(
         try {
           instance.stop()
         } catch (e) {
-          // Ignore errors on cleanup
+          // Ignore errors 
         }
       }
     }

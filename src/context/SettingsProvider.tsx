@@ -36,7 +36,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = React.useState(false)
   const { session } = useAppSession()
 
-  // Load from localStorage once on mount (client-side only)
   React.useEffect(() => {
     if (typeof window === 'undefined') return
     try {
@@ -52,7 +51,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Pré-remplir avec les données de session au login
   React.useEffect(() => {
     if (!isLoaded || !session.isLoggedIn) return
     
@@ -64,7 +62,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }))
   }, [session.isLoggedIn, session.name, session.notionToken, session.study, isLoaded])
 
-  // Persist whenever settings change (after initial load)
   React.useEffect(() => {
     if (!isLoaded) return
     try {
@@ -74,7 +71,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings, isLoaded])
 
-  // Listen to storage changes from other tabs
   React.useEffect(() => {
     if (typeof window === 'undefined') return
     const handler = (e: StorageEvent) => {

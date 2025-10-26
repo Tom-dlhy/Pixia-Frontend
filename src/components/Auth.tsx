@@ -57,19 +57,18 @@ export function Auth({
       className="fixed inset-0 flex items-center justify-center p-4
                  bg-gradient-to-br from-white/70 to-white/40
                  dark:from-gray-900/80 dark:to-black/90
-                 backdrop-blur-3xl transition-all duration-700"
+                 backdrop-blur-sm"
+      style={{ willChange: "transform" }}
     >
       <Card
         className="relative w-full max-w-sm rounded-3xl border border-white/20 
                    bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]
-                   backdrop-blur-2xl backdrop-saturate-150
-                   shadow-[0_8px_32px_rgba(0,0,0,0.25)] transition-all duration-300 
-                   hover:scale-[1.01] hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)] p-8 space-y-6"
+                   backdrop-blur-md shadow-lg p-8 space-y-6"
+        style={{ transform: "translate3d(0, 0, 0)", willChange: "auto" }}
       >
-        {/* Effet de lumière interne */}
         <span
           aria-hidden
-          className="absolute inset-[-20%] bg-[radial-gradient(circle,rgba(255,255,255,0.25),transparent_60%)] opacity-50 rounded-[inherit]"
+          className="absolute inset-[-20%] bg-[radial-gradient(circle,rgba(255,255,255,0.15),transparent_60%)] rounded-[inherit] pointer-events-none"
         />
 
         <h1 className="relative z-10 text-3xl font-bold text-center drop-shadow-sm">
@@ -111,8 +110,8 @@ export function Auth({
                 type="submit"
                 disabled={status === "pending"}
                 className="w-full bg-white/20 dark:bg-white/10 border-white/30
-                          text-foreground backdrop-blur-md hover:scale-[1.02] 
-                          transition-all duration-300"
+                          text-foreground backdrop-blur-md 
+                          active:scale-95 transition-transform duration-150"
               >
                 {status === "pending" ? "..." : primaryText}
               </Button>
@@ -125,8 +124,8 @@ export function Auth({
                 disabled={status === "pending"}
                 onClick={onSecondaryAction}
                 className="w-full bg-white/20 dark:bg-white/10 border-white/30
-                          text-foreground backdrop-blur-md hover:scale-[1.02] 
-                          transition-all duration-300"
+                          text-foreground backdrop-blur-md 
+                          active:scale-95 transition-transform duration-150"
               >
                 {status === "pending" ? "..." : secondaryText}
               </Button>
@@ -139,8 +138,8 @@ export function Auth({
                 disabled={status === "pending"}
                 onClick={onTestUser}
                 className="w-full bg-white/20 dark:bg-white/10 border-white/30
-                          text-foreground backdrop-blur-md hover:scale-[1.02] 
-                          transition-all duration-300"
+                          text-foreground backdrop-blur-md 
+                          active:scale-95 transition-transform duration-150"
               >
                 {status === "pending" ? "..." : "Utilisateur Test"}
               </Button>

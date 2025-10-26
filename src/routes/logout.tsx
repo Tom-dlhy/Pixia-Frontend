@@ -16,8 +16,10 @@ function LogoutScreen() {
     setSession({
       userEmail: null,
       userId: null,
-      givenName: null,
-      familyName: null,
+      name: null,
+      notionToken: null,
+      study:  null,
+      isLoggedIn: false,
     })
 
     navigate({ to: "/login" })

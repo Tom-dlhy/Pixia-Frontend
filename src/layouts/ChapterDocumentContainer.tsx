@@ -12,15 +12,6 @@ import { useDeepCoursesLayout } from "~/layouts/DeepCourseContext"
 import { useAppSession } from "~/utils/session"
 import { DocumentTitleProvider } from "~/context/DocumentTitleContext"
 
-/**
- * Composant qui affiche dynamiquement les documents d'un chapitre
- * selon l'onglet actif (cours, exercice, évaluation)
- * 
- * Flux:
- * 1. Récupère les IDs des documents via useChapterDocuments
- * 2. Récupère les documents complets via useSessionCache
- * 3. Affiche le bon composant selon l'onglet actif
- */
 export function ChapterDocumentContainer() {
   const { chapterId, activeTab } = useDeepCoursesLayout()
   const { session } = useAppSession()
@@ -29,25 +20,22 @@ export function ChapterDocumentContainer() {
     return session.userId ? String(session.userId) : undefined
   }, [session.userId])
 
-  // 📌 Étape 1: Récupérer les IDs des documents du chapitre
-  const { data: chapterDocs, isLoading: docsLoading } = useChapterDocuments(chapterId)
+  const memoizedChapterId = useMemo(() => chapterId, [chapterId])
+  const memoizedActiveTab = useMemo(() => activeTab, [activeTab])
 
-  console.log(`🔍 [ChapterDocumentContainer] chapterDocs loaded:`, {
-    chapter_id: chapterDocs?.chapter_id,
-    course_session_id: chapterDocs?.course_session_id,
-    exercice_session_id: chapterDocs?.exercice_session_id,
-    evaluation_session_id: chapterDocs?.evaluation_session_id,
-  })
+  const { data: chapterDocs, isLoading: docsLoading } = useChapterDocuments(
+    memoizedChapterId,
+    { enabled: !!memoizedChapterId && !!userId }
+  )
 
-  // 📌 Déterminer quel ID de session utiliser selon l'onglet actif
   const sessionId = useMemo(() => {
     if (!chapterDocs) {
-      console.warn(`⚠️ [ChapterDocumentContainer] chapterDocs not available yet`)
+      console.warn(`[ChapterDocumentContainer] chapterDocs not available yet`)
       return null
     }
     
     let selectedId: string | null = null
-    switch (activeTab) {
+    switch (memoizedActiveTab) {
       case "cours":
         selectedId = chapterDocs.course_session_id || null
         break
@@ -61,25 +49,22 @@ export function ChapterDocumentContainer() {
         selectedId = null
     }
     
-    console.log(`📍 [ChapterDocumentContainer] activeTab="${activeTab}", selectedSessionId="${selectedId}", chapterId="${chapterId}"`)
     return selectedId
-  }, [chapterDocs, activeTab])
+  }, [chapterDocs, memoizedActiveTab, memoizedChapterId])
 
-  // 📌 Mapper le nom de l'onglet français au type de document en anglais
   const docType = useMemo(() => {
-    switch (activeTab) {
+    switch (memoizedActiveTab) {
       case "cours":
         return "course" as const
       case "exercice":
         return "exercise" as const
       case "evaluation":
-        return "exercise" as const // L'évaluation est un type d'exercice
+        return "exercise" as const
       default:
         return undefined
     }
-  }, [activeTab])
+  }, [memoizedActiveTab])
 
-  // 📌 Étape 2: Récupérer le document complet selon l'onglet
   const { data, isLoading: docLoading, error } = useSessionCache(
     sessionId,
     docType,
@@ -89,7 +74,6 @@ export function ChapterDocumentContainer() {
   
   const { document } = data
 
-  // 🎯 États de chargement
   if (docsLoading) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
@@ -108,7 +92,6 @@ export function ChapterDocumentContainer() {
     )
   }
 
-  // 🎯 États d'erreur
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 py-12">
@@ -147,7 +130,6 @@ export function ChapterDocumentContainer() {
     )
   }
 
-  // 🎯 Afficher le bon composant selon le type
   if (isExerciseOutput(document)) {
     return (
       <DocumentTitleProvider>

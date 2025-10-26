@@ -113,7 +113,7 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
           isLoggedIn: true,
         })
       } catch (error) {
-        console.error("❌ Erreur lors du décodage du token :", error)
+        console.error("Erreur lors du décodage du token :", error)
         window.localStorage.removeItem("access_token")
         window.localStorage.removeItem(SESSION_PROFILE_STORAGE_KEY)
         setSession(defaultSession)
@@ -155,7 +155,6 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
     }
 
     try {
-      // 🔍 Vérifier si les données ont réellement changé avant de sauvegarder
       const stored = window.localStorage.getItem(SESSION_PROFILE_STORAGE_KEY)
       const newData = {
         email: userEmail ?? null,
@@ -166,7 +165,6 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactEle
       }
       
       if (stored === JSON.stringify(newData)) {
-        // Pas de changement, ne pas resauvegarder
         return
       }
 
