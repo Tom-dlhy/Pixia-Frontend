@@ -13,11 +13,12 @@ import { Textarea } from '~/components/ui/textarea'
 import { Button } from '~/components/ui/button'
 import { QCMQuestion } from '~/models/Document'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
-import { checkPlainQuestion } from '~/server/chat.server'
+import { checkPlainQuestion, checkAllPlainQuestions } from '~/server/chat.server'
 import { cn } from '~/lib/utils'
 
 interface ExerciseViewerProps {
   exercise: ExerciseOutput
+  isEvaluation?: boolean
 }
 
 const MARKDOWN_COMPONENTS = {
@@ -132,12 +133,13 @@ const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
   )
 })
 
-export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
+export function ExerciseViewer({ exercise, isEvaluation = false }: ExerciseViewerProps) {
   const { setTitle } = useDocumentTitle()
   
   const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>({})
   const [openAnswers, setOpenAnswers] = useState<Record<string, string>>({})
   const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>({})
+  const [isCheckingAll, setIsCheckingAll] = useState(false)
   
   const handlersCache = useRef<Map<string, any>>(new Map())
   const isCorrectedRef = useRef<Record<string, boolean>>({})
@@ -236,10 +238,267 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     }))
   }
 
+  const handleCheckAllQuestions = async () => {
+    setIsCheckingAll(true)
+    
+    try {
+      // 1. Corriger tous les QCM
+      exercise.exercises.forEach((block, blockIdx) => {
+        if (isQCM(block)) {
+          block.questions.forEach((question: QCMQuestion, qIdx: number) => {
+            const questionKey = `${blockIdx}_${qIdx}`
+            if (!correctedQuestions[questionKey]) {
+              handleCheckQCM(questionKey, question, question.multi_answers)
+            }
+          })
+        }
+      })
+
+      // 2. Préparer et corriger tous les Open questions
+      const allOpenQuestions = exercise.exercises
+        .flatMap((block, blockIdx) => {
+          if (isOpen(block)) {
+            return block.questions.map((question, qIdx) => {
+              const questionKey = `open_${blockIdx}_${qIdx}`
+              return {
+                questionKey,
+                question: question.question,
+                user_answer: openAnswers[questionKey],
+                expected_answer: question.explanation || "",
+              }
+            })
+          }
+          return []
+        })
+        .filter(q => q.user_answer && !correctedQuestions[q.questionKey])
+
+      if (allOpenQuestions.length > 0) {
+        const result = await checkAllPlainQuestions({
+          data: {
+            questions: allOpenQuestions.map(q => ({
+              question: q.question,
+              user_answer: q.user_answer,
+              expected_answer: q.expected_answer
+            }))
+          }
+        })
+
+        // Mettre à jour les corrections des Open questions
+        setCorrectedQuestions(prev => {
+          const updated = { ...prev }
+          result.results.forEach((res, idx) => {
+            const questionKey = allOpenQuestions[idx].questionKey
+            updated[questionKey] = { isCorrect: res.is_correct, showExplanation: true }
+          })
+          return updated
+        })
+      }
+    } catch (error) {
+      console.error("Erreur lors de la correction en masse:", error)
+    } finally {
+      setIsCheckingAll(false)
+    }
+  }
+
   return (
     <ScrollArea className="flex-1 h-full w-full">
       <div className="space-y-8 pr-4 w-full">
-        {exercise.exercises.map((block, blockIdx) => (
+        {isEvaluation ? (
+          // Mode évaluation : afficher seulement le bouton
+          <>
+            {exercise.exercises.map((block, blockIdx) => (
+              <div key={blockIdx} className="space-y-4">
+                {isQCM(block) && (
+                  <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20">
+                    <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                      {block.topic}
+                    </h2>
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+                    
+                    <div className="space-y-6">
+                      {block.questions.map((question: QCMQuestion, qIdx: number) => {
+                        const questionKey = `${blockIdx}_${qIdx}`
+                        const isMultiAnswer = question.multi_answers
+                        const correctionState = correctedQuestions[questionKey]
+                        const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
+                        
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`border rounded-lg bg-background/50 overflow-hidden transition-colors ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-50/5 dark:bg-green-950/10'
+                                  : 'border-red-500/50 bg-red-50/5 dark:bg-red-950/10'
+                                : 'border-white/20 dark:border-white/10'
+                            }`}
+                          >
+                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
+                              <MarkdownText text={question.question} className="!prose-sm" />
+                            </div>
+                            
+                            <div className="p-4">
+                            
+                            {isMultiAnswer ? (
+                              <div className="space-y-3 mb-4">
+                                {question.answers.map((answer, aIdx) => {
+                                  const isChecked = ((userAnswers[questionKey] as string[]) || []).includes(String(aIdx))
+                                  
+                                  return (
+                                    <CheckboxAnswerOption
+                                      key={aIdx}
+                                      checked={isChecked}
+                                      onCheckedChange={getCheckboxChangeHandler(questionKey, String(aIdx))}
+                                      text={answer.text}
+                                      isCorrected={isCorrected}
+                                      isCorrect={answer.is_correct}
+                                      disabled={isCorrected}
+                                    />
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <RadioGroup
+                                value={String(userAnswers[questionKey] ?? '')}
+                                onValueChange={getRadioChangeHandler(questionKey)}
+                                className="mb-4"
+                                disabled={isCorrected}
+                              >
+                                {question.answers.map((answer, aIdx) => (
+                                  <RadioAnswerOption
+                                    key={aIdx}
+                                    value={String(aIdx)}
+                                    text={answer.text}
+                                    isCorrected={isCorrected}
+                                    isCorrect={answer.is_correct}
+                                    disabled={isCorrected}
+                                  />
+                                ))}
+                              </RadioGroup>
+                            )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {isOpen(block) && (
+                  <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20">
+                    <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                      {block.topic}
+                    </h2>
+                    
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+                    
+                    <div className="space-y-6">
+                      {block.questions.map((question, qIdx: number) => {
+                        const questionKey = `open_${blockIdx}_${qIdx}`
+                        const correctionState = correctedQuestions[questionKey]
+                        const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
+                        
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`border rounded-lg bg-background/50 overflow-hidden transition-all duration-200 ${
+                              isCorrected 
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-500/5' 
+                                  : 'border-red-500/50 bg-red-500/5'
+                                : 'border-white/20 dark:border-white/10'
+                            }`}
+                          >
+                            <div className={`flex items-center justify-between px-4 py-3 border-b gap-4 ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
+                              <MarkdownText text={question.question} className="!prose-sm" />
+                              {isCorrected && (
+                                <div className={`px-4 py-1 rounded-md text-white text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
+                                  isAnswerCorrect ? 'bg-green-600' : 'bg-red-600'
+                                }`}>
+                                  {isAnswerCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="p-4">
+                            
+                            <Textarea
+                              placeholder="Entrez votre réponse ici..."
+                              value={openAnswers[questionKey] ?? ''}
+                              onChange={(e) => handleOpenAnswerChange(questionKey, e.target.value)}
+                              disabled={isCorrected}
+                              className="mb-4 min-h-[100px]"
+                            />
+                            
+                            {isCorrected && question.answers && (
+                              <div className="bg-muted rounded-lg p-3 text-sm mb-4 border-l-4 border-foreground/30">
+                                <p className="font-semibold mb-2 text-foreground">✓ Réponse attendue:</p>
+                                <p className="text-foreground/80">{question.answers}</p>
+                              </div>
+                            )}
+                            
+                            {isCorrected && question.explanation && (
+                              <div className="bg-accent/10 dark:bg-accent/5 rounded-lg p-3 text-xs border-l-4 border-accent">
+                                <p className="font-semibold mb-2 text-accent-foreground">💡 Explication:</p>
+                                <p className="text-accent-foreground/80">{question.explanation}</p>
+                              </div>
+                            )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            <div className="flex justify-center items-center gap-8 py-8">
+              <Button
+                onClick={handleCheckAllQuestions}
+                disabled={isCheckingAll}
+                size="lg"
+                className="gap-2"
+              >
+                {isCheckingAll ? "Évaluation en cours..." : "✓ Terminer l'évaluation"}
+              </Button>
+              
+              {Object.keys(correctedQuestions).length > 0 && (
+                <div className={`px-6 py-3 rounded-lg font-semibold text-lg ${
+                  (() => {
+                    const totalQuestions = Object.keys(correctedQuestions).length
+                    const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
+                    const percentage = (correctAnswers / totalQuestions) * 100
+                    return percentage >= 50 ? 'bg-green-600/20 text-green-600 border border-green-600/50' : 'bg-red-600/20 text-red-600 border border-red-600/50'
+                  })()
+                }`}>
+                  {(() => {
+                    const totalQuestions = Object.keys(correctedQuestions).length
+                    const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
+                    return `${correctAnswers} / ${totalQuestions}`
+                  })()}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          // Mode normal : afficher exercices avec boutons individuels
+          <>
+            {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">
                 {isQCM(block) && (
                   <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
@@ -449,8 +708,21 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                 )}
               </div>
             ))}
-          </div>
-      </ScrollArea>
+            
+            <div className="flex justify-center py-8">
+              <Button
+                onClick={handleCheckAllQuestions}
+                disabled={isCheckingAll}
+                size="lg"
+                className="gap-2"
+              >
+                {isCheckingAll ? "Correction en cours..." : "✓ Tout corriger"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </ScrollArea>
   )
 }
 

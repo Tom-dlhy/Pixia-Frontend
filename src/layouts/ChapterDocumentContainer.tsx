@@ -133,7 +133,7 @@ export function ChapterDocumentContainer() {
   if (isExerciseOutput(document)) {
     return (
       <DocumentTitleProvider>
-        <ExerciseViewer exercise={document} />
+        <ExerciseViewer exercise={document} isEvaluation={memoizedActiveTab === "evaluation"} />
       </DocumentTitleProvider>
     )
   }

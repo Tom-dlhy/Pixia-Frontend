@@ -29,7 +29,6 @@ export function Login() {
 
   const loginMutation = useMutation<LoginRequest, LoginResponse>({
     fn: async (data) => {
-      console.log("API_BASE:", API_BASE)
       const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

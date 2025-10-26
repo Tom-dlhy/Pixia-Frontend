@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments, correctPlainQuestion } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments, correctPlainQuestion, correctAllPlainQuestions } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -413,6 +413,38 @@ export const checkPlainQuestion = createServerFn({ method: "POST" })
       }
     } catch (error) {
       console.error(`[checkPlainQuestion] Erreur:`, error)
+      throw error
+    }
+  })
+
+const CheckAllPlainQuestionsSchema = z.object({
+  questions: z.array(z.object({
+    question: z.string().min(1),
+    user_answer: z.string().min(1),
+    expected_answer: z.string().min(1),
+  }))
+})
+
+export interface CheckAllPlainQuestionsResponse {
+  results: Array<{ is_correct: boolean; feedback?: string }>
+}
+
+export const checkAllPlainQuestions = createServerFn({ method: "POST" })
+  .inputValidator(CheckAllPlainQuestionsSchema)
+  .handler(async ({ data }): Promise<CheckAllPlainQuestionsResponse> => {
+    const { questions } = data
+
+    try {
+      const results = await correctAllPlainQuestions(questions)
+
+      return {
+        results: results.map(r => ({
+          is_correct: r.is_correct,
+          feedback: r.feedback || undefined,
+        }))
+      }
+    } catch (error) {
+      console.error(`[checkAllPlainQuestions] Erreur:`, error)
       throw error
     }
   })

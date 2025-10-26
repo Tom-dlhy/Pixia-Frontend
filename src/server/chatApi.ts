@@ -102,7 +102,7 @@ export async function sendChat(
 }
 
 export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse> {
-  
+
   const r = await fetch(`${API_BASE}/fetchallchats`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -366,4 +366,27 @@ export async function correctPlainQuestion(
     is_correct: result.is_correct,
     feedback: result.feedback || undefined,
   }
+}
+
+export async function correctAllPlainQuestions(
+  questions: Array<{ question: string; user_answer: string; expected_answer: string }>
+): Promise<CorrectPlainQuestionResponse[]> {
+
+  const r = await fetch(`${API_BASE}/correctallquestions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ questions }),
+  })
+
+  const results = await handle<CorrectPlainQuestionResponse[]>(r)
+
+  if (!Array.isArray(results)) {
+    console.warn(`[correctAllPlainQuestions] Réponse invalide du backend:`, results)
+    return []
+  }
+
+  return results.map(r => ({
+    is_correct: r.is_correct,
+    feedback: r.feedback || undefined,
+  }))
 }
