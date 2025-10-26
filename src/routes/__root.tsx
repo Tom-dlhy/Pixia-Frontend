@@ -37,7 +37,10 @@ export const Route = createRootRoute({
         description: "Progressez plus vite avec Pixia, votre compagnon d'étude personnalisé propulsé par l'intelligence artificielle.",
       }),
     ],
-    links: [{ rel: 'stylesheet', href: appCss }],
+    links: [
+      { rel: 'stylesheet', href: appCss },
+      { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' },
+    ],
   }),
 
   errorComponent: (props: ErrorComponentProps) => (
