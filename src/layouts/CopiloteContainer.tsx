@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties } from "react"
-import ReactMarkdown from "react-markdown"
 import {
   Empty,
   EmptyHeader,

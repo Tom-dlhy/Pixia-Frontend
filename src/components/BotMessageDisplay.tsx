@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
@@ -13,7 +14,25 @@ interface BotMessageDisplayProps {
   className?: string
 }
 
-export function BotMessageDisplay({
+const BOT_MARKDOWN_COMPONENTS = {
+  p: ({ node, ...props }: any) => <p className="mb-2" {...props} />,
+  ul: ({ node, ...props }: any) => <ul className="list-disc list-inside mb-2" {...props} />,
+  ol: ({ node, ...props }: any) => <ol className="list-decimal list-inside mb-2" {...props} />,
+  li: ({ node, ...props }: any) => <li className="mb-1" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+  em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+  code: ({ node, ...props }: any) => (
+    <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+  ),
+  pre: ({ node, ...props }: any) => (
+    <pre className="bg-muted p-2 rounded mb-2 overflow-x-auto" {...props} />
+  ),
+}
+
+const BOT_REMARK_PLUGINS = [remarkMath]
+const BOT_REHYPE_PLUGINS = [rehypeKatex]
+
+export const BotMessageDisplay = memo(function BotMessageDisplay({
   content,
   isLatest = false,
   showShimmering = true,
@@ -22,25 +41,12 @@ export function BotMessageDisplay({
   return (
     <div className={cn("prose prose-sm dark:prose-invert max-w-none text-foreground", className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        components={{
-          p: ({ node, ...props }) => <p className="mb-2" {...props} />,
-          ul: ({ node, ...props }) => <ul className="list-disc list-inside mb-2" {...props} />,
-          ol: ({ node, ...props }) => <ol className="list-decimal list-inside mb-2" {...props} />,
-          li: ({ node, ...props }) => <li className="mb-1" {...props} />,
-          strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-          em: ({ node, ...props }) => <em className="italic" {...props} />,
-          code: ({ node, ...props }) => (
-            <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
-          ),
-          pre: ({ node, ...props }) => (
-            <pre className="bg-muted p-2 rounded mb-2 overflow-x-auto" {...props} />
-          ),
-        }}
+        remarkPlugins={BOT_REMARK_PLUGINS}
+        rehypePlugins={BOT_REHYPE_PLUGINS}
+        components={BOT_MARKDOWN_COMPONENTS}
       >
         {content}
       </ReactMarkdown>
     </div>
   )
-}
+})

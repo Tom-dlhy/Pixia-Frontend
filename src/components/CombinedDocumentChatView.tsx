@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, memo } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkMath from "remark-math"
 import rehypeKatex from "rehype-katex"
@@ -100,26 +100,31 @@ export function CombinedDocumentChatView({
   )
 }
 
-function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
+const COMBINED_MARKDOWN_COMPONENTS = {
+  p: ({ node, ...props }: any) => <p className="mb-0" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+  em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+  code: ({ node, ...props }: any) => (
+    <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+  ),
+}
+
+const COMBINED_REMARK_PLUGINS = [remarkMath]
+const COMBINED_REHYPE_PLUGINS = [rehypeKatex]
+
+const MarkdownText = memo(function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
   return (
     <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        components={{
-          p: ({ node, ...props }) => <p className="mb-0" {...props} />,
-          strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-          em: ({ node, ...props }) => <em className="italic" {...props} />,
-          code: ({ node, ...props }) => (
-            <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
-          ),
-        }}
+        remarkPlugins={COMBINED_REMARK_PLUGINS}
+        rehypePlugins={COMBINED_REHYPE_PLUGINS}
+        components={COMBINED_MARKDOWN_COMPONENTS}
       >
         {text}
       </ReactMarkdown>
     </div>
   )
-}
+})
 
 function ExerciseDisplay({ exercise }: any) {
   if (!exercise.exercises) {

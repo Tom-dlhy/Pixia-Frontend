@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -19,29 +19,123 @@ interface ExerciseViewerProps {
   exercise: ExerciseOutput
 }
 
-/**
- * Composant pour afficher du texte avec support markdown et formules mathématiques
- */
-function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
-  return (
-    <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
-      <ReactMarkdown
-        remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex]}
-        components={{
-          p: ({ node, ...props }) => <p className="mb-0" {...props} />,
-          strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-          em: ({ node, ...props }) => <em className="italic" {...props} />,
-          code: ({ node, ...props }) => (
-            <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
-          ),
-        }}
-      >
-        {text}
-      </ReactMarkdown>
-    </div>
-  )
+// Move these outside the component file scope to ensure they're truly singleton
+const MARKDOWN_COMPONENTS = {
+  p: ({ node, ...props }: any) => <p className="mb-0" {...props} />,
+  strong: ({ node, ...props }: any) => <strong className="font-semibold" {...props} />,
+  em: ({ node, ...props }: any) => <em className="italic" {...props} />,
+  code: ({ node, ...props }: any) => (
+    <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+  ),
 }
+
+const REMARK_PLUGINS = [remarkMath]
+const REHYPE_PLUGINS = [rehypeKatex]
+
+// Memoize with aggressive caching - only re-render if the exact text hasn't been seen before
+const MarkdownText = memo(
+  function MarkdownText({ text, className = "" }: { text: string; className?: string }) {
+    // Use useMemo to prevent ReactMarkdown from re-rendering when text hasn't changed
+    const content = useMemo(
+      () => (
+        <ReactMarkdown
+          remarkPlugins={REMARK_PLUGINS}
+          rehypePlugins={REHYPE_PLUGINS}
+          components={MARKDOWN_COMPONENTS}
+        >
+          {text}
+        </ReactMarkdown>
+      ),
+      [text] // Only re-create when text changes
+    )
+    
+    return (
+      <div className={cn("prose prose-sm dark:prose-invert max-w-none", className)}>
+        {content}
+      </div>
+    )
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison: only re-render if text or className actually changes
+    return prevProps.text === nextProps.text && prevProps.className === nextProps.className
+  }
+)
+
+// Memoized answer option for radio questions to prevent unnecessary re-renders
+const RadioAnswerOption = memo(function RadioAnswerOption({
+  value,
+  text,
+  isCorrected,
+  isCorrect,
+  disabled,
+}: {
+  value: string
+  text: string
+  isCorrected: boolean
+  isCorrect: boolean
+  disabled: boolean
+}) {
+  return (
+    <label
+      className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-colors ${
+        isCorrected
+          ? isCorrect
+            ? 'bg-green-100/50 dark:bg-green-950/50 hover:bg-green-100/70 dark:hover:bg-green-950/70'
+            : 'bg-red-100/50 dark:bg-red-950/50 hover:bg-red-100/70 dark:hover:bg-red-950/70'
+          : 'hover:bg-muted/50'
+      }`}
+    >
+      <RadioGroupItem value={value} disabled={disabled} />
+      <div className="text-sm flex-1"><MarkdownText text={text} className="!prose-sm" /></div>
+      {isCorrected && isCorrect && (
+        <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
+          ✓ Correct
+        </span>
+      )}
+    </label>
+  )
+})
+
+// Memoized answer option for checkbox questions
+const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
+  checked,
+  onCheckedChange,
+  text,
+  isCorrected,
+  isCorrect,
+  disabled,
+}: {
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+  text: string
+  isCorrected: boolean
+  isCorrect: boolean
+  disabled: boolean
+}) {
+  return (
+    <label
+      className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-colors ${
+        isCorrected
+          ? isCorrect
+            ? 'bg-green-100/50 dark:bg-green-950/50 hover:bg-green-100/70 dark:hover:bg-green-950/70'
+            : 'bg-red-100/50 dark:bg-red-950/50 hover:bg-red-100/70 dark:hover:bg-red-950/70'
+          : 'hover:bg-muted/50'
+      }`}
+    >
+      <Checkbox
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+      />
+      <div className="text-sm flex-1"><MarkdownText text={text} className="!prose-sm" /></div>
+      {isCorrected && isCorrect && (
+        <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
+          ✓ Correct
+        </span>
+      )}
+    </label>
+  )
+})
 
 /**
  * Affiche le contenu d'un exercice (QCM, questions ouvertes, etc)
@@ -50,12 +144,21 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
   const { setTitle } = useDocumentTitle()
   
   // State pour les réponses utilisateur
-  // Format: { blockIdx_qIdx: string[] } pour multi-réponses ou string pour réponse unique
   const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>({})
   const [openAnswers, setOpenAnswers] = useState<Record<string, string>>({})
-  
-  // State pour suivre les questions corrigées et leurs résultats
   const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>({})
+  
+  // Cache for handlers to prevent recreation
+  const handlersCache = useRef<Map<string, any>>(new Map())
+  const isCorrectedRef = useRef<Record<string, boolean>>({})
+  
+  // Update ref whenever correctedQuestions changes
+  useEffect(() => {
+    isCorrectedRef.current = Object.keys(correctedQuestions).reduce((acc, key) => {
+      acc[key] = true
+      return acc
+    }, {} as Record<string, boolean>)
+  }, [correctedQuestions])
   
   // Set the document title in context when component mounts
   useEffect(() => {
@@ -72,11 +175,11 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
   }
 
   // Handlers pour les réponses
-  const handleRadioChange = (key: string, value: string) => {
+  const handleRadioChange = useCallback((key: string, value: string) => {
     setUserAnswers(prev => ({ ...prev, [key]: value }))
-  }
+  }, [])
 
-  const handleCheckboxChange = (key: string, value: string, checked: boolean) => {
+  const handleCheckboxChange = useCallback((key: string, value: string, checked: boolean) => {
     setUserAnswers(prev => {
       const current = (prev[key] as string[]) || []
       if (checked) {
@@ -85,11 +188,37 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
         return { ...prev, [key]: current.filter(v => v !== value) }
       }
     })
-  }
+  }, [])
 
-  const handleOpenAnswerChange = (key: string, value: string) => {
+  const handleOpenAnswerChange = useCallback((key: string, value: string) => {
     setOpenAnswers(prev => ({ ...prev, [key]: value }))
-  }
+  }, [])
+
+  // Get or create cached handler for radio change
+  const getRadioChangeHandler = useCallback((questionKey: string) => {
+    const cacheKey = `radio_${questionKey}`
+    if (!handlersCache.current.has(cacheKey)) {
+      handlersCache.current.set(cacheKey, (value: string) => {
+        if (!isCorrectedRef.current[questionKey]) {
+          handleRadioChange(questionKey, value)
+        }
+      })
+    }
+    return handlersCache.current.get(cacheKey)
+  }, [handleRadioChange])
+
+  // Get or create cached handler for checkbox change
+  const getCheckboxChangeHandler = useCallback((questionKey: string, answerIdx: string) => {
+    const cacheKey = `checkbox_${questionKey}_${answerIdx}`
+    if (!handlersCache.current.has(cacheKey)) {
+      handlersCache.current.set(cacheKey, (checked: boolean) => {
+        if (!isCorrectedRef.current[questionKey]) {
+          handleCheckboxChange(questionKey, answerIdx, checked)
+        }
+      })
+    }
+    return handlersCache.current.get(cacheKey)
+  }, [handleCheckboxChange])
 
   // Vérifier la réponse d'une question QCM
   const handleCheckQCM = (questionKey: string, question: QCMQuestion, isMultiAnswer: boolean) => {
@@ -197,30 +326,15 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                                   const isChecked = ((userAnswers[questionKey] as string[]) || []).includes(String(aIdx))
                                   
                                   return (
-                                    <label
+                                    <CheckboxAnswerOption
                                       key={aIdx}
-                                      className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-colors ${
-                                        isCorrected
-                                          ? answer.is_correct
-                                            ? 'bg-green-100/50 dark:bg-green-950/50 hover:bg-green-100/70 dark:hover:bg-green-950/70'
-                                            : 'bg-red-100/50 dark:bg-red-950/50 hover:bg-red-100/70 dark:hover:bg-red-950/70'
-                                          : 'hover:bg-muted/50'
-                                      }`}
-                                    >
-                                      <Checkbox
-                                        checked={isChecked}
-                                        onCheckedChange={(checked) =>
-                                          !isCorrected && handleCheckboxChange(questionKey, String(aIdx), checked as boolean)
-                                        }
-                                        disabled={isCorrected}
-                                      />
-                                      <div className="text-sm flex-1"><MarkdownText text={answer.text} className="!prose-sm" /></div>
-                                      {isCorrected && answer.is_correct && (
-                                        <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
-                                          ✓ Correct
-                                        </span>
-                                      )}
-                                    </label>
+                                      checked={isChecked}
+                                      onCheckedChange={getCheckboxChangeHandler(questionKey, String(aIdx))}
+                                      text={answer.text}
+                                      isCorrected={isCorrected}
+                                      isCorrect={answer.is_correct}
+                                      disabled={isCorrected}
+                                    />
                                   )
                                 })}
                               </div>
@@ -228,29 +342,19 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               // Réponse unique avec RadioGroup
                               <RadioGroup
                                 value={String(userAnswers[questionKey] ?? '')}
-                                onValueChange={(value) => !isCorrected && handleRadioChange(questionKey, value)}
+                                onValueChange={getRadioChangeHandler(questionKey)}
                                 className="mb-4"
                                 disabled={isCorrected}
                               >
                                 {question.answers.map((answer, aIdx) => (
-                                  <label
+                                  <RadioAnswerOption
                                     key={aIdx}
-                                    className={`flex items-center gap-3 cursor-pointer p-3 rounded-lg transition-colors ${
-                                      isCorrected
-                                        ? answer.is_correct
-                                          ? 'bg-green-100/50 dark:bg-green-950/50 hover:bg-green-100/70 dark:hover:bg-green-950/70'
-                                          : 'bg-red-100/50 dark:bg-red-950/50 hover:bg-red-100/70 dark:hover:bg-red-950/70'
-                                        : 'hover:bg-muted/50'
-                                    }`}
-                                  >
-                                    <RadioGroupItem value={String(aIdx)} disabled={isCorrected} />
-                                    <div className="text-sm flex-1"><MarkdownText text={answer.text} className="!prose-sm" /></div>
-                                    {isCorrected && answer.is_correct && (
-                                      <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
-                                        ✓ Correct
-                                      </span>
-                                    )}
-                                  </label>
+                                    value={String(aIdx)}
+                                    text={answer.text}
+                                    isCorrected={isCorrected}
+                                    isCorrect={answer.is_correct}
+                                    disabled={isCorrected}
+                                  />
                                 ))}
                               </RadioGroup>
                             )}
