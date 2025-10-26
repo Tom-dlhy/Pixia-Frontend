@@ -13,6 +13,7 @@ import { Textarea } from '~/components/ui/textarea'
 import { Button } from '~/components/ui/button'
 import { QCMQuestion } from '~/models/Document'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
+import { checkPlainQuestion } from '~/server/chat.server'
 import { cn } from '~/lib/utils'
 
 interface ExerciseViewerProps {
@@ -358,33 +359,62 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                         const questionKey = `open_${blockIdx}_${qIdx}`
                         const correctionState = correctedQuestions[questionKey]
                         const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
                         
                         return (
                           <div
                             key={qIdx}
                             className={`border rounded-lg bg-background/50 overflow-hidden transition-all duration-200 ${
                               isCorrected 
-                                ? 'border-green-500/50 bg-green-500/5' 
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-500/5' 
+                                  : 'border-red-500/50 bg-red-500/5'
                                 : 'border-white/20 dark:border-white/10'
                             }`}
                           >
-                            <div className="flex items-center justify-between bg-white/5 dark:bg-white/5 px-4 py-3 border-b border-white/10">
+                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
                               <MarkdownText text={question.question} className="!prose-sm" />
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (!isCorrected && openAnswers[questionKey]) {
-                                    setCorrectedQuestions(prev => ({
-                                      ...prev,
-                                      [questionKey]: { isCorrect: false, showExplanation: true }
-                                    }))
-                                  }
-                                }}
-                                disabled={isCorrected || !openAnswers[questionKey]}
-                              >
-                                {isCorrected ? '✓ Vérifié' : 'Vérifier'}
-                              </Button>
+                              {!isCorrected ? (
+                                <Button 
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (!isCorrected && openAnswers[questionKey]) {
+                                      try {
+                                        const result = await checkPlainQuestion({
+                                          data: {
+                                            question: question.question,
+                                            user_answer: openAnswers[questionKey],
+                                            expected_answer: question.explanation || ""
+                                          }
+                                        })
+                                        
+                                        setCorrectedQuestions(prev => ({
+                                          ...prev,
+                                          [questionKey]: { isCorrect: result.is_correct, showExplanation: true }
+                                        }))
+                                      } catch (error) {
+                                        console.error("Erreur lors de la correction:", error)
+                                      }
+                                    }
+                                  }}
+                                  disabled={isCorrected || !openAnswers[questionKey]}
+                                >
+                                  Vérifier
+                                </Button>
+                              ) : (
+                                <div className={`px-3 py-1 rounded-md text-white text-xs font-semibold ${
+                                  isAnswerCorrect ? 'bg-green-600' : 'bg-red-600'
+                                }`}>
+                                  {isAnswerCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                </div>
+                              )}
                             </div>
                             
                             <div className="p-4">
