@@ -47,6 +47,7 @@ function CopiloteContainerContent({
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
   const [isNewMessage, setIsNewMessage] = useState(false)
+  const [isWaitingForResponse, setIsWaitingForResponse] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { courseType: contextCourseType } = useCourseType()
   const effectiveCourseType = courseType || contextCourseType
@@ -217,6 +218,7 @@ function CopiloteContainerContent({
       setMessages((m) => [...m, userMessage, ""])
       setPrompt("")
       setIsNewMessage(true)
+      setIsWaitingForResponse(true)
       
       const res = await sendChatWithRefresh({
         user_id: effectiveUserId,
@@ -234,6 +236,7 @@ function CopiloteContainerContent({
         newMessages[newMessages.length - 1] = res.reply
         return newMessages
       })
+      setIsWaitingForResponse(false)
 
       handleRedirect(res)
     } catch (err) {
@@ -243,6 +246,7 @@ function CopiloteContainerContent({
         newMessages[newMessages.length - 1] = "Erreur lors de la requête"
         return newMessages
       })
+      setIsWaitingForResponse(false)
     }
   }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh])
 
@@ -330,7 +334,7 @@ function CopiloteContainerContent({
         onChange={setPrompt}
         onSubmit={handleSubmit}
         disableAttachments={false}
-        isSending={false}
+        isSending={isWaitingForResponse}
         className="flex-shrink-0"
         placeholder="Demandez une assistance au copilote..."
       />
