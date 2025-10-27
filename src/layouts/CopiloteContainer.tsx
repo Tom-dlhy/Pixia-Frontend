@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties } from "react"
+import React, { useState, useCallback, useMemo, useEffect, useRef, type CSSProperties, forwardRef } from "react"
 import {
   Empty,
   EmptyHeader,
@@ -33,6 +33,8 @@ interface CopiloteContainerProps {
   forceDeepMode?: boolean
   deepCourseId?: string | null
   chapterId?: string | null
+  onClose?: () => void
+  onTextareaRef?: (ref: HTMLTextAreaElement | null) => void
 }
 
 function CopiloteContainerContent({
@@ -43,17 +45,28 @@ function CopiloteContainerContent({
   isCopiloteModal = false,
   deepCourseId,
   chapterId,
+  onClose,
+  onTextareaRef,
 }: Omit<CopiloteContainerProps, "forceDeepMode">) {
   const [prompt, setPrompt] = useState("")
   const [messages, setMessages] = useState<string[]>([])
   const [isNewMessage, setIsNewMessage] = useState(false)
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false)
+  const [copiloteSessionId, setCopiloteSessionId] = useState<string | null>(sessionId || null)
+  const [queuedFiles, setQueuedFiles] = useState<File[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { courseType: contextCourseType } = useCourseType()
   const effectiveCourseType = courseType || contextCourseType
   const { session } = useAppSession()
   const { handleRedirect } = useApiRedirect()
   const { send: sendChatWithRefresh } = useSendChatWithRefresh()
+
+  useEffect(() => {
+    if (onTextareaRef && textareaRef.current) {
+      onTextareaRef(textareaRef.current)
+    }
+  }, [onTextareaRef])
   
   let activeTab: "cours" | "exercice" | "evaluation" | null = null
   try {
@@ -204,8 +217,19 @@ function CopiloteContainerContent({
     [accent]
   )
 
+  const handleFilesSelected = (files: File[]) => {
+    if (files.length) setQueuedFiles(files)
+  }
+
+  const removeAttachment = (index: number) => {
+    setQueuedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = useCallback(async () => {
-    if (!prompt.trim() || !effectiveUserId) {
+    if (!prompt.trim() && queuedFiles.length === 0) {
+      return
+    }
+    if (!effectiveUserId) {
       if (!effectiveUserId) {
         console.warn(`[CopiloteContainer] Impossible d'envoyer: userId non disponible`)
       }
@@ -219,11 +243,31 @@ function CopiloteContainerContent({
       setPrompt("")
       setIsNewMessage(true)
       setIsWaitingForResponse(true)
+
+      const encodedFiles = await Promise.all(
+        queuedFiles.map(
+          (file) =>
+            new Promise<{ name: string; data: string; type?: string; size?: number }>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () =>
+                resolve({
+                  name: file.name,
+                  data: (reader.result as string).split(",")[1],
+                  type: file.type,
+                  size: file.size,
+                })
+              reader.onerror = reject
+              reader.readAsDataURL(file)
+            })
+        )
+      )
       
       const res = await sendChatWithRefresh({
         user_id: effectiveUserId,
         message: userMessage,
-        sessionId: effectiveSessionId || undefined, 
+        files: encodedFiles.length ? encodedFiles : undefined,
+        sessionId: copiloteSessionId || undefined,
+        deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
         messageContext: {
           currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
           deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
@@ -231,14 +275,19 @@ function CopiloteContainerContent({
         },
       })
 
+      if (res.session_id && res.session_id !== copiloteSessionId) {
+        setCopiloteSessionId(res.session_id)
+      }
+
       setMessages((m) => {
         const newMessages = [...m]
         newMessages[newMessages.length - 1] = res.reply
         return newMessages
       })
       setIsWaitingForResponse(false)
+      setQueuedFiles([])
 
-      handleRedirect(res)
+      handleRedirect(res, onClose)
     } catch (err) {
       console.error("Erreur Copilote:", err)
       setMessages((m) => {
@@ -247,8 +296,9 @@ function CopiloteContainerContent({
         return newMessages
       })
       setIsWaitingForResponse(false)
+      setQueuedFiles([])
     }
-  }, [prompt, effectiveUserId, effectiveSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh])
+  }, [prompt, effectiveUserId, copiloteSessionId, activeTab, handleRedirect, effectiveCourseType, session, deepCourseId, sendChatWithRefresh, onClose, queuedFiles])
 
   return (
     <aside
@@ -258,7 +308,8 @@ function CopiloteContainerContent({
         rounded-[28px] border border-white/20 dark:border-white/10
         backdrop-blur-xl backdrop-saturate-150
         bg-[rgba(255,255,255,0.15)] dark:bg-[rgba(24,24,27,0.45)]
-        shadow-[inset_0_1px_3px_rgba(255,255,255,0.3),0_12px_40px_rgba(0,0,0,0.25)]
+        shadow-[inset_0_1px_3px_rgba(255,255,255,0.3)]
+        filter drop-shadow(0 8px 20px rgba(0,0,0,0.25))
         transition-all duration-300
         p-6 overflow-hidden
       `,
@@ -330,6 +381,7 @@ function CopiloteContainerContent({
       </div>
 
       <ChatInput
+        ref={textareaRef}
         value={prompt}
         onChange={setPrompt}
         onSubmit={handleSubmit}
@@ -337,6 +389,9 @@ function CopiloteContainerContent({
         isSending={isWaitingForResponse}
         className="flex-shrink-0"
         placeholder="Demandez une assistance au copilote..."
+        queuedFiles={queuedFiles}
+        onFilesSelected={handleFilesSelected}
+        onRemoveAttachment={removeAttachment}
       />
     </aside>
   )
@@ -366,6 +421,8 @@ export default function CopiloteContainer({
   forceDeepMode = false,
   deepCourseId,
   chapterId,
+  onClose,
+  onTextareaRef,
 }: CopiloteContainerProps) {
   if (forceDeepMode) {
     return (
@@ -377,6 +434,8 @@ export default function CopiloteContainer({
           isCopiloteModal={isCopiloteModal}
           deepCourseId={deepCourseId}
           chapterId={chapterId}
+          onClose={onClose}
+          onTextareaRef={onTextareaRef}
         />
       </ForcedDeepModeProvider>
     )
@@ -390,6 +449,8 @@ export default function CopiloteContainer({
       isCopiloteModal={isCopiloteModal}
       deepCourseId={deepCourseId}
       chapterId={chapterId}
+      onClose={onClose}
+      onTextareaRef={onTextareaRef}
     />
   )
 }

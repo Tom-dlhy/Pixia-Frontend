@@ -172,7 +172,6 @@ export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationCom
   const handlersCache = useRef<Map<string, any>>(new Map())
   const isCorrectedRef = useRef<Record<string, boolean>>({})
   
-  // Calculer le nombre total de questions
   const totalQuestions = useMemo(() => {
     let count = 0
     exercise.exercises.forEach((block) => {
@@ -326,7 +325,6 @@ export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationCom
     setIsCheckingAll(true)
     
     try {
-      // 1. Corriger tous les QCM
       exercise.exercises.forEach((block, blockIdx) => {
         if (isQCM(block)) {
           block.questions.forEach((question: QCMQuestion, qIdx: number) => {
@@ -338,7 +336,6 @@ export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationCom
         }
       })
 
-      // 2. Préparer et corriger tous les Open questions
       const allOpenQuestions = exercise.exercises
         .flatMap((block, blockIdx) => {
           if (isOpen(block)) {
@@ -367,7 +364,6 @@ export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationCom
           }
         })
 
-        // Mettre à jour les corrections des Open questions
         setCorrectedQuestions(prev => {
           const updated = { ...prev }
           result.results.forEach((res, idx) => {
@@ -388,7 +384,6 @@ export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationCom
     <ScrollArea className="flex-1 h-full w-full">
       <div className="space-y-8 pr-4 w-full">
         {isEvaluation ? (
-          // Mode évaluation : afficher seulement le bouton
           <>
             {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">

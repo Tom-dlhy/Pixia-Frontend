@@ -26,12 +26,13 @@ const ChatMessageSchema = z.object({
       userFullName: z.string().optional(),
     })
     .optional(),
+  deepCourseId: z.string().optional(),
 })
 
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
-    const { user_id, message, sessionId, files = [], messageContext } = data
+    const { user_id, message, sessionId, files = [], messageContext, deepCourseId } = data
 
     console.group("%c📨 [sendChatMessage] Input Reçu", "color: #3b82f6; font-weight: bold; font-size: 13px;")
     console.groupEnd()
@@ -90,6 +91,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     formData.append("user_id", user_id)
     formData.append("message", enrichedMessage)
     if (sessionId) formData.append("session_id", sessionId)
+    if (deepCourseId) formData.append("deep_course_id", deepCourseId)
 
     for (const f of files) {
       const buffer = Buffer.from(f.data, "base64")

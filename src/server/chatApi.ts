@@ -74,12 +74,12 @@ function extractMessageContent(text: string | null | undefined): string {
 }
 
 export async function sendChat(
-  data: FormData | { user_id: string; message: string; sessionId?: string }
+  data: FormData | { user_id: string; message: string; sessionId?: string; deepCourseId?: string }
 ): Promise<SendChatResponse> {
   let options: RequestInit
 
-  // Extraire sessionId de manière sûre
   const sessionId = data instanceof FormData ? null : data.sessionId
+  const deepCourseId = data instanceof FormData ? null : data.deepCourseId
 
   if (sessionId) {
     console.log("Envoi de message avec sessionId:", sessionId)
@@ -88,16 +88,24 @@ export async function sendChat(
     console.log("Envoi de message sans sessionId")
   }
 
+  if (deepCourseId) {
+    console.log("Envoi de message avec deepCourseId:", deepCourseId)
+  }
+
   if (data instanceof FormData) {
     options = {
       method: "POST",
       body: data,
     }
   } else {
-    const jsonBody = {
+    const jsonBody: any = {
       user_id: data.user_id,
       message: data.message,
       session_id: data.sessionId,
+    }
+    
+    if (data.deepCourseId) {
+      jsonBody.deep_course_id = data.deepCourseId
     }
 
     options = {

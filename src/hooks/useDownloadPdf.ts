@@ -11,7 +11,6 @@ export function useDownloadPdf() {
         throw new Error("Le PDF généré est vide")
       }
 
-      // Créer l'URL blob côté client
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url

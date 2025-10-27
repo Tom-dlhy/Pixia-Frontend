@@ -103,15 +103,6 @@ export function ChatActionButton({ sessionId }: ChatActionButtonProps) {
     }
   }
 
-  const accentMap: Record<string, { light: string; dark: string }> = {
-    none: { light: "rgba(209,213,219,0.3)", dark: "rgba(82,82,91,0.25)" },
-    cours: { light: "rgba(167,243,208,0.25)", dark: "rgba(16,185,129,0.25)" },
-    exercice: { light: "rgba(147,197,253,0.25)", dark: "rgba(56,189,248,0.25)" },
-    deep: { light: "rgba(216,180,254,0.25)", dark: "rgba(139,92,246,0.25)" },
-  }
-
-  const accent = accentMap[courseType] ?? accentMap["none"]
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -125,9 +116,6 @@ export function ChatActionButton({ sessionId }: ChatActionButtonProps) {
             "shadow-[inset_0_1px_2px_rgba(255,255,255,0.4),0_4px_12px_rgba(0,0,0,0.1)]",
             "hover:scale-[1.03]"
           )}
-          style={{
-            background: `linear-gradient(135deg, ${accent.light}, transparent 80%)`,
-          }}
         >
           <Menu className="h-4 w-4 opacity-90" />
         </Button>
@@ -165,11 +153,9 @@ export function ChatActionButton({ sessionId }: ChatActionButtonProps) {
                 background: `linear-gradient(135deg, transparent, transparent)`,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = `linear-gradient(135deg, ${accent.light}, ${accent.dark})`
                 e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
                 e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
               }}
             >
