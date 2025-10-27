@@ -21,8 +21,6 @@ function HomeLayoutContent({ user, children }: { user?: any; children: React.Rea
   const [isDark, setIsDark] = useState(
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
-  
-  const navigate = useNavigate()
 
   useEffect(() => {
     if (typeof document === "undefined") return
@@ -43,7 +41,7 @@ function HomeLayoutContent({ user, children }: { user?: any; children: React.Rea
           <div className="absolute inset-0 backdrop-blur-2xl transition-colors duration-700" />
         </GradientBackground>
 
-        <main className="relative z-10 flex flex-col w-full h-full overflow-y-auto px-4 sm:px-6 lg:px-10 py-8">
+        <main className="relative z-10 flex flex-col w-full h-full overflow-y-auto px-4 sm:px-6 lg:px-10 py-8 pb-0">
           
           <section className="flex flex-1 flex-col gap-8 min-h-0">
             {children}

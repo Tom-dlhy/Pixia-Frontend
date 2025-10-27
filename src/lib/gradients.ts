@@ -1,6 +1,3 @@
-/**
- * Map des couleurs Tailwind en valeurs RGB
- */
 const tailwindColorMap: Record<string, string> = {
   // Reds
   "red-500": "239, 68, 68",
@@ -61,11 +58,7 @@ const tailwindColorMap: Record<string, string> = {
   "gray-400": "156, 163, 175",
 }
 
-/**
- * Convertit une classe de gradient Tailwind en valeur CSS valid pour backgroundImage
- */
 export function convertTailwindGradientToCss(tailwindGradient: string): string {
-  // Parse la direction du gradient
   const directionMatch = tailwindGradient.match(/to-(\w+)/);
   const directionMap: Record<string, string> = {
     "br": "to bottom right",
@@ -80,7 +73,6 @@ export function convertTailwindGradientToCss(tailwindGradient: string): string {
   
   const direction = directionMap[directionMatch?.[1] || "br"] || "to bottom right";
 
-  // Parse les couleurs
   const fromMatch = tailwindGradient.match(/from-([a-z]+-\d+)/);
   const toMatch = tailwindGradient.match(/to-([a-z]+-\d+)/);
   
@@ -90,17 +82,11 @@ export function convertTailwindGradientToCss(tailwindGradient: string): string {
   return `linear-gradient(${direction}, rgb(${fromColor}), rgb(${toColor}))`;
 }
 
-/**
- * Extrait la couleur primaire d'une classe de gradient Tailwind
- */
 export function extractPrimaryColor(gradientClass: string): string {
   const match = gradientClass.match(/from-([a-z]+-\d+)/);
   return match ? match[1] : "gray-400";
 }
 
-/**
- * Convertit une couleur Tailwind en style de bordure inline CSS
- */
 export function getColorBorderStyle(colorClass: string): string {
   const rgb = tailwindColorMap[colorClass] || tailwindColorMap["gray-400"];
   return `3px solid rgba(${rgb}, 0.6)`;

@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  forwardRef,
 } from "react"
 import { Mic, Paperclip, Send, X } from "lucide-react"
 import { Textarea } from "~/components/ui/textarea"
@@ -32,7 +33,7 @@ export type ChatInputProps = {
   placeholder?: string
 }
 
-export function ChatInput({
+export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(function ChatInput({
   value,
   onChange,
   onSubmit,
@@ -43,12 +44,18 @@ export function ChatInput({
   disableAttachments = false,
   className,
   placeholder = "Écris ton message...",
-}: ChatInputProps) {
+}, ref) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const { courseType } = useCourseType()
   const accentKey = courseType === "deep" ? "none" : courseType
   const accent = useMemo(() => getCourseAccent(accentKey), [accentKey])
+
+  useEffect(() => {
+    if (ref && "current" in ref) {
+      ref.current = textareaRef.current
+    }
+  }, [ref])
 
   const [isDark, setIsDark] = useState(() => {
     if (typeof document === "undefined") return false
@@ -249,7 +256,7 @@ export function ChatInput({
           rows={1}
           disabled={isSending || isListening}
           className={cn(
-            "w-full min-h-[44px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto",
+            "w-full min-h-[44px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto scrollbar-hide",
             textColor
           )}
         />
@@ -349,4 +356,4 @@ export function ChatInput({
       )}
     </div>
   )
-}
+})
