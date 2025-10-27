@@ -132,7 +132,7 @@ export default function ActionButton({
 
     setIsDownloadingPdf(true)
     try {
-      const filename = `copilote_${documentTitle || 'cours'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
+      const filename = `${documentTitle || 'cours'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
       await downloadPdf(copiloteSessionId, filename)
     } catch (error) {
       console.error('[ActionButton] Erreur lors du téléchargement PDF du copilote:', error)
@@ -331,41 +331,35 @@ export default function ActionButton({
           align="end"
           sideOffset={8}
         >
-          {courseData && (
+          {courseType === "cours" && copiloteSessionId && (
             <>
-              {copiloteSessionId && (
-                <>
-                  <Button
-                    variant="ghost"
-                    onClick={handleExportCopilotePdf}
-                    disabled={isDownloadingPdf}
-                    className={cn(
-                      "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
-                      "border border-transparent",
-                      "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]",
-                      isDownloadingPdf && "opacity-50 cursor-not-allowed"
-                    )}
-                    style={{
-                      background: `linear-gradient(135deg, transparent, transparent)`,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isDownloadingPdf) {
-                        e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
-                        e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
-                      e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
-                    }}
-                  >
-                    <FileText className="h-4 w-4 opacity-80" />
-                    {isDownloadingPdf ? "Téléchargement..." : "Enregistrer en PDF"}
-                  </Button>
+              <Button
+                variant="ghost"
+                onClick={handleExportCopilotePdf}
+                disabled={isDownloadingPdf}
+                className={cn(
+                  "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
+                  "border border-transparent",
+                  "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]",
+                  isDownloadingPdf && "opacity-50 cursor-not-allowed"
+                )}
+                style={{
+                  background: `linear-gradient(135deg, transparent, transparent)`,
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDownloadingPdf) {
+                    e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
+                }}
+              >
+                <FileText className="h-4 w-4 opacity-80" />
+                {isDownloadingPdf ? "Téléchargement..." : "Enregistrer en PDF"}
+              </Button>
 
-                  <DropdownMenuSeparator className="my-1 opacity-20" />
-                </>
-              )}
+              <DropdownMenuSeparator className="my-1 opacity-20" />
             </>
           )}
 
