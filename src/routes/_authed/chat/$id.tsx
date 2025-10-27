@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useParams, useNavigate } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Chat, ChatMessage, loadConversation, saveConversation } from "~/components/Chat"
 import { ChatInput } from "~/components/ChatInput"
 import { ScrollArea } from "~/components/ui/scroll-area"
@@ -29,12 +29,23 @@ function ChatSessionPage() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [queuedFiles, setQueuedFiles] = useState<File[]>([])
+  
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setOpen(false)
     const stored = loadConversation(id)
     if (stored) setMessages(stored)
   }, [id, setOpen])
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, 0)
+    }
+  }, [messages])
 
   const userId =
     session.userId != null ? String(session.userId) : "anonymous-user"
@@ -134,8 +145,9 @@ function ChatSessionPage() {
         </div>
 
         <div className="flex-1 flex flex-col min-h-0">
-          <ScrollArea className="flex-1 mb-4 rounded-lg">
+          <ScrollArea className="flex-1 mb-4 rounded-lg" ref={scrollAreaRef}>
             <Chat messages={messages} sending={sending} error={error} />
+            <div ref={messagesEndRef} />
           </ScrollArea>
         </div>
       </div>

@@ -30,6 +30,7 @@ import {
   useHeaderIcon,
   useRightAction,
 } from "~/hooks/useDeepCourseNavigation"
+import { useChapterDocuments } from "~/hooks/useChapterDocuments"
 
 export function DeepCoursesLayout() {
   const { setCourseType } = useCourseType()
@@ -52,6 +53,8 @@ export function DeepCoursesLayout() {
     if (!deepcourseId) return ""
     return localStorage.getItem(`deepcourse-gradient-${deepcourseId}`) || ""
   }, [deepcourseId])
+
+  const { data: chapterDocs } = useChapterDocuments(chapterId || undefined)
 
   useEffect(() => {
     const courseType: CourseType = depth === 3
@@ -87,12 +90,30 @@ export function DeepCoursesLayout() {
   const enrichedActionConfig = useMemo(() => {
     if (!rightActionConfig) return null
     
+    let sessionId: string | undefined = undefined
+    let copiloteSessionId: string | undefined = undefined
+    
+    if (chapterDocs) {
+      if (activeTab === "cours") {
+        sessionId = chapterDocs.course_session_id
+        copiloteSessionId = chapterDocs.course_session_id
+      } else if (activeTab === "exercice") {
+        sessionId = chapterDocs.exercice_session_id
+        copiloteSessionId = undefined
+      } else if (activeTab === "evaluation") {
+        sessionId = chapterDocs.evaluation_session_id
+        copiloteSessionId = undefined
+      }
+    }
+    
     return {
       ...rightActionConfig,
       onCreateCourse: handleOpenCopiloteModal,
       onAddChapter: handleOpenCopiloteModal,
+      sessionId,
+      copiloteSessionId,
     }
-  }, [rightActionConfig])
+  }, [rightActionConfig, activeTab, chapterDocs])
 
   const contextValue = useMemo(
     () => ({

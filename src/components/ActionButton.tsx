@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { useParams } from "@tanstack/react-router"
 import {
   DropdownMenu,
@@ -9,15 +9,14 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { Button } from "~/components/ui/button"
-import { Plus, Trash2, Menu, FileText, FileCode } from "lucide-react"
+import { Plus, Trash2, Menu, FileText } from "lucide-react"
 import { FaCheckCircle } from "react-icons/fa"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { useCourseContent } from "~/context/CourseContentContext"
 import { useSessionCache } from "~/hooks/useSessionCache"
 import { useAppSession } from "~/utils/session"
-import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
-import { generateMarkdownFromCourseData } from "~/utils/generateMarkdownFromCourseData"
+import { useDownloadPdf } from "~/hooks/useDownloadPdf"
 import { cn } from "~/lib/utils"
 import { markChapterCompleteServerFn, markChapterUncompleteServerFn } from "~/server/chat.server"
 import type { CourseWithChapters } from "~/models/Course"
@@ -32,6 +31,8 @@ interface ActionButtonProps {
   onDeleteCourse?: () => void
   onDeleteChapter?: () => void
   onMarkDone?: () => void
+  sessionId?: string
+  copiloteSessionId?: string
 }
 
 export default function ActionButton({
@@ -43,8 +44,12 @@ export default function ActionButton({
   onDeleteCourse,
   onDeleteChapter,
   onMarkDone,
+  sessionId,
+  copiloteSessionId,
 }: ActionButtonProps) {
   const { courseType } = useCourseType()
+  const { downloadPdf } = useDownloadPdf()
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
   
   let documentTitle: string | null = null
   try {
@@ -119,26 +124,21 @@ export default function ActionButton({
     return null
   }, [sessionCacheData, contextCourse])
 
-  const handleExportPdf = async () => {
-    if (!courseData) {
-      console.error('[ActionButton] Course data not available')
+  const handleExportCopilotePdf = async () => {
+    if (!copiloteSessionId) {
+      console.error('[ActionButton] copiloteSessionId manquant pour le téléchargement PDF du copilote')
       return
     }
 
-    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
-    
-    await generatePdfFromCourseData(courseData, filename)
-  }
-
-  const handleExportMarkdown = () => {
-    if (!courseData) {
-      console.error('[ActionButton] Course data not available')
-      return
+    setIsDownloadingPdf(true)
+    try {
+      const filename = `copilote_${documentTitle || 'cours'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
+      await downloadPdf(copiloteSessionId, filename)
+    } catch (error) {
+      console.error('[ActionButton] Erreur lors du téléchargement PDF du copilote:', error)
+    } finally {
+      setIsDownloadingPdf(false)
     }
-
-    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.md`
-    
-    generateMarkdownFromCourseData(courseData, filename)
   }
 
   const accentMap: Record<
@@ -333,57 +333,39 @@ export default function ActionButton({
         >
           {courseData && (
             <>
-              <Button
-                variant="ghost"
-                onClick={handleExportPdf}
-                className={cn(
-                  "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
-                  "border border-transparent",
-                  "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, transparent, transparent)`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
-                  e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
-                  e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
-                }}
-              >
-                <FileText className="h-4 w-4 opacity-80" />
-                Enregistrer en PDF
-              </Button>
+              {copiloteSessionId && (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={handleExportCopilotePdf}
+                    disabled={isDownloadingPdf}
+                    className={cn(
+                      "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
+                      "border border-transparent",
+                      "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]",
+                      isDownloadingPdf && "opacity-50 cursor-not-allowed"
+                    )}
+                    style={{
+                      background: `linear-gradient(135deg, transparent, transparent)`,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isDownloadingPdf) {
+                        e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
+                        e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
+                      e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
+                    }}
+                  >
+                    <FileText className="h-4 w-4 opacity-80" />
+                    {isDownloadingPdf ? "Téléchargement..." : "Enregistrer en PDF"}
+                  </Button>
 
-              <DropdownMenuSeparator className="my-1 opacity-20" />
-
-              <Button
-                variant="ghost"
-                onClick={handleExportMarkdown}
-                className={cn(
-                  "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
-                  "border border-transparent",
-                  "hover:shadow-[inset_0_1px_3px_rgba(255,255,255,0.4),0_4px_10px_rgba(0,0,0,0.1)]"
-                )}
-                style={{
-                  background: `linear-gradient(135deg, transparent, transparent)`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, rgba(167,243,208,0.25), rgba(16,185,129,0.25))`
-                  e.currentTarget.style.backdropFilter = "blur(16px) saturate(150%)"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, transparent, transparent)`
-                  e.currentTarget.style.backdropFilter = "blur(10px) saturate(100%)"
-                }}
-              >
-                <FileCode className="h-4 w-4 opacity-80" />
-                Enregistrer en Markdown
-              </Button>
-
-              <DropdownMenuSeparator className="my-1 opacity-20" />
+                  <DropdownMenuSeparator className="my-1 opacity-20" />
+                </>
+              )}
             </>
           )}
 

@@ -78,6 +78,16 @@ export async function sendChat(
 ): Promise<SendChatResponse> {
   let options: RequestInit
 
+  // Extraire sessionId de manière sûre
+  const sessionId = data instanceof FormData ? null : data.sessionId
+
+  if (sessionId) {
+    console.log("Envoi de message avec sessionId:", sessionId)
+  }
+  else {
+    console.log("Envoi de message sans sessionId")
+  }
+
   if (data instanceof FormData) {
     options = {
       method: "POST",
@@ -382,4 +392,23 @@ export async function correctAllPlainQuestions(
     is_correct: r.is_correct,
     feedback: r.feedback || undefined,
   }))
+}
+
+export async function downloadCoursePdf(
+  sessionId: string
+): Promise<Blob> {
+  const formData = new FormData()
+  formData.append("session_id", sessionId)
+
+  const r = await fetch(`${API_BASE}/downloadcourse`, {
+    method: "POST",
+    body: formData,
+  })
+
+  if (!r.ok) {
+    const body = await r.text().catch(() => "")
+    throw new Error(`HTTP ${r.status}: ${body}`)
+  }
+
+  return r.blob()
 }

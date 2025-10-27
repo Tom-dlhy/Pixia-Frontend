@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { useParams } from "@tanstack/react-router"
 import {
   DropdownMenu,
@@ -9,31 +9,29 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu"
 import { Button } from "~/components/ui/button"
-import { Mail, FileText, Database, HardDrive, Menu, FileCode } from "lucide-react"
+import { FileText, Menu } from "lucide-react"
 import { useCourseType } from "~/context/CourseTypeContext"
-import { usePdfExport } from "~/hooks/usePdfExport"
 import { useDocumentTitle } from "~/context/DocumentTitleContext"
 import { useCourseContent } from "~/context/CourseContentContext"
 import { useSessionCache } from "~/hooks/useSessionCache"
 import { useAppSession } from "~/utils/session"
-import { generatePdfFromCourseData } from "~/utils/generatePdfFromCourseData"
-import { 
-  generateMarkdownFromCourseData
-} from "~/utils/generateMarkdownFromCourseData"
+import { useDownloadPdf } from "~/hooks/useDownloadPdf"
 import { cn } from "~/lib/utils"
 import type { CourseWithChapters } from "~/models/Course"
 import type { CourseOutput } from "~/models/Document"
 
 export interface ChatActionButtonProps {
   contentRef?: React.RefObject<HTMLDivElement | null>
+  sessionId?: string
 }
 
-export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
+export function ChatActionButton({ sessionId }: ChatActionButtonProps) {
   const { courseType } = useCourseType()
   const { title: documentTitle } = useDocumentTitle()
   const { course: contextCourse } = useCourseContent()
-  const { exportToPdf } = usePdfExport()
   const { session } = useAppSession()
+  const { downloadPdf } = useDownloadPdf()
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
   let courseId: string | undefined
   try {
@@ -89,25 +87,20 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
   }
 
   const handleExportPdf = async () => {
-    if (!courseData) {
-      console.error('[ChatActionButton] Course data not available')
+    if (!sessionId) {
+      console.error('[ChatActionButton] Session ID not available')
       return
     }
 
-    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
-    
-    await generatePdfFromCourseData(courseData, filename)
-  }
-
-  const handleExportMarkdown = () => {
-    if (!courseData) {
-      console.error('[ChatActionButton] Course data not available')
-      return
+    setIsDownloadingPdf(true)
+    try {
+      const filename = `${documentTitle || 'cours'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`
+      await downloadPdf(sessionId, filename)
+    } catch (error) {
+      console.error('[ChatActionButton] Erreur lors du téléchargement PDF:', error)
+    } finally {
+      setIsDownloadingPdf(false)
     }
-
-    const filename = `${documentTitle || 'export'}_${new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')}.md`
-    
-    generateMarkdownFromCourseData(courseData, filename)
   }
 
   const accentMap: Record<string, { light: string; dark: string }> = {
@@ -157,16 +150,12 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
             icon: FileText,
             action: handleExportPdf,
           },
-          {
-            label: "Enregistrer en Markdown",
-            icon: FileCode,
-            action: handleExportMarkdown,
-          },
         ].map(({ label, icon: Icon, action }, idx, arr) => (
           <div key={label}>
             <Button
               variant="ghost"
               onClick={action}
+              disabled={label === "Enregistrer en PDF" && isDownloadingPdf}
               className={cn(
                 "w-full justify-start gap-2 text-foreground rounded-md transition-all duration-300",
                 "border border-transparent",
@@ -185,7 +174,7 @@ export function ChatActionButton({ contentRef }: ChatActionButtonProps) {
               }}
             >
               <Icon className="h-4 w-4 opacity-80" />
-              {label}
+              {label === "Enregistrer en PDF" && isDownloadingPdf ? "Téléchargement..." : label}
             </Button>
 
             {idx < arr.length - 1 && (

@@ -94,7 +94,7 @@ export function ChatQuickViewLayout({
           <ChatHeader
             title={displayTitle}
             leftAction={<BackButton onClick={() => navigate({ to: backTo })} />}
-            rightAction={<ChatActionButton contentRef={contentRef} />}
+            rightAction={<ChatActionButton contentRef={contentRef} sessionId={sessionId || undefined} />}
           />
         </div>
 

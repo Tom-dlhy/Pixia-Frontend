@@ -10,19 +10,9 @@
 
 # Extras
 
-    - gérer la taille des div pour exo et eval dans deepcourse (F)
-
     - Faire en sorte que quand je surligne qlqch ca me le prenne ene context (F)
 
-    - Supprimer / Renommer un document (B/F)
-
     - revoir l'ui
-
-    - afficher 
-
-    - ajouter le logo dans les pdf et sur la page principale (F)
-
-    - mettre de la couleurs pour les chapitres (F)
 
 
 # MTN 
@@ -32,7 +22,5 @@
 
 $k_{n+1}$
 
-
-http://localhost:8000/api
 
 http://localhost:8000/api
