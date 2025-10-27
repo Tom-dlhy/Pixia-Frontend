@@ -19,7 +19,7 @@ export function useApiRedirect() {
       } else if (agentLower === "exercise" || agentLower === "exercice") {
         redirectTo = "/exercise/$id"
       } else if (agentLower === "deep-course") {
-        redirectTo = "/deep-course/$id"
+        redirectTo = "/deep-course"
       } 
 
       if (redirectTo) {
