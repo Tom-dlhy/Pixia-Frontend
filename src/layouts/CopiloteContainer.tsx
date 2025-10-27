@@ -18,7 +18,6 @@ import { cn } from "~/lib/utils"
 import { useAppSession } from "~/utils/session"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
 import { BotMessageDisplay } from "~/components/BotMessageDisplay"
-import { useSessionCache } from "~/hooks/useSessionCache"
 import { useChapterDocuments } from "~/hooks/useChapterDocuments"
 import { useDeepCoursesLayout } from "~/layouts/DeepCourseContext"
 import { getChat } from "~/server/chat.server"
@@ -114,40 +113,9 @@ function CopiloteContainerContent({
     return null
   }, [sessionId, chapterId, chapterDocs, activeTab])
   
-  const docType = useMemo(() => {
-    if (effectiveCourseType === "exercice") return "exercise"
-    if (effectiveCourseType === "cours") return "course"
-    if (effectiveCourseType === "deep") {
-      if (activeTab === "exercice" || activeTab === "evaluation") {
-        return "exercise" as const
-      }
-      return "course" as const
-    }
-    return undefined 
-  }, [effectiveCourseType, activeTab])
-
-  const { data, isLoading: chatLoading } = useSessionCache(
-    effectiveSessionId || null,
-    docType,
-    effectiveUserId || undefined,
-    { enabled: !!effectiveSessionId && !!effectiveUserId && !!docType }
-  )
-  
   const accent = useMemo(() => getCourseAccent(effectiveCourseType), [effectiveCourseType])
 
-  useEffect(() => {
-    if (data?.messages && Array.isArray(data.messages) && data.messages.length > 0) {
-      const displayMessages: string[] = []
-      for (const msg of data.messages) {
-        if (msg.text) {
-          displayMessages.push(msg.text)
-        }
-      }
-      setMessages(displayMessages)
-      setIsNewMessage(false)
-    }
-  }, [effectiveSessionId, effectiveUserId, activeTab])
-
+  // Fetch chat messages quand la session change
   useEffect(() => {
     let mounted = true
     const tryFetch = async () => {
