@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, type CSSProperties, useCallback } from "react"
+import { useMemo, type CSSProperties, useCallback, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { Button } from "~/components/ui/button"
 import CopiloteContainer from "~/layouts/CopiloteContainer"
@@ -16,6 +16,7 @@ interface CopiloteModalProps {
 
 export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: CopiloteModalProps) {
   const { session } = useAppSession()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   const userId = useMemo(() => {
     if (session.userId != null) {
@@ -23,6 +24,28 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: Copi
     }
     return null
   }, [session.userId])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose()
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
+
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -60,6 +83,12 @@ export function CopiloteModal({ isOpen, onClose, sessionId, deepCourseId }: Copi
             isCopiloteModal={true}
             forceDeepMode={true}
             deepCourseId={deepCourseId}
+            onClose={onClose}
+            onTextareaRef={(ref) => {
+              if (ref) {
+                textareaRef.current = ref
+              }
+            }}
           />
         </div>
       </div>

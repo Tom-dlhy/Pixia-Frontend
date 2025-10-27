@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start"
 import z from "zod"
-import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments, correctPlainQuestion } from "./chatApi"
+import { sendChat, fetchAllChat, fetchAllDeepCourses, fetchChat, fetchChapters, markChapterComplete, markChapterUncomplete, changeSettings, fetchChapterDocuments, correctPlainQuestion, correctAllPlainQuestions } from "./chatApi"
 import { getExercise, getCourse } from "./document.server"
 import { ExerciseOutput, CourseOutput, isExerciseOutput, isCourseOutput } from "~/models/Document"
 
@@ -26,12 +26,13 @@ const ChatMessageSchema = z.object({
       userFullName: z.string().optional(),
     })
     .optional(),
+  deepCourseId: z.string().optional(),
 })
 
 export const sendChatMessage = createServerFn({ method: "POST" })
   .inputValidator(ChatMessageSchema)
   .handler(async ({ data }) => {
-    const { user_id, message, sessionId, files = [], messageContext } = data
+    const { user_id, message, sessionId, files = [], messageContext, deepCourseId } = data
 
     console.group("%c📨 [sendChatMessage] Input Reçu", "color: #3b82f6; font-weight: bold; font-size: 13px;")
     console.groupEnd()
@@ -90,6 +91,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     formData.append("user_id", user_id)
     formData.append("message", enrichedMessage)
     if (sessionId) formData.append("session_id", sessionId)
+    if (deepCourseId) formData.append("deep_course_id", deepCourseId)
 
     for (const f of files) {
       const buffer = Buffer.from(f.data, "base64")
@@ -390,7 +392,6 @@ const CheckPlainQuestionSchema = z.object({
 
 export interface CheckPlainQuestionResponse {
   is_correct: boolean
-  feedback?: string
 }
 
 export const checkPlainQuestion = createServerFn({ method: "POST" })
@@ -399,20 +400,55 @@ export const checkPlainQuestion = createServerFn({ method: "POST" })
     const { question, user_answer, expected_answer } = data
 
     try {
-
       const res = await correctPlainQuestion(question, user_answer, expected_answer)
 
-      if (!res || typeof res.is_correct !== "boolean") {
+      if (typeof res !== "boolean") {
         console.warn(`[checkPlainQuestion] Réponse invalide du backend:`, res)
-        return { is_correct: false, feedback: "Erreur lors de la correction" }
+        return { is_correct: false }
       }
 
       return {
-        is_correct: res.is_correct,
-        feedback: res.feedback || undefined,
+        is_correct: res,
       }
     } catch (error) {
       console.error(`[checkPlainQuestion] Erreur:`, error)
       throw error
     }
   })
+
+const CheckAllPlainQuestionsSchema = z.object({
+  questions: z.array(z.object({
+    question: z.string().min(1),
+    user_answer: z.string().min(1),
+    expected_answer: z.string().min(1),
+  }))
+})
+
+export interface CheckAllPlainQuestionsResponse {
+  results: Array<{ is_correct: boolean }>
+}
+
+export const checkAllPlainQuestions = createServerFn({ method: "POST" })
+  .inputValidator(CheckAllPlainQuestionsSchema)
+  .handler(async ({ data }): Promise<CheckAllPlainQuestionsResponse> => {
+    const { questions } = data
+
+    try {
+      const results = await correctAllPlainQuestions(questions)
+
+      if (!Array.isArray(results)) {
+        console.warn(`[checkAllPlainQuestions] Réponse invalide du backend:`, results)
+        return { results: [] }
+      }
+
+      return {
+        results: results.map(isCorrect => ({
+          is_correct: typeof isCorrect === "boolean" ? isCorrect : false,
+        }))
+      }
+    } catch (error) {
+      console.error(`[checkAllPlainQuestions] Erreur:`, error)
+      throw error
+    }
+  })
+

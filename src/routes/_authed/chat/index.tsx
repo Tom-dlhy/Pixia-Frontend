@@ -8,8 +8,6 @@ import { ChatInput } from "~/components/ChatInput"
 import { SectionCards } from "~/components/SectionCards"
 import { sendChatMessage } from "~/server/chat.server"
 import { useAppSession } from "~/utils/session"
-import { Button } from "~/components/ui/button"
-import { ArrowLeft } from "lucide-react"
 import { cn } from "~/lib/utils"
 import { useSidebar } from "~/components/ui/sidebar"
 import { useApiRedirect } from "~/hooks/useApiRedirect"
@@ -17,6 +15,7 @@ import { useChatSessions } from "~/context/ChatSessionsContext"
 import { useAllChatSessions } from "~/hooks/useListCache"
 import { useCourseType } from "~/context/CourseTypeContext"
 import { useSendChatWithRefresh } from "~/hooks/useSendChatWithRefresh"
+import "~/styles/loader.css"
 
 export const Route = createFileRoute("/_authed/chat/")({
   component: ChatPage,
@@ -72,6 +71,7 @@ function ChatPage() {
   const handleSend = useCallback(async () => {
     if (!input.trim()) return
     setSending(true)
+    setShowCards(false)
     setError(null)
 
     try {
@@ -132,12 +132,14 @@ function ChatPage() {
           }, 200)
         }
       }
+      
+      setSending(false)
     } catch (err) {
       console.error("Erreur lors de l'envoi :", err)
       setError("Une erreur est survenue lors de l'envoi du message.")
+      setSending(false)
     } finally {
       setInput("")
-      setSending(false)
     }
   }, [input, messages, userId, sessionId, queuedFiles, navigate, setOpen])
 
@@ -161,43 +163,43 @@ function ChatPage() {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto flex flex-col gap-8 relative">
-
-      {!showCards && (
-        <div className="absolute top-6 left-6 z-30">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleBack}
-            className="rounded-full bg-muted/30 hover:bg-muted/50 backdrop-blur-md transition-all"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
+    <div className="w-full h-full flex flex-col items-center justify-center relative">
 
       <div
         className={cn(
-          "w-full mx-auto transform transition-all duration-700 ease-out",
-          showCards ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-6 scale-95"
+          "w-full transform transition-all duration-700 ease-out",
+          showCards && !sending ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-6 scale-95"
         )}
       >
-        {showCards && <SectionCards />}
+        {showCards && !sending && <SectionCards />}
       </div>
 
       <div
         className={cn(
-          "w-full flex-1 flex flex-col min-h-0 mx-auto transform transition-all duration-700 ease-out",
+          "w-full h-full flex items-center justify-center transform transition-all duration-700 ease-out",
+          sending ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-6 scale-95"
+        )}
+      >
+        {sending && (
+          <div className="flex flex-col items-center gap-4">
+            <div className="loader"></div>
+          </div>
+        )}
+      </div>
+
+      <div
+        className={cn(
+          "w-full flex-1 flex flex-col min-h-0 transform transition-all duration-700 ease-out",
           showCards
             ? "opacity-0 translate-y-6 scale-95 pointer-events-none"
             : "opacity-100 translate-y-0 scale-100 pointer-events-auto"
         )}
       >
-        {!showCards && <Chat messages={messages} sending={sending} error={error} />}
+        {!showCards && messages.length > 0 && <Chat messages={messages} sending={sending} error={error} />}
       </div>
 
-      <div className="sticky bottom-0 z-20 flex w-full justify-center px-4 mt-6 transition-all duration-500">
-        <div className="w-full max-w-3xl">
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 flex w-full justify-center px-4 py-6 transition-all duration-500 pointer-events-none">
+        <div className="w-full max-w-3xl pointer-events-auto">
           <ChatInput
             className="w-full"
             value={input}

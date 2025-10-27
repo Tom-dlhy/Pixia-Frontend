@@ -1,4 +1,4 @@
-const API_BASE: string = process.env.API_BASE || "https://hackathon-backend-356001158171.europe-west9.run.app/api"
+const API_BASE: string = process.env.API_BASE || "http://localhost:8000/api"
 
 export type SendChatResponse = {
   session_id: string
@@ -74,9 +74,23 @@ function extractMessageContent(text: string | null | undefined): string {
 }
 
 export async function sendChat(
-  data: FormData | { user_id: string; message: string; sessionId?: string }
+  data: FormData | { user_id: string; message: string; sessionId?: string; deepCourseId?: string }
 ): Promise<SendChatResponse> {
   let options: RequestInit
+
+  const sessionId = data instanceof FormData ? null : data.sessionId
+  const deepCourseId = data instanceof FormData ? null : data.deepCourseId
+
+  if (sessionId) {
+    console.log("Envoi de message avec sessionId:", sessionId)
+  }
+  else {
+    console.log("Envoi de message sans sessionId")
+  }
+
+  if (deepCourseId) {
+    console.log("Envoi de message avec deepCourseId:", deepCourseId)
+  }
 
   if (data instanceof FormData) {
     options = {
@@ -84,10 +98,14 @@ export async function sendChat(
       body: data,
     }
   } else {
-    const jsonBody = {
+    const jsonBody: any = {
       user_id: data.user_id,
       message: data.message,
       session_id: data.sessionId,
+    }
+    
+    if (data.deepCourseId) {
+      jsonBody.deep_course_id = data.deepCourseId
     }
 
     options = {
@@ -102,7 +120,7 @@ export async function sendChat(
 }
 
 export async function fetchAllChat(userId: string): Promise<FetchAllChatResponse> {
-  
+
   const r = await fetch(`${API_BASE}/fetchallchats`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -343,27 +361,62 @@ export async function correctPlainQuestion(
   question: string,
   userAnswer: string,
   expectedAnswer: string
-): Promise<CorrectPlainQuestionResponse> {
-
-  const formData = new FormData()
-  formData.append("question", question)
-  formData.append("user_answer", userAnswer)
-  formData.append("expected_answer", expectedAnswer)
+): Promise<boolean> {
 
   const r = await fetch(`${API_BASE}/correctplainquestion`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ question, user_answer: userAnswer, expected_answer: expectedAnswer }),
+  })
+
+  const result = await handle<{ is_correct: boolean }>(r)
+
+  if (!result || typeof result.is_correct !== "boolean") {
+    console.warn(`[correctPlainQuestion] Réponse invalide du backend:`, result)
+    return false
+  }
+
+  return result.is_correct
+}
+
+export async function correctAllPlainQuestions(
+  questions: Array<{ question: string; user_answer: string; expected_answer: string }>
+): Promise<CorrectPlainQuestionResponse[]> {
+
+  const r = await fetch(`${API_BASE}/correctallquestions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ questions }),
+  })
+
+  const results = await handle<CorrectPlainQuestionResponse[]>(r)
+
+  if (!Array.isArray(results)) {
+    console.warn(`[correctAllPlainQuestions] Réponse invalide du backend:`, results)
+    return []
+  }
+
+  return results.map(r => ({
+    is_correct: r.is_correct,
+    feedback: r.feedback || undefined,
+  }))
+}
+
+export async function downloadCoursePdf(
+  sessionId: string
+): Promise<Blob> {
+  const formData = new FormData()
+  formData.append("session_id", sessionId)
+
+  const r = await fetch(`${API_BASE}/downloadcourse`, {
     method: "POST",
     body: formData,
   })
 
-  const result = await handle<CorrectPlainQuestionResponse>(r)
-
-  if (!result || typeof result !== "object" || typeof result.is_correct !== "boolean") {
-    console.warn(`[correctPlainQuestion] Réponse invalide du backend:`, result)
-    return { is_correct: false, feedback: "Erreur lors de la correction" }
+  if (!r.ok) {
+    const body = await r.text().catch(() => "")
+    throw new Error(`HTTP ${r.status}: ${body}`)
   }
 
-  return {
-    is_correct: result.is_correct,
-    feedback: result.feedback || undefined,
-  }
+  return r.blob()
 }

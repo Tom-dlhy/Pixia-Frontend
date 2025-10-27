@@ -9,9 +9,10 @@ import { useMemo, useEffect } from "react"
 
 interface DeepCourseMainContentProps {
   isEvaluating: boolean
+  onEvaluationComplete?: () => void
 }
 
-export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentProps) {
+export function DeepCourseMainContent({ isEvaluating, onEvaluationComplete }: DeepCourseMainContentProps) {
   const { depth, chapterId, deepcourseId } = useDeepCourseParams()
   const { session } = useAppSession()
   const userId = useMemo(() => {
@@ -40,7 +41,7 @@ export function DeepCourseMainContent({ isEvaluating }: DeepCourseMainContentPro
           )}
         >
           <ContentContainer className="flex-1 h-full overflow-hidden">
-            <ChapterDocumentContainer />
+            <ChapterDocumentContainer onEvaluationComplete={onEvaluationComplete} />
           </ContentContainer>
         </div>
 

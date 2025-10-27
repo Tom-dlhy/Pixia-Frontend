@@ -12,16 +12,19 @@ export default function DeepCourseTabs({
   onChange,
   onDrawerToggle,
   onEvaluationStateChange,
+  onEvaluationComplete,
 }: {
   activeTab: DeepCoursesTab
   onChange: (tab: DeepCoursesTab) => void
   onDrawerToggle?: (open: boolean) => void
   onEvaluationStateChange?: (isEvaluating: boolean) => void
+  onEvaluationComplete?: () => void
 }) {
   const tabs: DeepCoursesTab[] = ["cours", "exercice", "evaluation"]
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [timer, setTimer] = useState<number | null>(null)
   const [isRunning, setIsRunning] = useState(false)
+  const [isEvaluationComplete, setIsEvaluationComplete] = useState(false)
 
 useEffect(() => {
   if (!isRunning || timer === null) return
@@ -30,7 +33,6 @@ useEffect(() => {
     setIsRunning(false)
     setTimer(null) 
     onEvaluationStateChange?.(false)
-    onChange("cours") 
     return
   }
 
@@ -39,7 +41,7 @@ useEffect(() => {
   }, 1000)
 
   return () => clearInterval(interval)
-}, [isRunning, timer])
+}, [isRunning, timer, onEvaluationStateChange])
 
   const handleDrawerChange = (open: boolean) => {
     setDrawerOpen(open)
@@ -47,6 +49,17 @@ useEffect(() => {
 
     if (!open) onChange("cours")
   }
+
+  const handleEvaluationCompleted = () => {
+    setIsRunning(false)
+    setTimer(null)
+    onEvaluationStateChange?.(false)
+    setIsEvaluationComplete(true)
+  }
+
+  useEffect(() => {
+
+  }, [])
 
   const accentMap: Record<
     "cours" | "exercice" | "evaluation",
@@ -61,8 +74,8 @@ useEffect(() => {
       dark: "rgba(59, 130, 246, 0.25)",
     },
     evaluation: {
-      light: "rgba(253, 164, 175, 0.25)",
-      dark: "rgba(244, 63, 94, 0.25)",
+      light: "rgba(167, 139, 250, 0.25)",
+      dark: "rgba(139, 92, 246, 0.25)",
     },
   }
 

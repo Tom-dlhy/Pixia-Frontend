@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
 } from "react"
 
 import { useCourseType } from "~/context/CourseTypeContext"
@@ -29,6 +30,7 @@ import {
   useHeaderIcon,
   useRightAction,
 } from "~/hooks/useDeepCourseNavigation"
+import { useChapterDocuments } from "~/hooks/useChapterDocuments"
 
 export function DeepCoursesLayout() {
   const { setCourseType } = useCourseType()
@@ -51,6 +53,8 @@ export function DeepCoursesLayout() {
     if (!deepcourseId) return ""
     return localStorage.getItem(`deepcourse-gradient-${deepcourseId}`) || ""
   }, [deepcourseId])
+
+  const { data: chapterDocs } = useChapterDocuments(chapterId || undefined)
 
   useEffect(() => {
     const courseType: CourseType = depth === 3
@@ -75,15 +79,41 @@ export function DeepCoursesLayout() {
     setIsCopiloteModalOpen(false)
   }
 
+  const handleEvaluationComplete = () => {
+    setIsEvaluating(false)
+  }
+
+  const handleEvaluationCompleted = useCallback(() => {
+    handleEvaluationComplete()
+  }, [])
+
   const enrichedActionConfig = useMemo(() => {
     if (!rightActionConfig) return null
+    
+    let sessionId: string | undefined = undefined
+    let copiloteSessionId: string | undefined = undefined
+    
+    if (chapterDocs) {
+      if (activeTab === "cours") {
+        sessionId = chapterDocs.course_session_id
+        copiloteSessionId = chapterDocs.course_session_id
+      } else if (activeTab === "exercice") {
+        sessionId = chapterDocs.exercice_session_id
+        copiloteSessionId = undefined
+      } else if (activeTab === "evaluation") {
+        sessionId = chapterDocs.evaluation_session_id
+        copiloteSessionId = undefined
+      }
+    }
     
     return {
       ...rightActionConfig,
       onCreateCourse: handleOpenCopiloteModal,
       onAddChapter: handleOpenCopiloteModal,
+      sessionId,
+      copiloteSessionId,
     }
-  }, [rightActionConfig])
+  }, [rightActionConfig, activeTab, chapterDocs])
 
   const contextValue = useMemo(
     () => ({
@@ -124,6 +154,7 @@ export function DeepCoursesLayout() {
                 onChange={setActiveTab}
                 onDrawerToggle={setDrawerOpen}
                 onEvaluationStateChange={setIsEvaluating}
+                onEvaluationComplete={handleEvaluationCompleted}
               />
             )}
           </DeepCourseHeader>
@@ -133,7 +164,7 @@ export function DeepCoursesLayout() {
           "flex flex-1 overflow-hidden px-6 pb-10 pt-6 sm:px-10 min-h-0 transition-all duration-500",
           (drawerOpen || isCopiloteModalOpen) && "blur-md brightness-75 pointer-events-none"
         )}>
-          <DeepCourseMainContent isEvaluating={isEvaluating} />
+          <DeepCourseMainContent isEvaluating={isEvaluating} onEvaluationComplete={handleEvaluationComplete} />
         </div>
 
         <CopiloteModal

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo, memo, useCallback, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import ReactMarkdown from 'react-markdown'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
@@ -13,10 +14,13 @@ import { Textarea } from '~/components/ui/textarea'
 import { Button } from '~/components/ui/button'
 import { QCMQuestion } from '~/models/Document'
 import { useDocumentTitle } from '~/context/DocumentTitleContext'
+import { checkPlainQuestion, checkAllPlainQuestions } from '~/server/chat.server'
 import { cn } from '~/lib/utils'
 
 interface ExerciseViewerProps {
   exercise: ExerciseOutput
+  isEvaluation?: boolean
+  onEvaluationComplete?: () => void
 }
 
 const MARKDOWN_COMPONENTS = {
@@ -131,15 +135,51 @@ const CheckboxAnswerOption = memo(function CheckboxAnswerOption({
   )
 })
 
-export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
+export function ExerciseViewer({ exercise, isEvaluation = false, onEvaluationComplete }: ExerciseViewerProps) {
   const { setTitle } = useDocumentTitle()
-  
-  const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>({})
-  const [openAnswers, setOpenAnswers] = useState<Record<string, string>>({})
-  const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>({})
+  const queryClient = useQueryClient()
+  const sessionStorageKey = `evaluation_${exercise.title || 'unknown'}`  
+  const [userAnswers, setUserAnswers] = useState<Record<string, string | string[]>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_userAnswers`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [openAnswers, setOpenAnswers] = useState<Record<string, string>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_openAnswers`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [correctedQuestions, setCorrectedQuestions] = useState<Record<string, { isCorrect: boolean; showExplanation: boolean }>>(() => {
+    if (typeof window === 'undefined') return {}
+    try {
+      const saved = localStorage.getItem(`${sessionStorageKey}_correctedQuestions`)
+      return saved ? JSON.parse(saved) : {}
+    } catch {
+      return {}
+    }
+  })
+  const [isCheckingAll, setIsCheckingAll] = useState(false)
+  const [isEvaluationFullyComplete, setIsEvaluationFullyComplete] = useState(false)
   
   const handlersCache = useRef<Map<string, any>>(new Map())
   const isCorrectedRef = useRef<Record<string, boolean>>({})
+  
+  const totalQuestions = useMemo(() => {
+    let count = 0
+    exercise.exercises.forEach((block) => {
+      if (isQCM(block)) count += block.questions.length
+      if (isOpen(block)) count += block.questions.length
+    })
+    return count
+  }, [exercise.exercises])
   
   useEffect(() => {
     isCorrectedRef.current = Object.keys(correctedQuestions).reduce((acc, key) => {
@@ -152,6 +192,52 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     setTitle(exercise.title || null)
     return () => setTitle(null)
   }, [exercise.title, setTitle])
+
+  useEffect(() => {
+    if (isEvaluation && Object.keys(correctedQuestions).length > 0) {
+      queryClient.invalidateQueries({ queryKey: ["sessionCache"] })
+    }
+  }, [isEvaluation, correctedQuestions, queryClient])
+
+  useEffect(() => {
+    if (!isEvaluation || isCheckingAll) return
+    
+    const correctedCount = Object.keys(correctedQuestions).length
+    if (correctedCount > 0 && correctedCount === totalQuestions) {
+      if (!isEvaluationFullyComplete) {
+        setIsEvaluationFullyComplete(true)
+        setTimeout(() => {
+          onEvaluationComplete?.()
+        }, 500)
+      }
+    }
+  }, [isEvaluation, isCheckingAll, correctedQuestions, totalQuestions, isEvaluationFullyComplete, onEvaluationComplete])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_userAnswers`, JSON.stringify(userAnswers))
+    } catch {
+    }
+  }, [userAnswers, sessionStorageKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_openAnswers`, JSON.stringify(openAnswers))
+    } catch {
+      // Ignorer les erreurs localStorage
+    }
+  }, [openAnswers, sessionStorageKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      localStorage.setItem(`${sessionStorageKey}_correctedQuestions`, JSON.stringify(correctedQuestions))
+    } catch {
+      // Ignorer les erreurs localStorage
+    }
+  }, [correctedQuestions, sessionStorageKey])
   
   if (!exercise.exercises || exercise.exercises.length === 0) {
     return (
@@ -235,10 +321,268 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
     }))
   }
 
+  const handleCheckAllQuestions = async () => {
+    setIsCheckingAll(true)
+    
+    try {
+      exercise.exercises.forEach((block, blockIdx) => {
+        if (isQCM(block)) {
+          block.questions.forEach((question: QCMQuestion, qIdx: number) => {
+            const questionKey = `${blockIdx}_${qIdx}`
+            if (!correctedQuestions[questionKey]) {
+              handleCheckQCM(questionKey, question, question.multi_answers)
+            }
+          })
+        }
+      })
+
+      const allOpenQuestions = exercise.exercises
+        .flatMap((block, blockIdx) => {
+          if (isOpen(block)) {
+            return block.questions.map((question, qIdx) => {
+              const questionKey = `open_${blockIdx}_${qIdx}`
+              return {
+                questionKey,
+                question: question.question,
+                user_answer: openAnswers[questionKey],
+                expected_answer: question.explanation || "",
+              }
+            })
+          }
+          return []
+        })
+        .filter(q => q.user_answer && !correctedQuestions[q.questionKey])
+
+      if (allOpenQuestions.length > 0) {
+        const result = await checkAllPlainQuestions({
+          data: {
+            questions: allOpenQuestions.map(q => ({
+              question: q.question,
+              user_answer: q.user_answer,
+              expected_answer: q.expected_answer
+            }))
+          }
+        })
+
+        setCorrectedQuestions(prev => {
+          const updated = { ...prev }
+          result.results.forEach((res, idx) => {
+            const questionKey = allOpenQuestions[idx].questionKey
+            updated[questionKey] = { isCorrect: res.is_correct, showExplanation: true }
+          })
+          return updated
+        })
+      }
+    } catch (error) {
+      console.error("Erreur lors de la correction en masse:", error)
+    } finally {
+      setIsCheckingAll(false)
+    }
+  }
+
   return (
     <ScrollArea className="flex-1 h-full w-full">
       <div className="space-y-8 pr-4 w-full">
-        {exercise.exercises.map((block, blockIdx) => (
+        {isEvaluation ? (
+          <>
+            {exercise.exercises.map((block, blockIdx) => (
+              <div key={blockIdx} className="space-y-4">
+                {isQCM(block) && (
+                  <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20">
+                    <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                      {block.topic}
+                    </h2>
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+                    
+                    <div className="space-y-6">
+                      {block.questions.map((question: QCMQuestion, qIdx: number) => {
+                        const questionKey = `${blockIdx}_${qIdx}`
+                        const isMultiAnswer = question.multi_answers
+                        const correctionState = correctedQuestions[questionKey]
+                        const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
+                        
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`border rounded-lg bg-background/50 overflow-hidden transition-colors ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-50/5 dark:bg-green-950/10'
+                                  : 'border-red-500/50 bg-red-50/5 dark:bg-red-950/10'
+                                : 'border-white/20 dark:border-white/10'
+                            }`}
+                          >
+                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
+                              <MarkdownText text={question.question} className="!prose-sm" />
+                            </div>
+                            
+                            <div className="p-4">
+                            
+                            {isMultiAnswer ? (
+                              <div className="space-y-3 mb-4">
+                                {question.answers.map((answer, aIdx) => {
+                                  const isChecked = ((userAnswers[questionKey] as string[]) || []).includes(String(aIdx))
+                                  
+                                  return (
+                                    <CheckboxAnswerOption
+                                      key={aIdx}
+                                      checked={isChecked}
+                                      onCheckedChange={getCheckboxChangeHandler(questionKey, String(aIdx))}
+                                      text={answer.text}
+                                      isCorrected={isCorrected}
+                                      isCorrect={answer.is_correct}
+                                      disabled={isCorrected}
+                                    />
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <RadioGroup
+                                value={String(userAnswers[questionKey] ?? '')}
+                                onValueChange={getRadioChangeHandler(questionKey)}
+                                className="mb-4"
+                                disabled={isCorrected}
+                              >
+                                {question.answers.map((answer, aIdx) => (
+                                  <RadioAnswerOption
+                                    key={aIdx}
+                                    value={String(aIdx)}
+                                    text={answer.text}
+                                    isCorrected={isCorrected}
+                                    isCorrect={answer.is_correct}
+                                    disabled={isCorrected}
+                                  />
+                                ))}
+                              </RadioGroup>
+                            )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {isOpen(block) && (
+                  <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20">
+                    <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                      {block.topic}
+                    </h2>
+                    
+                    <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mb-6" />
+                    
+                    <div className="space-y-6">
+                      {block.questions.map((question, qIdx: number) => {
+                        const questionKey = `open_${blockIdx}_${qIdx}`
+                        const correctionState = correctedQuestions[questionKey]
+                        const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
+                        
+                        return (
+                          <div
+                            key={qIdx}
+                            className={`border rounded-lg bg-background/50 overflow-hidden transition-all duration-200 ${
+                              isCorrected 
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-500/5' 
+                                  : 'border-red-500/50 bg-red-500/5'
+                                : 'border-white/20 dark:border-white/10'
+                            }`}
+                          >
+                            <div className={`flex items-center justify-between px-4 py-3 border-b gap-4 ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
+                              <MarkdownText text={question.question} className="!prose-sm" />
+                              {isCorrected && (
+                                <div className={`px-4 py-1 rounded-md text-white text-xs font-semibold whitespace-nowrap flex-shrink-0 ${
+                                  isAnswerCorrect ? 'bg-green-600' : 'bg-red-600'
+                                }`}>
+                                  {isAnswerCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="p-4">
+                            
+                            <Textarea
+                              placeholder="Entrez votre réponse ici..."
+                              value={openAnswers[questionKey] ?? ''}
+                              onChange={(e) => handleOpenAnswerChange(questionKey, e.target.value)}
+                              disabled={isCorrected}
+                              className={cn(
+                                "w-full min-h-[100px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto scrollbar-hide mb-4",
+                                isCorrected
+                                  ? "text-foreground/50 placeholder:text-foreground/30"
+                                  : "text-foreground placeholder:text-foreground/60"
+                              )}
+                            />
+                            
+                            {isCorrected && question.answers && (
+                              <div className="bg-muted rounded-lg p-3 text-sm mb-4 border-l-4 border-foreground/30">
+                                <p className="font-semibold mb-2 text-foreground">✓ Réponse attendue:</p>
+                                <p className="text-foreground/80">{question.answers}</p>
+                              </div>
+                            )}
+                            
+                            {isCorrected && question.explanation && (
+                              <div className="bg-accent/10 dark:bg-accent/5 rounded-lg p-3 text-xs border-l-4 border-accent">
+                                <p className="font-semibold mb-2 text-accent-foreground">💡 Explication:</p>
+                                <p className="text-accent-foreground/80">{question.explanation}</p>
+                              </div>
+                            )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            <div className="flex justify-center items-center gap-8 py-8">
+              {!isEvaluationFullyComplete ? (
+                <Button
+                  onClick={handleCheckAllQuestions}
+                  disabled={isCheckingAll}
+                  size="lg"
+                  className="gap-2"
+                >
+                  {isCheckingAll ? "Évaluation en cours..." : "✓ Corriger l'évaluation"}
+                </Button>
+              ) : (
+                <div className={`px-6 py-3 rounded-lg font-semibold text-lg ${
+                  (() => {
+                    const totalQs = Object.keys(correctedQuestions).length
+                    const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
+                    const percentage = (correctAnswers / totalQs) * 100
+                    return percentage >= 50 ? 'bg-green-600/20 text-green-600 border border-green-600/50' : 'bg-red-600/20 text-red-600 border border-red-600/50'
+                  })()
+                }`}>
+                  {(() => {
+                    const totalQs = Object.keys(correctedQuestions).length
+                    const correctAnswers = Object.values(correctedQuestions).filter(q => q.isCorrect).length
+                    return `${correctAnswers} / ${totalQs}`
+                  })()}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+
+          <>
+            {exercise.exercises.map((block, blockIdx) => (
               <div key={blockIdx} className="space-y-4">
                 {isQCM(block) && (
                   <div className="border border-white/20 dark:border-white/10 rounded-xl p-6 bg-muted/20 hover:bg-muted/30 transition-colors duration-200">
@@ -358,33 +702,62 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                         const questionKey = `open_${blockIdx}_${qIdx}`
                         const correctionState = correctedQuestions[questionKey]
                         const isCorrected = !!correctionState
+                        const isAnswerCorrect = correctionState?.isCorrect
                         
                         return (
                           <div
                             key={qIdx}
                             className={`border rounded-lg bg-background/50 overflow-hidden transition-all duration-200 ${
                               isCorrected 
-                                ? 'border-green-500/50 bg-green-500/5' 
+                                ? isAnswerCorrect
+                                  ? 'border-green-500/50 bg-green-500/5' 
+                                  : 'border-red-500/50 bg-red-500/5'
                                 : 'border-white/20 dark:border-white/10'
                             }`}
                           >
-                            <div className="flex items-center justify-between bg-white/5 dark:bg-white/5 px-4 py-3 border-b border-white/10">
+                            <div className={`flex items-center justify-between px-4 py-3 border-b ${
+                              isCorrected
+                                ? isAnswerCorrect
+                                  ? 'bg-green-600/20 border-green-400'
+                                  : 'bg-red-600/20 border-red-400'
+                                : 'bg-white/5 dark:bg-white/5 border-white/10'
+                            }`}>
                               <MarkdownText text={question.question} className="!prose-sm" />
-                              <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  if (!isCorrected && openAnswers[questionKey]) {
-                                    setCorrectedQuestions(prev => ({
-                                      ...prev,
-                                      [questionKey]: { isCorrect: false, showExplanation: true }
-                                    }))
-                                  }
-                                }}
-                                disabled={isCorrected || !openAnswers[questionKey]}
-                              >
-                                {isCorrected ? '✓ Vérifié' : 'Vérifier'}
-                              </Button>
+                              {!isCorrected ? (
+                                <Button 
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={async () => {
+                                    if (!isCorrected && openAnswers[questionKey]) {
+                                      try {
+                                        const result = await checkPlainQuestion({
+                                          data: {
+                                            question: question.question,
+                                            user_answer: openAnswers[questionKey],
+                                            expected_answer: question.explanation || ""
+                                          }
+                                        })
+                                        
+                                        setCorrectedQuestions(prev => ({
+                                          ...prev,
+                                          [questionKey]: { isCorrect: result.is_correct, showExplanation: true }
+                                        }))
+                                      } catch (error) {
+                                        console.error("Erreur lors de la correction:", error)
+                                      }
+                                    }
+                                  }}
+                                  disabled={isCorrected || !openAnswers[questionKey]}
+                                >
+                                  Vérifier
+                                </Button>
+                              ) : (
+                                <div className={`px-3 py-1 rounded-md text-white text-xs font-semibold ${
+                                  isAnswerCorrect ? 'bg-green-600' : 'bg-red-600'
+                                }`}>
+                                  {isAnswerCorrect ? '✓ Correct' : '✗ Incorrect'}
+                                </div>
+                              )}
                             </div>
                             
                             <div className="p-4">
@@ -394,7 +767,12 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                               value={openAnswers[questionKey] ?? ''}
                               onChange={(e) => handleOpenAnswerChange(questionKey, e.target.value)}
                               disabled={isCorrected}
-                              className="mb-4 min-h-[100px]"
+                              className={cn(
+                                "w-full min-h-[100px] max-h-48 resize-none bg-transparent border-none px-2 py-1 text-base shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 overflow-y-auto scrollbar-hide mb-4",
+                                isCorrected
+                                  ? "text-foreground/50 placeholder:text-foreground/30"
+                                  : "text-foreground placeholder:text-foreground/60"
+                              )}
                             />
                             
                             {isCorrected && question.answers && (
@@ -419,8 +797,21 @@ export function ExerciseViewer({ exercise }: ExerciseViewerProps) {
                 )}
               </div>
             ))}
-          </div>
-      </ScrollArea>
+            
+            <div className="flex justify-center py-8">
+              <Button
+                onClick={handleCheckAllQuestions}
+                disabled={isCheckingAll}
+                size="lg"
+                className="gap-2"
+              >
+                {isCheckingAll ? "Correction en cours..." : "✓ Tout corriger"}
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </ScrollArea>
   )
 }
 

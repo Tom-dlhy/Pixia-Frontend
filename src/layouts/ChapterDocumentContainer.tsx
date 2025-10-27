@@ -12,7 +12,7 @@ import { useDeepCoursesLayout } from "~/layouts/DeepCourseContext"
 import { useAppSession } from "~/utils/session"
 import { DocumentTitleProvider } from "~/context/DocumentTitleContext"
 
-export function ChapterDocumentContainer() {
+export function ChapterDocumentContainer({ onEvaluationComplete }: { onEvaluationComplete?: () => void }) {
   const { chapterId, activeTab } = useDeepCoursesLayout()
   const { session } = useAppSession()
   
@@ -133,7 +133,7 @@ export function ChapterDocumentContainer() {
   if (isExerciseOutput(document)) {
     return (
       <DocumentTitleProvider>
-        <ExerciseViewer exercise={document} />
+        <ExerciseViewer exercise={document} isEvaluation={memoizedActiveTab === "evaluation"} onEvaluationComplete={onEvaluationComplete} />
       </DocumentTitleProvider>
     )
   }

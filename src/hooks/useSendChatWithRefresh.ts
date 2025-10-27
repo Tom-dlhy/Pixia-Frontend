@@ -6,6 +6,7 @@ interface SendChatParams {
   user_id: string
   message: string
   sessionId?: string
+  deepCourseId?: string
   files?: Array<{
     name: string
     type?: string
