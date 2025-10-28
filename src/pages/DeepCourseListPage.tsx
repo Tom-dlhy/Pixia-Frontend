@@ -55,7 +55,7 @@ export default function DeepCourseListPage() {
   const coursesWithGradients = useMemo(() => {
     const gradientKeys = Object.keys(courseGradients) as Array<keyof typeof courseGradients>
     
-    return deepCourses
+    const coursesWithData = deepCourses
       .map((course, index) => {
         const id = course.deepcourse_id || `course-${index}`
         const title = course.title || `Course ${index + 1}`
@@ -70,6 +70,21 @@ export default function DeepCourseListPage() {
           icon: [Brain, Code2, Binary, Sparkles][index % 4],
         }
       })
+
+    return coursesWithData.sort((a, b) => {
+      const aIsFinished = a.completion === 100
+      const bIsFinished = b.completion === 100
+
+      if (aIsFinished !== bIsFinished) {
+        return aIsFinished ? 1 : -1
+      }
+
+      if (!aIsFinished && !bIsFinished) {
+        return b.completion - a.completion
+      }
+
+      return 0
+    })
   }, [deepCourses])
 
   if (isLoading) {
