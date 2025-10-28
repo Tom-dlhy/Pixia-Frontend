@@ -229,7 +229,18 @@ function CopiloteContainerContent({
             })
         )
       )
-      
+
+      let agentIndication: "chat" | "deepCourse" | "cours" | "exercice" | "copiloteCours" | "copiloteExercice" | "copiloteNouveauCours"
+      if (effectiveCourseType === "deep") {
+        agentIndication = deepCourseId && !chapterId ? "copiloteNouveauCours" : "deepCourse"
+      } else if (effectiveCourseType === "exercice") {
+        agentIndication = "copiloteExercice"
+      } else if (effectiveCourseType === "cours") {
+        agentIndication = "copiloteCours"
+      } else {
+        agentIndication = "chat"
+      }
+
       const res = await sendChatWithRefresh({
         user_id: effectiveUserId,
         message: userMessage,
@@ -237,9 +248,10 @@ function CopiloteContainerContent({
         sessionId: copiloteSessionId || undefined,
         deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
         messageContext: {
-          currentRoute: effectiveCourseType === "deep" ? "deep-course" : effectiveCourseType === "exercice" ? "exercice" : effectiveCourseType === "cours" ? "course" : "chat",
+          agentIndication,
           deepCourseId: effectiveCourseType === "deep" ? (deepCourseId || undefined) : undefined,
           userFullName: session.name || undefined,
+          userStudy: session.study || undefined,
         },
       })
 

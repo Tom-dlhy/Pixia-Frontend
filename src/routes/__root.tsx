@@ -9,9 +9,6 @@ import {
   createRootRoute,
   type ErrorComponentProps,
 } from "@tanstack/react-router"
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
-import { scan } from "react-scan"
-
 import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary"
 import { NotFound } from "~/components/NotFound"
 import { Toaster } from "~/components/ui/sonner"
@@ -77,13 +74,7 @@ function AppShell() {
     document.documentElement.classList.toggle("dark", nextTheme === "dark")
   }, [])
 
-  if (process.env.NODE_ENV === "development") {
-    scan({
-      enabled: true,
-      showToolbar: true,
-      log: true,
-    })
-  }
+
 
   return (
     <html lang="en">
@@ -96,7 +87,6 @@ function AppShell() {
         </main>
 
         <Toaster />
-        <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>
     </html>

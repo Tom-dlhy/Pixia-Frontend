@@ -90,7 +90,12 @@ function ChatSessionPage() {
         user_id: userId,
         sessionId: id,
         message: userInput,
-        files: encodedFiles, 
+        files: encodedFiles,
+        messageContext: {
+          agentIndication: "chat",
+          userFullName: session.name || undefined,
+          userStudy: session.study || undefined,
+        },
       })
 
       const assistantMessage: ChatMessage = {

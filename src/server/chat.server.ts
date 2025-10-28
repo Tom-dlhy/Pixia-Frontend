@@ -20,10 +20,10 @@ const ChatMessageSchema = z.object({
     .optional(),
   messageContext: z
     .object({
-      selectedCardType: z.enum(["cours", "exercice"]).optional(),
-      currentRoute: z.enum(["chat", "deep-course", "course", "exercice"]).optional(),
-      deepCourseId: z.string().optional(),
+      agentIndication: z.enum(["chat", "deepCourse", "cours", "exercice", "copiloteCours", "copiloteExercice", "copiloteNouveauCours"]).optional(),
       userFullName: z.string().optional(),
+      userStudy: z.string().optional(),
+      deepCourseId: z.string().optional(),
     })
     .optional(),
   deepCourseId: z.string().optional(),
@@ -34,64 +34,17 @@ export const sendChatMessage = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { user_id, message, sessionId, files = [], messageContext, deepCourseId } = data
 
-    console.group("%c📨 [sendChatMessage] Input Reçu", "color: #3b82f6; font-weight: bold; font-size: 13px;")
-    console.groupEnd()
-
-    let enrichedMessage = message
-    if (messageContext) {
-      const contextParts: string[] = []
-
-      if (messageContext.userFullName) {
-        contextParts.push(`[Utilisateur: ${messageContext.userFullName}]`)
-      }
-
-      const route = messageContext.currentRoute || "chat"
-      const selectedCard = messageContext.selectedCardType
-
-      switch (route) {
-        case "chat":
-          if (selectedCard === "cours") {
-            contextParts.push(
-              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours"
-            )
-          } else if (selectedCard === "exercice") {
-            contextParts.push(
-              "l'utilisateur a indiqué qu'il souhaitait générer un nouvel exercice"
-            )
-          }
-          break
-
-        case "deep-course":
-          if (messageContext.deepCourseId) {
-            contextParts.push(
-              `tu es un copilote deep course, l'utilisateur souhaite ajouter un chapitre au deep cours ${messageContext.deepCourseId}`
-            )
-          } else {
-            contextParts.push(
-              "l'utilisateur a indiqué qu'il souhaitait générer un nouveau cours approfondi"
-            )
-          }
-          break
-
-        case "course":
-          contextParts.push("tu es un copilote cours")
-          break
-
-        case "exercice":
-          contextParts.push("tu es un copilote exercice")
-          break
-      }
-
-      if (contextParts.length > 0) {
-        enrichedMessage = `${contextParts.join("\n")}\n\n[ENDCONTEXT]\n\n${message}`
-      }
-    }
+    console.log("Context reçu dans sendChatMessage:", messageContext)
 
     const formData = new FormData()
     formData.append("user_id", user_id)
-    formData.append("message", enrichedMessage)
+    formData.append("message", message)
     if (sessionId) formData.append("session_id", sessionId)
     if (deepCourseId) formData.append("deep_course_id", deepCourseId)
+
+    if (messageContext) {
+      formData.append("message_context", JSON.stringify(messageContext))
+    }
 
     for (const f of files) {
       const buffer = Buffer.from(f.data, "base64")

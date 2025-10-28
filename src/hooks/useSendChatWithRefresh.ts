@@ -14,10 +14,10 @@ interface SendChatParams {
     data: string
   }>
   messageContext?: {
-    selectedCardType?: "cours" | "exercice"
-    currentRoute?: "chat" | "deep-course" | "course" | "exercice"
-    deepCourseId?: string
+    agentIndication?: "chat" | "deepCourse" | "cours" | "exercice" | "copiloteCours" | "copiloteExercice" | "copiloteNouveauCours"
     userFullName?: string
+    userStudy?: string
+    deepCourseId?: string
   }
 }
 
