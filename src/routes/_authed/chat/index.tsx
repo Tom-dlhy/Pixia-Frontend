@@ -101,9 +101,9 @@ function ChatPage() {
         message: input,
         files: encodedFiles.length ? encodedFiles : undefined,
         messageContext: {
-          selectedCardType: courseType === "cours" || courseType === "exercice" ? courseType : undefined,
-          currentRoute: "chat",
+          agentIndication: courseType === "cours" ? "cours" : courseType === "exercice" ? "exercice" : "chat",
           userFullName: session.name || undefined,
+          userStudy: session.study || undefined,
         },
       })
 

@@ -264,36 +264,6 @@ export default function ActionButton({
             </Button>
           )}
 
-          {onDeleteCourse && (
-            <>
-              <DropdownMenuSeparator className="my-1 opacity-20" />
-              <Button
-                variant="ghost"
-                onClick={onDeleteCourse}
-                className={cn(
-                  "relative w-full justify-start gap-2 rounded-md transition-all duration-300 text-red-600 dark:text-red-400",
-                  "hover:scale-[1.02]"
-                )}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, ${
-                    document.documentElement.classList.contains("dark")
-                      ? "rgba(239,68,68,0.3)"
-                      : "rgba(252,165,165,0.3)"
-                  }, ${
-                    document.documentElement.classList.contains("dark")
-                      ? "rgba(127,29,29,0.3)"
-                      : "rgba(248,113,113,0.3)"
-                  })`
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent"
-                }}
-              >
-                <Trash2 className="h-4 w-4 opacity-80" />
-                Supprimer le cours
-              </Button>
-            </>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
     )
@@ -414,37 +384,6 @@ export default function ActionButton({
               <FaCheckCircle className="h-4 w-4 opacity-80" />
               {isChapterComplete ? "Reprendre le cours" : "Marquer comme terminé"}
             </Button>
-          )}
-
-          {onDeleteChapter && (
-            <>
-              <DropdownMenuSeparator className="my-1 opacity-20" />
-              <Button
-                variant="ghost"
-                onClick={onDeleteChapter}
-                className={cn(
-                  "w-full justify-start gap-2 rounded-md transition-all duration-300 text-red-600 dark:text-red-400",
-                  "hover:scale-[1.02]"
-                )}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = `linear-gradient(135deg, ${
-                    document.documentElement.classList.contains("dark")
-                      ? "rgba(239,68,68,0.3)"
-                      : "rgba(252,165,165,0.3)"
-                  }, ${
-                    document.documentElement.classList.contains("dark")
-                      ? "rgba(127,29,29,0.3)"
-                      : "rgba(248,113,113,0.3)"
-                  })`
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent"
-                }}
-              >
-                <Trash2 className="h-4 w-4 opacity-80" />
-                Supprimer le chapitre
-              </Button>
-            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>

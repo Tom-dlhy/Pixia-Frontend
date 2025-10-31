@@ -49,7 +49,18 @@ export default function DeepCourseChaptersPage() {
           localStorage.setItem(`chapter-complete-${chapter.chapter_id}`, String(isComplete))
         })
         
-        setChapters(fetchedChapters)
+        const sortedChapters = fetchedChapters.sort((a: any, b: any) => {
+          const aIsComplete = a.is_complete || false
+          const bIsComplete = b.is_complete || false
+
+          if (aIsComplete !== bIsComplete) {
+            return aIsComplete ? 1 : -1
+          }
+
+          return 0
+        })
+        
+        setChapters(sortedChapters)
       } catch (error) {
         console.error(`[DeepCourseChaptersPage] Erreur lors de la récupération des chapitres:`, error)
         setChapters([])
