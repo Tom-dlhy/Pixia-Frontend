@@ -3,7 +3,9 @@
 ### Prerequisites
 
 * **Node.js** 24+ with npm
-* **Pixia Backend** running at `http://localhost:8000`
+* **Pixia Backend** — follow the installation guide at [Pixia Backend](https://github.com/Tom-dlhy/Pixia-Backend)
+  The backend must be running locally at `http://localhost:8000`
+
 
 ### Installation
 
