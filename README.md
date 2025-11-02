@@ -1,5 +1,10 @@
 ## Quick Start
 
+### App
+
+Live app (hosted frontend):
+[Pixia](https://hackathon-frontend-356001158171.europe-west9.run.app/)
+
 ### Prerequisites
 
 * **Node.js** 24+ with npm
