@@ -1,9 +1,9 @@
-## Démarrage rapide
+## Quick Start
 
-### Prérequis
+### Prerequisites
 
-- **Node.js** 24+ avec npm
-- **Backend Pixia** sur `http://localhost:8000`
+* **Node.js** 24+ with npm
+* **Pixia Backend** running at `http://localhost:8000`
 
 ### Installation
 
@@ -15,50 +15,50 @@ npm install
 
 ### Configuration
 
-Crée un `.env` à la racine :
+Create a `.env` file at the root:
 
 ```env
 VITE_BACKEND_URL=http://localhost:8000/api
 API_BASE=http://localhost:8000/api
 ```
 
-Crée un `.env.local` à la racine :
+Create a `.env.local` file at the root:
 
 ```env
 VITE_BACKEND_URL=http://localhost:8000/api
 ```
 
-### Lancer
+### Run
 
 ```bash
 npm run dev
 ```
 
-**→ Ouvre http://localhost:3000**
+**→ Open [http://localhost:3000](http://localhost:3000)**
 
-## Commandes
+## Commands
 
 ```bash
-npm run dev        # Démarrer le dev
-npm run build      # Build pour la prod
-npm start          # Lancer la prod
+npm run dev        # Start development
+npm run build      # Build for production
+npm start          # Run in production
 ```
 
 ## Tech Stack
 
-| Technologie |
-|-------------|
-| **React 19** |
-| **TypeScript** |
+| Technology          |
+| ------------------- |
+| **React 19**        |
+| **TypeScript**      |
 | **TanStack Router** |
-| **Vite** |
-| **TanStack Query** |
-| **Tailwind CSS** |
-| **shadcn/ui** |
-| **Framer Motion** |
-| **Zod** |
+| **Vite**            |
+| **TanStack Query**  |
+| **Tailwind CSS**    |
+| **shadcn/ui**       |
+| **Framer Motion**   |
+| **Zod**             |
 
-## 🔗 Liens
+## Links
 
-- **Backend** : https://github.com/Tom-dlhy/Pixia-Backend
-- **Live** : https://hackathon-frontend-356001158171.europe-west9.run.app
+* **Backend**: [https://github.com/Tom-dlhy/Pixia-Backend](https://github.com/Tom-dlhy/Pixia-Backend)
+* **Live**: [https://hackathon-frontend-356001158171.europe-west9.run.app](https://hackathon-frontend-356001158171.europe-west9.run.app)
