@@ -5,6 +5,9 @@
 Live app (hosted frontend):
 [Pixia](https://hackathon-frontend-356001158171.europe-west9.run.app/)
 
+Project presentation video:
+[Video](https://youtu.be/DErVX9jl2-I)
+
 ### Prerequisites
 
 * **Node.js** 24+ with npm
