@@ -1,17 +1,64 @@
-# Pixia — Multi‑agent AI study copilot
+## Démarrage rapide
 
-Associated backend repository :
-[Backend](https://github.com/Tom-dlhy/Hackathon-Backend)
+### Prérequis
 
-Live app (hosted frontend):
-[Pixia](https://hackathon-frontend-356001158171.europe-west9.run.app/)
+- **Node.js** 24+ avec npm
+- **Backend Pixia** sur `http://localhost:8000`
 
-**How to use the app** : 
-- You will reach a login page which only for tests purposes, it's not operationnal, you can login with `'utilisateur test'` to access an app with some documents already generated.
-- You can also create an account using the `signup` button, fill the form, reload the app, login using any password but with the right email and you we'll be able to retrieve all youre documents and chats.
+### Installation
 
-**What is Pixia** : 
+```bash
+git clone https://github.com/Tom-dlhy/Pixia-Frontend.git
+cd Pixia-Frontend
+npm install
+```
 
-Pixia is our submission to GCPU AI for Impact 2025. We focused on education and a familiar pain point: reviewing effectively before an exam with a personal, on‑demand helper. Pixia centralizes this with a multi‑agent architecture (Google ADK), specialized tools (MCP, course/exercise generation), and a FastAPI backend connected to PostgreSQL (Cloud SQL), deployed on Cloud Run.
+### Configuration
 
-[Hackathon link](https://www.linkedin.com/posts/activity-7379204410070949889-HJlO?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEPSC7cBdbyR8s3pKeHGnbEqJHbV6P_kqvA)
+Crée un `.env` à la racine :
+
+```env
+VITE_BACKEND_URL=http://localhost:8000/api
+API_BASE=http://localhost:8000/api
+```
+
+Crée un `.env.local` à la racine :
+
+```env
+VITE_BACKEND_URL=http://localhost:8000/api
+```
+
+### Lancer
+
+```bash
+npm run dev
+```
+
+**→ Ouvre http://localhost:3000**
+
+## Commandes
+
+```bash
+npm run dev        # Démarrer le dev
+npm run build      # Build pour la prod
+npm start          # Lancer la prod
+```
+
+## Tech Stack
+
+| Technologie |
+|-------------|
+| **React 19** |
+| **TypeScript** |
+| **TanStack Router** |
+| **Vite** |
+| **TanStack Query** |
+| **Tailwind CSS** |
+| **shadcn/ui** |
+| **Framer Motion** |
+| **Zod** |
+
+## 🔗 Liens
+
+- **Backend** : https://github.com/Tom-dlhy/Pixia-Backend
+- **Live** : https://hackathon-frontend-356001158171.europe-west9.run.app

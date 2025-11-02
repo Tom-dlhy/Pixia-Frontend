@@ -7,3 +7,5 @@
 !vite.config.ts
 !src/
 !public/
+!.env.local
+!.env.production
